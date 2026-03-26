@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -74,7 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final pages = _getPages(l10n);
-    
+
     return Scaffold(
       backgroundColor: AppColors.background, // Pure white
       body: SafeArea(
@@ -85,9 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 // Spacer to reserve space where Skip button was (maintains exact layout)
                 // Height calculation: Padding (AppSpacing.md = 16px on all sides) + TextButton (~40px) = ~72px total
                 // Using 72px to match: top padding (16px) + button height (~40px) + bottom padding (16px)
-                const SizedBox(
-                  height: 72,
-                ),
+                const SizedBox(height: 72),
 
                 // PageView with illustrations and content
                 Expanded(
@@ -178,14 +177,10 @@ class _OnboardingPageContent extends StatefulWidget {
   final OnboardingPage page;
   final int pageIndex;
 
-  const _OnboardingPageContent({
-    required this.page,
-    required this.pageIndex,
-  });
+  const _OnboardingPageContent({required this.page, required this.pageIndex});
 
   @override
-  State<_OnboardingPageContent> createState() =>
-      _OnboardingPageContentState();
+  State<_OnboardingPageContent> createState() => _OnboardingPageContentState();
 }
 
 class _OnboardingPageContentState extends State<_OnboardingPageContent>
@@ -202,21 +197,14 @@ class _OnboardingPageContentState extends State<_OnboardingPageContent>
       duration: const Duration(milliseconds: 600),
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOut,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+        );
 
     _animationController.forward();
   }
@@ -272,14 +260,16 @@ class _OnboardingPageContentState extends State<_OnboardingPageContent>
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Color(0xFFFB923C),
-                      Color(0xFFEF4444),
-                    ],
+                    colors: [Color(0xFFFB923C), Color(0xFFEF4444)],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color.fromARGB(255, 251, 119, 141).withOpacity(0.3),
+                      color: const Color.fromARGB(
+                        255,
+                        251,
+                        119,
+                        141,
+                      ).withOpacity(0.3),
                       blurRadius: 24,
                       offset: const Offset(0, 8),
                       spreadRadius: 0,
@@ -342,10 +332,7 @@ class _DotsIndicator extends StatelessWidget {
   final int currentPage;
   final int pageCount;
 
-  const _DotsIndicator({
-    required this.currentPage,
-    required this.pageCount,
-  });
+  const _DotsIndicator({required this.currentPage, required this.pageCount});
 
   @override
   Widget build(BuildContext context) {

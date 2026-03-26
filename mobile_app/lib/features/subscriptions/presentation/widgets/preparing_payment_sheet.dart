@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 
 /// Bottom sheet shown immediately when starting checkout: "Preparing payment…" loader.
@@ -23,7 +24,12 @@ void showPreparingPaymentSheet({
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        padding: EdgeInsets.fromLTRB(24, 32, 24, 24 + MediaQuery.of(ctx).padding.bottom),
+        padding: EdgeInsets.fromLTRB(
+          24,
+          32,
+          24,
+          24 + MediaQuery.of(ctx).padding.bottom,
+        ),
         child: SafeArea(
           top: false,
           child: Column(
@@ -43,10 +49,7 @@ void showPreparingPaymentSheet({
               const SizedBox(height: 8),
               Text(
                 'Please wait',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 24),
               TextButton(

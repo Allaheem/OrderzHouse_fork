@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -9,11 +10,7 @@ class SectionTitleRow extends StatelessWidget {
   final String title;
   final VoidCallback? onSeeAllTap;
 
-  const SectionTitleRow({
-    super.key,
-    required this.title,
-    this.onSeeAllTap,
-  });
+  const SectionTitleRow({super.key, required this.title, this.onSeeAllTap});
 
   @override
   Widget build(BuildContext context) {

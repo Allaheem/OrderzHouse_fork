@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,9 +56,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     } else {
       final error = ref.read(authStateProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Login failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error ?? 'Login failed')));
     }
   }
 
@@ -90,7 +91,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             width: 100,
                             height: 100,
                             decoration: const BoxDecoration(
-                              color: Color.fromARGB(255, 255, 215, 182), // Light pink
+                              color: Color.fromARGB(
+                                255,
+                                255,
+                                215,
+                                182,
+                              ), // Light pink
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -123,7 +129,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // Email input
                         _StyledTextField(
                           controller: _emailController,
- 
 
                           hint: l10n.email,
 
@@ -140,7 +145,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                               color: const Color(0xFF9CA3AF),
                             ),
                             onPressed: () {
@@ -213,8 +220,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // _buildGoogleSignInButton(l10n),
                         // const SizedBox(height: AppSpacing.xl),
                         // Bottom link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               '${l10n.dontHaveAccount} ',
@@ -234,7 +242,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: Text(
                                 l10n.signUp,
                                 style: AppTextStyles.bodyMedium.copyWith(
-                                  color:const Color(0xFFFB923C),
+                                  color: const Color(0xFFFB923C),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -289,10 +297,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final error = ref.read(authStateProvider).error;
       if (error != null && !error.toLowerCase().contains('cancel')) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error),
-            duration: const Duration(seconds: 5),
-          ),
+          SnackBar(content: Text(error), duration: const Duration(seconds: 5)),
         );
       }
     }
@@ -338,9 +343,7 @@ class _StyledTextField extends StatelessWidget {
         obscureText: obscureText,
         keyboardType: keyboardType,
         validator: validator,
-        style: AppTextStyles.bodyLarge.copyWith(
-          color: const Color(0xFF111827),
-        ),
+        style: AppTextStyles.bodyLarge.copyWith(color: const Color(0xFF111827)),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -362,10 +365,7 @@ class _StyledTextField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(
-              color: AppColors.primary,
-              width: 2,
-            ),
+            borderSide: const BorderSide(color: AppColors.primary, width: 2),
           ),
           filled: true,
           fillColor: Colors.white,
@@ -378,7 +378,3 @@ class _StyledTextField extends StatelessWidget {
     );
   }
 }
-
-
-
-

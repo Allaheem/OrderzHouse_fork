@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,10 +24,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     6,
     (index) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(
-    6,
-    (index) => FocusNode(),
-  );
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   int _resendTimer = 60;
   bool _canResend = false;
 
@@ -95,10 +93,7 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     }
 
     final authNotifier = ref.read(authStateProvider.notifier);
-    final success = await authNotifier.verifyOtp(
-      widget.email,
-      otp,
-    );
+    final success = await authNotifier.verifyOtp(widget.email, otp);
 
     if (!mounted) return;
 
@@ -129,9 +124,9 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
     // Call login again to resend OTP (or implement a dedicated resend endpoint)
     // For now, just reset timer
     _startResendTimer();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP resent successfully')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('OTP resent successfully')));
   }
 
   void _handleBack() {
@@ -193,7 +188,9 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
               // Main content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -369,9 +366,7 @@ class _OtpInputField extends StatelessWidget {
         style: AppTextStyles.headlineMedium.copyWith(
           color: const Color(0xFF111827),
         ),
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,

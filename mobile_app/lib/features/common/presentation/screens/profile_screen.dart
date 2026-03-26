@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,7 +29,7 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             // Standard AppBar/Header (like My Projects)
             _ProfileTopBar(l10n: l10n),
-            
+
             // Scrollable content
             Expanded(
               child: SingleChildScrollView(
@@ -108,7 +109,9 @@ class ProfileScreen extends ConsumerWidget {
                       ),
 
                     // Bottom padding for safe area
-                    SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
+                    SizedBox(
+                      height: MediaQuery.of(context).padding.bottom + 24,
+                    ),
                   ],
                 ),
               ),
@@ -123,16 +126,13 @@ class ProfileScreen extends ConsumerWidget {
 // Standard Top Bar (matching My Projects style)
 class _ProfileTopBar extends StatelessWidget {
   final AppLocalizations l10n;
-  
+
   const _ProfileTopBar({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -169,7 +169,6 @@ class _ProfileTopBar extends StatelessWidget {
             )
           else
             const SizedBox(width: 40), // Spacer if no back button
-          
           // Center: Title
           Text(
             l10n.profile,
@@ -178,7 +177,7 @@ class _ProfileTopBar extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          
+
           // Right: Spacer (no avatar button since we're on Profile page)
           const SizedBox(width: 40), // Balance the left button
         ],
@@ -210,7 +209,8 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ),
           child: ClipOval(
-            child: user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
+            child:
+                user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
                 ? CachedNetworkImage(
                     imageUrl: user!.profilePicUrl!.startsWith('http')
                         ? user!.profilePicUrl!
@@ -218,7 +218,8 @@ class _ProfileHeader extends StatelessWidget {
                     width: 76,
                     height: 76,
                     fit: BoxFit.cover,
-                    errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
+                    errorWidget: (context, url, error) =>
+                        _buildAvatarPlaceholder(),
                   )
                 : _buildAvatarPlaceholder(),
           ),
@@ -289,13 +290,13 @@ class _ProfileHeader extends StatelessWidget {
 // 2) Stats Row - Dynamic stats from user's projects
 class _StatsRow extends ConsumerWidget {
   final AppLocalizations l10n;
-  
+
   const _StatsRow({required this.l10n});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(profileStatsProvider);
-    
+
     return statsAsync.when(
       data: (stats) => Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -329,10 +330,7 @@ class _StatItem extends StatelessWidget {
   final String number;
   final String label;
 
-  const _StatItem({
-    required this.number,
-    required this.label,
-  });
+  const _StatItem({required this.number, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -438,11 +436,7 @@ class _SettingsListItem extends StatelessWidget {
         child: Row(
           children: [
             // Left: Accent orange icon
-            Icon(
-              icon,
-              color: AppColors.accentOrange,
-              size: 22,
-            ),
+            Icon(icon, color: AppColors.accentOrange, size: 22),
             const SizedBox(width: 16),
             // Middle: Label
             Expanded(
@@ -622,7 +616,8 @@ class _UpgradeCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // ✅ Align content to start
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // ✅ Align content to start
         children: [
           // Text
           Text(

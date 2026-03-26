@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../../../../../core/theme/app_spacing.dart';
 
@@ -30,7 +31,11 @@ class InternalSkipStepView extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.info_outline, color: Colors.orange.shade800, size: 20),
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.orange.shade800,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -49,10 +54,7 @@ class InternalSkipStepView extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Your project will be created without payment.',
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
             textAlign: TextAlign.center,
           ),
         ],

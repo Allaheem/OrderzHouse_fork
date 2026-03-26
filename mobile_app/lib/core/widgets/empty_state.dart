@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -25,11 +26,7 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: AppColors.textTertiary,
-            ),
+            Icon(icon, size: 64, color: AppColors.textTertiary),
             const SizedBox(height: AppSpacing.lg),
             Text(
               title,

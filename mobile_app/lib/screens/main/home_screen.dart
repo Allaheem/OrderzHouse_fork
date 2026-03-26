@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:OrderzHouse/features/auth/presentation/providers/auth_provider.dart';
@@ -13,9 +14,7 @@ class HomeScreen extends ConsumerWidget {
     final isFreelancer = user?.role == 'freelancer';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home'), 
-      ),
+      appBar: AppBar(title: const Text('Home')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -23,18 +22,12 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Text(
               'Welcome, ${user?.displayName ?? "User"}!',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Role: ${user?.role ?? "Unknown"}',
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 32),
             Expanded(

@@ -1,3 +1,4 @@
+// ??? ????????
 import '../storage/app_prefs.dart';
 
 /// Tracks last visited route for restore after app reopen.
@@ -32,7 +33,9 @@ class RouteTracker {
   /// Persist route if not an auth page. Call on each non-redirect navigation.
   static Future<void> saveLastRoute(String path) async {
     final normalized = path.startsWith('/') ? path : '/$path';
-    if (_authPaths.any((p) => normalized == p || normalized.startsWith('$p/'))) {
+    if (_authPaths.any(
+      (p) => normalized == p || normalized.startsWith('$p/'),
+    )) {
       return;
     }
     _lastRouteCache = normalized;
@@ -47,6 +50,8 @@ class RouteTracker {
 
   static bool isAuthRoute(String path) {
     final normalized = path.startsWith('/') ? path : '/$path';
-    return _authPaths.any((p) => normalized == p || normalized.startsWith('$p/'));
+    return _authPaths.any(
+      (p) => normalized == p || normalized.startsWith('$p/'),
+    );
   }
 }

@@ -1,3 +1,4 @@
+// ??? ????????
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -12,7 +13,8 @@ part of 'project.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Project _$ProjectFromJson(Map<String, dynamic> json) {
   return _Project.fromJson(json);
@@ -55,24 +57,23 @@ abstract class $ProjectCopyWith<$Res> {
   factory $ProjectCopyWith(Project value, $Res Function(Project) then) =
       _$ProjectCopyWithImpl<$Res, Project>;
   @useResult
-  $Res call(
-      {int id,
-      @JsonKey(name: 'user_id') int userId,
-      String title,
-      String description,
-      @JsonKey(name: 'cover_pic') String? coverPic,
-      @JsonKey(name: 'project_type') String projectType,
-      String status,
-      @JsonKey(fromJson: _doubleFromJson) double? budget,
-      @JsonKey(name: 'budget_min', fromJson: _doubleFromJson) double? budgetMin,
-      @JsonKey(name: 'budget_max', fromJson: _doubleFromJson) double? budgetMax,
-      @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson)
-      double? hourlyRate,
-      @JsonKey(name: 'duration_days', fromJson: _intFromJson) int? durationDays,
-      @JsonKey(name: 'duration_hours', fromJson: _intFromJson)
-      int? durationHours,
-      @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
-      DateTime createdAt});
+  $Res call({
+    int id,
+    @JsonKey(name: 'user_id') int userId,
+    String title,
+    String description,
+    @JsonKey(name: 'cover_pic') String? coverPic,
+    @JsonKey(name: 'project_type') String projectType,
+    String status,
+    @JsonKey(fromJson: _doubleFromJson) double? budget,
+    @JsonKey(name: 'budget_min', fromJson: _doubleFromJson) double? budgetMin,
+    @JsonKey(name: 'budget_max', fromJson: _doubleFromJson) double? budgetMax,
+    @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson) double? hourlyRate,
+    @JsonKey(name: 'duration_days', fromJson: _intFromJson) int? durationDays,
+    @JsonKey(name: 'duration_hours', fromJson: _intFromJson) int? durationHours,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
+    DateTime createdAt,
+  });
 }
 
 /// @nodoc
@@ -103,92 +104,95 @@ class _$ProjectCopyWithImpl<$Res, $Val extends Project>
     Object? durationHours = freezed,
     Object? createdAt = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as int,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: null == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String,
-      coverPic: freezed == coverPic
-          ? _value.coverPic
-          : coverPic // ignore: cast_nullable_to_non_nullable
-              as String?,
-      projectType: null == projectType
-          ? _value.projectType
-          : projectType // ignore: cast_nullable_to_non_nullable
-              as String,
-      status: null == status
-          ? _value.status
-          : status // ignore: cast_nullable_to_non_nullable
-              as String,
-      budget: freezed == budget
-          ? _value.budget
-          : budget // ignore: cast_nullable_to_non_nullable
-              as double?,
-      budgetMin: freezed == budgetMin
-          ? _value.budgetMin
-          : budgetMin // ignore: cast_nullable_to_non_nullable
-              as double?,
-      budgetMax: freezed == budgetMax
-          ? _value.budgetMax
-          : budgetMax // ignore: cast_nullable_to_non_nullable
-              as double?,
-      hourlyRate: freezed == hourlyRate
-          ? _value.hourlyRate
-          : hourlyRate // ignore: cast_nullable_to_non_nullable
-              as double?,
-      durationDays: freezed == durationDays
-          ? _value.durationDays
-          : durationDays // ignore: cast_nullable_to_non_nullable
-              as int?,
-      durationHours: freezed == durationHours
-          ? _value.durationHours
-          : durationHours // ignore: cast_nullable_to_non_nullable
-              as int?,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as int,
+            userId: null == userId
+                ? _value.userId
+                : userId // ignore: cast_nullable_to_non_nullable
+                      as int,
+            title: null == title
+                ? _value.title
+                : title // ignore: cast_nullable_to_non_nullable
+                      as String,
+            description: null == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String,
+            coverPic: freezed == coverPic
+                ? _value.coverPic
+                : coverPic // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            projectType: null == projectType
+                ? _value.projectType
+                : projectType // ignore: cast_nullable_to_non_nullable
+                      as String,
+            status: null == status
+                ? _value.status
+                : status // ignore: cast_nullable_to_non_nullable
+                      as String,
+            budget: freezed == budget
+                ? _value.budget
+                : budget // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            budgetMin: freezed == budgetMin
+                ? _value.budgetMin
+                : budgetMin // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            budgetMax: freezed == budgetMax
+                ? _value.budgetMax
+                : budgetMax // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            hourlyRate: freezed == hourlyRate
+                ? _value.hourlyRate
+                : hourlyRate // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            durationDays: freezed == durationDays
+                ? _value.durationDays
+                : durationDays // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            durationHours: freezed == durationHours
+                ? _value.durationHours
+                : durationHours // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            createdAt: null == createdAt
+                ? _value.createdAt
+                : createdAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$ProjectImplCopyWith<$Res> implements $ProjectCopyWith<$Res> {
   factory _$$ProjectImplCopyWith(
-          _$ProjectImpl value, $Res Function(_$ProjectImpl) then) =
-      __$$ProjectImplCopyWithImpl<$Res>;
+    _$ProjectImpl value,
+    $Res Function(_$ProjectImpl) then,
+  ) = __$$ProjectImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int id,
-      @JsonKey(name: 'user_id') int userId,
-      String title,
-      String description,
-      @JsonKey(name: 'cover_pic') String? coverPic,
-      @JsonKey(name: 'project_type') String projectType,
-      String status,
-      @JsonKey(fromJson: _doubleFromJson) double? budget,
-      @JsonKey(name: 'budget_min', fromJson: _doubleFromJson) double? budgetMin,
-      @JsonKey(name: 'budget_max', fromJson: _doubleFromJson) double? budgetMax,
-      @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson)
-      double? hourlyRate,
-      @JsonKey(name: 'duration_days', fromJson: _intFromJson) int? durationDays,
-      @JsonKey(name: 'duration_hours', fromJson: _intFromJson)
-      int? durationHours,
-      @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
-      DateTime createdAt});
+  $Res call({
+    int id,
+    @JsonKey(name: 'user_id') int userId,
+    String title,
+    String description,
+    @JsonKey(name: 'cover_pic') String? coverPic,
+    @JsonKey(name: 'project_type') String projectType,
+    String status,
+    @JsonKey(fromJson: _doubleFromJson) double? budget,
+    @JsonKey(name: 'budget_min', fromJson: _doubleFromJson) double? budgetMin,
+    @JsonKey(name: 'budget_max', fromJson: _doubleFromJson) double? budgetMax,
+    @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson) double? hourlyRate,
+    @JsonKey(name: 'duration_days', fromJson: _intFromJson) int? durationDays,
+    @JsonKey(name: 'duration_hours', fromJson: _intFromJson) int? durationHours,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
+    DateTime createdAt,
+  });
 }
 
 /// @nodoc
@@ -196,8 +200,9 @@ class __$$ProjectImplCopyWithImpl<$Res>
     extends _$ProjectCopyWithImpl<$Res, _$ProjectImpl>
     implements _$$ProjectImplCopyWith<$Res> {
   __$$ProjectImplCopyWithImpl(
-      _$ProjectImpl _value, $Res Function(_$ProjectImpl) _then)
-      : super(_value, _then);
+    _$ProjectImpl _value,
+    $Res Function(_$ProjectImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -217,88 +222,89 @@ class __$$ProjectImplCopyWithImpl<$Res>
     Object? durationHours = freezed,
     Object? createdAt = null,
   }) {
-    return _then(_$ProjectImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as int,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: null == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String,
-      coverPic: freezed == coverPic
-          ? _value.coverPic
-          : coverPic // ignore: cast_nullable_to_non_nullable
-              as String?,
-      projectType: null == projectType
-          ? _value.projectType
-          : projectType // ignore: cast_nullable_to_non_nullable
-              as String,
-      status: null == status
-          ? _value.status
-          : status // ignore: cast_nullable_to_non_nullable
-              as String,
-      budget: freezed == budget
-          ? _value.budget
-          : budget // ignore: cast_nullable_to_non_nullable
-              as double?,
-      budgetMin: freezed == budgetMin
-          ? _value.budgetMin
-          : budgetMin // ignore: cast_nullable_to_non_nullable
-              as double?,
-      budgetMax: freezed == budgetMax
-          ? _value.budgetMax
-          : budgetMax // ignore: cast_nullable_to_non_nullable
-              as double?,
-      hourlyRate: freezed == hourlyRate
-          ? _value.hourlyRate
-          : hourlyRate // ignore: cast_nullable_to_non_nullable
-              as double?,
-      durationDays: freezed == durationDays
-          ? _value.durationDays
-          : durationDays // ignore: cast_nullable_to_non_nullable
-              as int?,
-      durationHours: freezed == durationHours
-          ? _value.durationHours
-          : durationHours // ignore: cast_nullable_to_non_nullable
-              as int?,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
+    return _then(
+      _$ProjectImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as int,
+        userId: null == userId
+            ? _value.userId
+            : userId // ignore: cast_nullable_to_non_nullable
+                  as int,
+        title: null == title
+            ? _value.title
+            : title // ignore: cast_nullable_to_non_nullable
+                  as String,
+        description: null == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String,
+        coverPic: freezed == coverPic
+            ? _value.coverPic
+            : coverPic // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        projectType: null == projectType
+            ? _value.projectType
+            : projectType // ignore: cast_nullable_to_non_nullable
+                  as String,
+        status: null == status
+            ? _value.status
+            : status // ignore: cast_nullable_to_non_nullable
+                  as String,
+        budget: freezed == budget
+            ? _value.budget
+            : budget // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        budgetMin: freezed == budgetMin
+            ? _value.budgetMin
+            : budgetMin // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        budgetMax: freezed == budgetMax
+            ? _value.budgetMax
+            : budgetMax // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        hourlyRate: freezed == hourlyRate
+            ? _value.hourlyRate
+            : hourlyRate // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        durationDays: freezed == durationDays
+            ? _value.durationDays
+            : durationDays // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        durationHours: freezed == durationHours
+            ? _value.durationHours
+            : durationHours // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        createdAt: null == createdAt
+            ? _value.createdAt
+            : createdAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$ProjectImpl extends _Project {
-  const _$ProjectImpl(
-      {required this.id,
-      @JsonKey(name: 'user_id') required this.userId,
-      required this.title,
-      required this.description,
-      @JsonKey(name: 'cover_pic') this.coverPic,
-      @JsonKey(name: 'project_type') required this.projectType,
-      required this.status,
-      @JsonKey(fromJson: _doubleFromJson) this.budget,
-      @JsonKey(name: 'budget_min', fromJson: _doubleFromJson) this.budgetMin,
-      @JsonKey(name: 'budget_max', fromJson: _doubleFromJson) this.budgetMax,
-      @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson) this.hourlyRate,
-      @JsonKey(name: 'duration_days', fromJson: _intFromJson) this.durationDays,
-      @JsonKey(name: 'duration_hours', fromJson: _intFromJson)
-      this.durationHours,
-      @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
-      required this.createdAt})
-      : super._();
+  const _$ProjectImpl({
+    required this.id,
+    @JsonKey(name: 'user_id') required this.userId,
+    required this.title,
+    required this.description,
+    @JsonKey(name: 'cover_pic') this.coverPic,
+    @JsonKey(name: 'project_type') required this.projectType,
+    required this.status,
+    @JsonKey(fromJson: _doubleFromJson) this.budget,
+    @JsonKey(name: 'budget_min', fromJson: _doubleFromJson) this.budgetMin,
+    @JsonKey(name: 'budget_max', fromJson: _doubleFromJson) this.budgetMax,
+    @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson) this.hourlyRate,
+    @JsonKey(name: 'duration_days', fromJson: _intFromJson) this.durationDays,
+    @JsonKey(name: 'duration_hours', fromJson: _intFromJson) this.durationHours,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
+    required this.createdAt,
+  }) : super._();
 
   factory _$ProjectImpl.fromJson(Map<String, dynamic> json) =>
       _$$ProjectImplFromJson(json);
@@ -380,21 +386,22 @@ class _$ProjectImpl extends _Project {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      userId,
-      title,
-      description,
-      coverPic,
-      projectType,
-      status,
-      budget,
-      budgetMin,
-      budgetMax,
-      hourlyRate,
-      durationDays,
-      durationHours,
-      createdAt);
+    runtimeType,
+    id,
+    userId,
+    title,
+    description,
+    coverPic,
+    projectType,
+    status,
+    budget,
+    budgetMin,
+    budgetMax,
+    hourlyRate,
+    durationDays,
+    durationHours,
+    createdAt,
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -404,34 +411,33 @@ class _$ProjectImpl extends _Project {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$ProjectImplToJson(
-      this,
-    );
+    return _$$ProjectImplToJson(this);
   }
 }
 
 abstract class _Project extends Project {
-  const factory _Project(
-      {required final int id,
-      @JsonKey(name: 'user_id') required final int userId,
-      required final String title,
-      required final String description,
-      @JsonKey(name: 'cover_pic') final String? coverPic,
-      @JsonKey(name: 'project_type') required final String projectType,
-      required final String status,
-      @JsonKey(fromJson: _doubleFromJson) final double? budget,
-      @JsonKey(name: 'budget_min', fromJson: _doubleFromJson)
-      final double? budgetMin,
-      @JsonKey(name: 'budget_max', fromJson: _doubleFromJson)
-      final double? budgetMax,
-      @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson)
-      final double? hourlyRate,
-      @JsonKey(name: 'duration_days', fromJson: _intFromJson)
-      final int? durationDays,
-      @JsonKey(name: 'duration_hours', fromJson: _intFromJson)
-      final int? durationHours,
-      @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
-      required final DateTime createdAt}) = _$ProjectImpl;
+  const factory _Project({
+    required final int id,
+    @JsonKey(name: 'user_id') required final int userId,
+    required final String title,
+    required final String description,
+    @JsonKey(name: 'cover_pic') final String? coverPic,
+    @JsonKey(name: 'project_type') required final String projectType,
+    required final String status,
+    @JsonKey(fromJson: _doubleFromJson) final double? budget,
+    @JsonKey(name: 'budget_min', fromJson: _doubleFromJson)
+    final double? budgetMin,
+    @JsonKey(name: 'budget_max', fromJson: _doubleFromJson)
+    final double? budgetMax,
+    @JsonKey(name: 'hourly_rate', fromJson: _doubleFromJson)
+    final double? hourlyRate,
+    @JsonKey(name: 'duration_days', fromJson: _intFromJson)
+    final int? durationDays,
+    @JsonKey(name: 'duration_hours', fromJson: _intFromJson)
+    final int? durationHours,
+    @JsonKey(name: 'created_at', fromJson: _dateTimeFromJson)
+    required final DateTime createdAt,
+  }) = _$ProjectImpl;
   const _Project._() : super._();
 
   factory _Project.fromJson(Map<String, dynamic> json) = _$ProjectImpl.fromJson;

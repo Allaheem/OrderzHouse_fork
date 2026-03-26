@@ -1,3 +1,4 @@
+// ??? ????????
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -12,10 +13,13 @@ part of 'api_response.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 ApiResponse<T> _$ApiResponseFromJson<T>(
-    Map<String, dynamic> json, T Function(Object?) fromJsonT) {
+  Map<String, dynamic> json,
+  T Function(Object?) fromJsonT,
+) {
   return _ApiResponse<T>.fromJson(json, fromJsonT);
 }
 
@@ -36,11 +40,16 @@ mixin _$ApiResponse<T> {
 /// @nodoc
 abstract class $ApiResponseCopyWith<T, $Res> {
   factory $ApiResponseCopyWith(
-          ApiResponse<T> value, $Res Function(ApiResponse<T>) then) =
-      _$ApiResponseCopyWithImpl<T, $Res, ApiResponse<T>>;
+    ApiResponse<T> value,
+    $Res Function(ApiResponse<T>) then,
+  ) = _$ApiResponseCopyWithImpl<T, $Res, ApiResponse<T>>;
   @useResult
-  $Res call(
-      {bool success, String? message, T? data, Map<String, dynamic>? error});
+  $Res call({
+    bool success,
+    String? message,
+    T? data,
+    Map<String, dynamic>? error,
+  });
 }
 
 /// @nodoc
@@ -61,37 +70,45 @@ class _$ApiResponseCopyWithImpl<T, $Res, $Val extends ApiResponse<T>>
     Object? data = freezed,
     Object? error = freezed,
   }) {
-    return _then(_value.copyWith(
-      success: null == success
-          ? _value.success
-          : success // ignore: cast_nullable_to_non_nullable
-              as bool,
-      message: freezed == message
-          ? _value.message
-          : message // ignore: cast_nullable_to_non_nullable
-              as String?,
-      data: freezed == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as T?,
-      error: freezed == error
-          ? _value.error
-          : error // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            success: null == success
+                ? _value.success
+                : success // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            message: freezed == message
+                ? _value.message
+                : message // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            data: freezed == data
+                ? _value.data
+                : data // ignore: cast_nullable_to_non_nullable
+                      as T?,
+            error: freezed == error
+                ? _value.error
+                : error // ignore: cast_nullable_to_non_nullable
+                      as Map<String, dynamic>?,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$ApiResponseImplCopyWith<T, $Res>
     implements $ApiResponseCopyWith<T, $Res> {
-  factory _$$ApiResponseImplCopyWith(_$ApiResponseImpl<T> value,
-          $Res Function(_$ApiResponseImpl<T>) then) =
-      __$$ApiResponseImplCopyWithImpl<T, $Res>;
+  factory _$$ApiResponseImplCopyWith(
+    _$ApiResponseImpl<T> value,
+    $Res Function(_$ApiResponseImpl<T>) then,
+  ) = __$$ApiResponseImplCopyWithImpl<T, $Res>;
   @override
   @useResult
-  $Res call(
-      {bool success, String? message, T? data, Map<String, dynamic>? error});
+  $Res call({
+    bool success,
+    String? message,
+    T? data,
+    Map<String, dynamic>? error,
+  });
 }
 
 /// @nodoc
@@ -99,8 +116,9 @@ class __$$ApiResponseImplCopyWithImpl<T, $Res>
     extends _$ApiResponseCopyWithImpl<T, $Res, _$ApiResponseImpl<T>>
     implements _$$ApiResponseImplCopyWith<T, $Res> {
   __$$ApiResponseImplCopyWithImpl(
-      _$ApiResponseImpl<T> _value, $Res Function(_$ApiResponseImpl<T>) _then)
-      : super(_value, _then);
+    _$ApiResponseImpl<T> _value,
+    $Res Function(_$ApiResponseImpl<T>) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -110,41 +128,44 @@ class __$$ApiResponseImplCopyWithImpl<T, $Res>
     Object? data = freezed,
     Object? error = freezed,
   }) {
-    return _then(_$ApiResponseImpl<T>(
-      success: null == success
-          ? _value.success
-          : success // ignore: cast_nullable_to_non_nullable
-              as bool,
-      message: freezed == message
-          ? _value.message
-          : message // ignore: cast_nullable_to_non_nullable
-              as String?,
-      data: freezed == data
-          ? _value.data
-          : data // ignore: cast_nullable_to_non_nullable
-              as T?,
-      error: freezed == error
-          ? _value._error
-          : error // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>?,
-    ));
+    return _then(
+      _$ApiResponseImpl<T>(
+        success: null == success
+            ? _value.success
+            : success // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        message: freezed == message
+            ? _value.message
+            : message // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        data: freezed == data
+            ? _value.data
+            : data // ignore: cast_nullable_to_non_nullable
+                  as T?,
+        error: freezed == error
+            ? _value._error
+            : error // ignore: cast_nullable_to_non_nullable
+                  as Map<String, dynamic>?,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable(genericArgumentFactories: true)
 class _$ApiResponseImpl<T> extends _ApiResponse<T> {
-  const _$ApiResponseImpl(
-      {this.success = false,
-      this.message,
-      this.data,
-      final Map<String, dynamic>? error})
-      : _error = error,
-        super._();
+  const _$ApiResponseImpl({
+    this.success = false,
+    this.message,
+    this.data,
+    final Map<String, dynamic>? error,
+  }) : _error = error,
+       super._();
 
   factory _$ApiResponseImpl.fromJson(
-          Map<String, dynamic> json, T Function(Object?) fromJsonT) =>
-      _$$ApiResponseImplFromJson(json, fromJsonT);
+    Map<String, dynamic> json,
+    T Function(Object?) fromJsonT,
+  ) => _$$ApiResponseImplFromJson(json, fromJsonT);
 
   @override
   @JsonKey()
@@ -182,18 +203,21 @@ class _$ApiResponseImpl<T> extends _ApiResponse<T> {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      success,
-      message,
-      const DeepCollectionEquality().hash(data),
-      const DeepCollectionEquality().hash(_error));
+    runtimeType,
+    success,
+    message,
+    const DeepCollectionEquality().hash(data),
+    const DeepCollectionEquality().hash(_error),
+  );
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$ApiResponseImplCopyWith<T, _$ApiResponseImpl<T>> get copyWith =>
       __$$ApiResponseImplCopyWithImpl<T, _$ApiResponseImpl<T>>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson(Object? Function(T) toJsonT) {
@@ -202,16 +226,18 @@ class _$ApiResponseImpl<T> extends _ApiResponse<T> {
 }
 
 abstract class _ApiResponse<T> extends ApiResponse<T> {
-  const factory _ApiResponse(
-      {final bool success,
-      final String? message,
-      final T? data,
-      final Map<String, dynamic>? error}) = _$ApiResponseImpl<T>;
+  const factory _ApiResponse({
+    final bool success,
+    final String? message,
+    final T? data,
+    final Map<String, dynamic>? error,
+  }) = _$ApiResponseImpl<T>;
   const _ApiResponse._() : super._();
 
   factory _ApiResponse.fromJson(
-          Map<String, dynamic> json, T Function(Object?) fromJsonT) =
-      _$ApiResponseImpl<T>.fromJson;
+    Map<String, dynamic> json,
+    T Function(Object?) fromJsonT,
+  ) = _$ApiResponseImpl<T>.fromJson;
 
   @override
   bool get success;

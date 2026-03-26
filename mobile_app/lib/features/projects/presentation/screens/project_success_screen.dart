@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,8 @@ class ProjectSuccessScreen extends ConsumerStatefulWidget {
   const ProjectSuccessScreen({super.key, required this.projectId});
 
   @override
-  ConsumerState<ProjectSuccessScreen> createState() => _ProjectSuccessScreenState();
+  ConsumerState<ProjectSuccessScreen> createState() =>
+      _ProjectSuccessScreenState();
 }
 
 /// Default CliQ alias when not set from API/env.
@@ -37,7 +39,8 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
       final repo = ProjectsRepository();
       final response = await repo.getProjectSuccess(widget.projectId);
       if (!mounted) return;
-      final data = response.success && response.data != null && response.data!.isNotEmpty
+      final data =
+          response.success && response.data != null && response.data!.isNotEmpty
           ? response.data
           : null;
       if (data != null) {
@@ -60,7 +63,12 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
     if (t == 'hourly') return '${p['hourly_rate'] ?? '—'}/hr';
     if (t == 'bidding') {
       final amount = p['accepted_offer_amount'];
-      if (amount != null) return amount is num ? amount.toStringAsFixed(amount.truncateToDouble() == amount ? 0 : 2) : amount.toString();
+      if (amount != null)
+        return amount is num
+            ? amount.toStringAsFixed(
+                amount.truncateToDouble() == amount ? 0 : 2,
+              )
+            : amount.toString();
       return '${p['budget_min'] ?? '—'} - ${p['budget_max'] ?? '—'}';
     }
     return '—';
@@ -69,11 +77,18 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
   String _formatPaymentMethod(String? method) {
     if (method == null) return '—';
     switch (method) {
-      case 'cliq': return 'CliQ';
-      case 'cash': return 'Cash';
-      case 'skipped': return 'Skipped';
-      case 'stripe': return 'Stripe';
-      default: return method.isNotEmpty ? '${method[0].toUpperCase()}${method.substring(1)}' : '—';
+      case 'cliq':
+        return 'CliQ';
+      case 'cash':
+        return 'Cash';
+      case 'skipped':
+        return 'Skipped';
+      case 'stripe':
+        return 'Stripe';
+      default:
+        return method.isNotEmpty
+            ? '${method[0].toUpperCase()}${method.substring(1)}'
+            : '—';
     }
   }
 
@@ -87,19 +102,24 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
     final approvalStatus = p['admin_approval_status'] as String?;
     final categoryInfo = p['category_name'] != null
         ? (p['sub_sub_category_name'] != null
-            ? '${p['category_name']} / ${p['sub_sub_category_name']}'
-            : p['category_name'] as String?)
+              ? '${p['category_name']} / ${p['sub_sub_category_name']}'
+              : p['category_name'] as String?)
         : null;
     String? durationText;
     if (p['duration_days'] != null && (p['duration_days'] as num) > 0) {
       durationText = '${p['duration_days']} days';
-    } else if (p['duration_hours'] != null && (p['duration_hours'] as num) > 0) {
+    } else if (p['duration_hours'] != null &&
+        (p['duration_hours'] as num) > 0) {
       durationText = '${p['duration_hours']} hours';
     }
     final skills = p['preferred_skills'];
-    final skillsJoined = skills is List ? skills.join(', ') : (skills?.toString() ?? '—');
+    final skillsJoined = skills is List
+        ? skills.join(', ')
+        : (skills?.toString() ?? '—');
     final desc = p['description'] as String?;
-    final shortDescription = desc != null ? (desc.length > 200 ? '${desc.substring(0, 200)}...' : desc) : '—';
+    final shortDescription = desc != null
+        ? (desc.length > 200 ? '${desc.substring(0, 200)}...' : desc)
+        : '—';
 
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final projectIdInt = id is int ? id : int.tryParse(id.toString()) ?? 0;
@@ -117,9 +137,9 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
     );
     final launched = await launchWhatsAppWithMessage(message);
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open WhatsApp')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not open WhatsApp')));
     }
   }
 
@@ -168,12 +188,18 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
     final paymentMethod = p['payment_method'] as String?;
     final adminStatus = p['admin_approval_status'] as String?;
     final status = (p['status'] as String? ?? '').toString().toLowerCase();
-    final isBidding = (p['project_type'] as String? ?? '').toString().toLowerCase() == 'bidding';
-    final showPaymentChooser = isBidding &&
+    final isBidding =
+        (p['project_type'] as String? ?? '').toString().toLowerCase() ==
+        'bidding';
+    final showPaymentChooser =
+        isBidding &&
         (status == 'pending_admin_approval' || adminStatus == 'pending') &&
         (paymentMethod == null || paymentMethod == 'skipped');
     final isCliq = paymentMethod == 'cliq';
-    final cliqDisplay = p['cliq_alias'] as String? ?? p['cliq_number'] as String? ?? _defaultCliqAlias;
+    final cliqDisplay =
+        p['cliq_alias'] as String? ??
+        p['cliq_number'] as String? ??
+        _defaultCliqAlias;
 
     return Scaffold(
       body: SafeArea(
@@ -205,7 +231,11 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                     const CircleAvatar(
                       backgroundColor: Colors.white24,
                       radius: 32,
-                      child: Icon(Icons.check_circle, color: Colors.white, size: 36),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 36,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.lg),
                     Expanded(
@@ -245,14 +275,21 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.schedule, color: Colors.amber.shade800, size: 22),
+                      Icon(
+                        Icons.schedule,
+                        color: Colors.amber.shade800,
+                        size: 22,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           showPaymentChooser
                               ? 'Choose payment method (CliQ or Cash). After payment, admin will review your request.'
                               : 'Your project will be created but will remain hidden until admin approves your payment.',
-                          style: TextStyle(color: Colors.amber.shade900, fontSize: 13),
+                          style: TextStyle(
+                            color: Colors.amber.shade900,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -289,7 +326,10 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                       const SizedBox(height: 6),
                       Text(
                         'Choose your payment method to complete the project posting.',
-                        style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade700,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       Container(
@@ -301,9 +341,18 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Project', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+                            Text(
+                              'Project',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(p['title'] ?? '—', style: const TextStyle(color: Color(0xFF111827))),
+                            Text(
+                              p['title'] ?? '—',
+                              style: const TextStyle(color: Color(0xFF111827)),
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               'Amount: ${_formatBudget(p)} JOD',
@@ -325,24 +374,41 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                               : () async {
                                   setState(() => _paymentSubmitting = true);
                                   final repo = ProjectsRepository();
-                                  final res = await repo.setProjectOfflinePayment(widget.projectId, 'cliq');
+                                  final res = await repo
+                                      .setProjectOfflinePayment(
+                                        widget.projectId,
+                                        'cliq',
+                                      );
                                   if (!mounted) return;
                                   setState(() => _paymentSubmitting = false);
                                   if (res.success) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('CliQ selected. Waiting for admin approval.')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'CliQ selected. Waiting for admin approval.',
+                                        ),
+                                      ),
                                     );
                                     await _load(showLoading: false);
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(res.message ?? 'Failed to set payment method')),
+                                      SnackBar(
+                                        content: Text(
+                                          res.message ??
+                                              'Failed to set payment method',
+                                        ),
+                                      ),
                                     );
                                   }
                                 },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            side: const BorderSide(color: AppColors.accentOrange),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: const BorderSide(
+                              color: AppColors.accentOrange,
+                            ),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -351,10 +417,15 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                                 const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               else
-                                const Icon(Icons.phone_android, color: AppColors.accentOrange),
+                                const Icon(
+                                  Icons.phone_android,
+                                  color: AppColors.accentOrange,
+                                ),
                               const SizedBox(width: 10),
                               const Text('Pay via CliQ'),
                             ],
@@ -370,24 +441,41 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                               : () async {
                                   setState(() => _paymentSubmitting = true);
                                   final repo = ProjectsRepository();
-                                  final res = await repo.setProjectOfflinePayment(widget.projectId, 'cash');
+                                  final res = await repo
+                                      .setProjectOfflinePayment(
+                                        widget.projectId,
+                                        'cash',
+                                      );
                                   if (!mounted) return;
                                   setState(() => _paymentSubmitting = false);
                                   if (res.success) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Cash selected. Waiting for admin approval.')),
+                                      const SnackBar(
+                                        content: Text(
+                                          'Cash selected. Waiting for admin approval.',
+                                        ),
+                                      ),
                                     );
                                     await _load(showLoading: false);
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(res.message ?? 'Failed to set payment method')),
+                                      SnackBar(
+                                        content: Text(
+                                          res.message ??
+                                              'Failed to set payment method',
+                                        ),
+                                      ),
                                     );
                                   }
                                 },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            side: const BorderSide(color: AppColors.accentOrange),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: const BorderSide(
+                              color: AppColors.accentOrange,
+                            ),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -396,10 +484,15 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                                 const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               else
-                                const Icon(Icons.payments, color: AppColors.accentOrange),
+                                const Icon(
+                                  Icons.payments,
+                                  color: AppColors.accentOrange,
+                                ),
                               const SizedBox(width: 10),
                               const Text('Pay Cash'),
                             ],
@@ -440,11 +533,16 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                       _row('Project ID', '#${p['id']}'),
                       _row('Title', p['title'] ?? '—'),
                       _row(l10n.amountLabel, '${_formatBudget(p)} JOD'),
-                      _row('Payment method', _formatPaymentMethod(paymentMethod)),
-                      if (isCliq)
-                        _row('CliQ transfer to', cliqDisplay),
+                      _row(
+                        'Payment method',
+                        _formatPaymentMethod(paymentMethod),
+                      ),
+                      if (isCliq) _row('CliQ transfer to', cliqDisplay),
                       if (p['category_name'] != null)
-                        _row(l10n.categoryLabel, p['category_name'] as String? ?? '—'),
+                        _row(
+                          l10n.categoryLabel,
+                          p['category_name'] as String? ?? '—',
+                        ),
                       if (p['created_at'] != null)
                         _row('Created', _formatDate(p['created_at'])),
                     ],
@@ -473,7 +571,10 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                         const SizedBox(height: 6),
                         Text(
                           'Please send a screenshot of your CliQ payment on WhatsApp to confirm your payment.',
-                          style: TextStyle(color: Colors.blue.shade900, fontSize: 13),
+                          style: TextStyle(
+                            color: Colors.blue.shade900,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -489,7 +590,9 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF25D366),
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
@@ -501,7 +604,9 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.accentOrange,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: const Text('Go to My Projects'),
                   ),
@@ -550,7 +655,9 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
     if (v == null) return '—';
     try {
       final d = DateTime.tryParse(v.toString());
-      return d != null ? '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}' : '—';
+      return d != null
+          ? '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}'
+          : '—';
     } catch (_) {
       return '—';
     }

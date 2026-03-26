@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,7 +56,10 @@ final _authRefreshNotifier = _AuthRefreshNotifier();
 
 /// Registers listener so router redirect runs when auth state changes.
 final _authRefreshListenableProvider = Provider<_AuthRefreshNotifier>((ref) {
-  ref.listen<AuthState>(authStateProvider, (_, _) => _authRefreshNotifier.refresh());
+  ref.listen<AuthState>(
+    authStateProvider,
+    (_, _) => _authRefreshNotifier.refresh(),
+  );
   return _authRefreshNotifier;
 });
 
@@ -75,7 +79,9 @@ String? _redirect(BuildContext context, GoRouterState state) {
   }
   if (RouteTracker.isAuthRoute(path) || path == '/splash') {
     final last = RouteTracker.getLastRoute();
-    final defaultHome = auth.userRole == 'freelancer' ? '/freelancer' : '/client';
+    final defaultHome = auth.userRole == 'freelancer'
+        ? '/freelancer'
+        : '/client';
     return last ?? defaultHome;
   }
   RouteTracker.saveLastRoute(path);
@@ -94,275 +100,257 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 });
 
 final List<RouteBase> _appRoutes = [
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/onboarding',
-      builder: (context, state) => const OnboardingScreen(),
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/register',
-      builder: (context, state) => const RegisterScreen(),
-    ),
-    GoRoute(
-      path: '/verify-email',
-      builder: (context, state) {
-        final email = state.uri.queryParameters['email'] ?? '';
-        return VerifyEmailScreen(email: email);
-      },
-    ),
-    GoRoute(
-      path: '/verify-otp',
-      builder: (context, state) {
-        final email = state.uri.queryParameters['email'] ?? '';
-        return VerifyOtpScreen(email: email);
-      },
-    ),
-    GoRoute(
-      path: '/accept-terms',
-      builder: (context, state) => const AcceptTermsScreen(),
-    ),
-    // Forgot Password Flow
-    GoRoute(
-      path: '/forgot-password',
-      builder: (context, state) => const ForgotPasswordScreen(),
-    ),
-    GoRoute(
-      path: '/reset-otp',
-      builder: (context, state) {
-        final email = state.uri.queryParameters['email'] ?? '';
-        return ResetPasswordOtpScreen(email: email);
-      },
-    ),
-    GoRoute(
-      path: '/reset-password',
-      builder: (context, state) {
-        final email = state.uri.queryParameters['email'] ?? '';
-        final otp = state.uri.queryParameters['otp'] ?? '';
-        return ResetPasswordScreen(email: email, otp: otp);
-      },
-    ),
-    // Freelancer Routes
-    GoRoute(
-      path: '/freelancer',
-      builder: (context, state) => const FreelancerHomeScreen(),
-      routes: [
-        GoRoute(
-          path: 'projects',
-          builder: (context, state) => const FreelancerProjectsScreen(),
-        ),
-        GoRoute(
-          path: 'explore',
-          builder: (context, state) => const ExploreProjectsScreen(
-            readOnly: false,
-          ),
-        ),
-        GoRoute(
-          path: 'payments',
-          builder: (context, state) => const PaymentsScreen(),
-        ),
-        GoRoute(
-          path: 'profile',
-          builder: (context, state) => const ProfileScreen(),
-        ),
-        GoRoute(
-          path: 'notifications',
-          name: 'freelancerNotifications',
-          builder: (context, state) => const NotificationsPage(),
-        ),
-      ],
-    ),
-    // Client Routes
-    GoRoute(
-      path: '/client',
-      builder: (context, state) => const ClientHomeScreen(),
-      routes: [
-        GoRoute(
-          path: 'projects',
-          builder: (context, state) => const ClientProjectsScreen(),
-        ),
-        GoRoute(
-          path: 'explore',
-          builder: (context, state) => const ExploreProjectsScreen(
-            readOnly: true,
-          ),
-        ),
-        GoRoute(
-          path: 'payments',
-          builder: (context, state) => const PaymentsScreen(),
-        ),
-        GoRoute(
-          path: 'profile',
-          builder: (context, state) => const ProfileScreen(),
-        ),
-        GoRoute(
-          path: 'notifications',
-          name: 'clientNotifications',
-          builder: (context, state) => const NotificationsPage(),
-        ),
-      ],
-    ),
-    // Common Routes
-    GoRoute(
-      path: '/project/:id',
-      builder: (context, state) {
-        // Parse deep-link query parameters for notification navigation
-        final openApplicants = state.uri.queryParameters['openApplicants'] == 'true';
-        final openReceiveModal = state.uri.queryParameters['openReceiveModal'] == 'true';
-        final showDeliveries = state.uri.queryParameters['showDeliveries'] == 'true';
-        
-        // Try to get project from extra (when navigating from explore/my projects)
-        final project = state.extra;
-        if (project != null && project is Project) {
-          return ProjectDetailsScreen(
-            project: project,
-            openApplicants: openApplicants,
-            openReceiveModal: openReceiveModal,
-            showDeliveries: showDeliveries,
-          );
-        }
-        
-        // Otherwise, parse projectId from path and fetch from API
-        final idString = state.pathParameters['id'] ?? '0';
-        final id = int.tryParse(idString);
-        if (id == null || id == 0) {
-          // Invalid ID, show error screen
-          return const Scaffold(
-            body: Center(
-              child: Text('Invalid project ID'),
-            ),
-          );
-        }
-        
-        // Pass projectId to screen, which will fetch the project
+  GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+  GoRoute(
+    path: '/onboarding',
+    builder: (context, state) => const OnboardingScreen(),
+  ),
+  GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+  GoRoute(
+    path: '/register',
+    builder: (context, state) => const RegisterScreen(),
+  ),
+  GoRoute(
+    path: '/verify-email',
+    builder: (context, state) {
+      final email = state.uri.queryParameters['email'] ?? '';
+      return VerifyEmailScreen(email: email);
+    },
+  ),
+  GoRoute(
+    path: '/verify-otp',
+    builder: (context, state) {
+      final email = state.uri.queryParameters['email'] ?? '';
+      return VerifyOtpScreen(email: email);
+    },
+  ),
+  GoRoute(
+    path: '/accept-terms',
+    builder: (context, state) => const AcceptTermsScreen(),
+  ),
+  // Forgot Password Flow
+  GoRoute(
+    path: '/forgot-password',
+    builder: (context, state) => const ForgotPasswordScreen(),
+  ),
+  GoRoute(
+    path: '/reset-otp',
+    builder: (context, state) {
+      final email = state.uri.queryParameters['email'] ?? '';
+      return ResetPasswordOtpScreen(email: email);
+    },
+  ),
+  GoRoute(
+    path: '/reset-password',
+    builder: (context, state) {
+      final email = state.uri.queryParameters['email'] ?? '';
+      final otp = state.uri.queryParameters['otp'] ?? '';
+      return ResetPasswordScreen(email: email, otp: otp);
+    },
+  ),
+  // Freelancer Routes
+  GoRoute(
+    path: '/freelancer',
+    builder: (context, state) => const FreelancerHomeScreen(),
+    routes: [
+      GoRoute(
+        path: 'projects',
+        builder: (context, state) => const FreelancerProjectsScreen(),
+      ),
+      GoRoute(
+        path: 'explore',
+        builder: (context, state) =>
+            const ExploreProjectsScreen(readOnly: false),
+      ),
+      GoRoute(
+        path: 'payments',
+        builder: (context, state) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: 'notifications',
+        name: 'freelancerNotifications',
+        builder: (context, state) => const NotificationsPage(),
+      ),
+    ],
+  ),
+  // Client Routes
+  GoRoute(
+    path: '/client',
+    builder: (context, state) => const ClientHomeScreen(),
+    routes: [
+      GoRoute(
+        path: 'projects',
+        builder: (context, state) => const ClientProjectsScreen(),
+      ),
+      GoRoute(
+        path: 'explore',
+        builder: (context, state) =>
+            const ExploreProjectsScreen(readOnly: true),
+      ),
+      GoRoute(
+        path: 'payments',
+        builder: (context, state) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: 'notifications',
+        name: 'clientNotifications',
+        builder: (context, state) => const NotificationsPage(),
+      ),
+    ],
+  ),
+  // Common Routes
+  GoRoute(
+    path: '/project/:id',
+    builder: (context, state) {
+      // Parse deep-link query parameters for notification navigation
+      final openApplicants =
+          state.uri.queryParameters['openApplicants'] == 'true';
+      final openReceiveModal =
+          state.uri.queryParameters['openReceiveModal'] == 'true';
+      final showDeliveries =
+          state.uri.queryParameters['showDeliveries'] == 'true';
+
+      // Try to get project from extra (when navigating from explore/my projects)
+      final project = state.extra;
+      if (project != null && project is Project) {
         return ProjectDetailsScreen(
-          projectId: id,
+          project: project,
           openApplicants: openApplicants,
           openReceiveModal: openReceiveModal,
           showDeliveries: showDeliveries,
         );
-      },
-    ),
-    GoRoute(
-      path: '/project/:id/applicants',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id'] ?? '0');
-        return ApplicantsScreen(projectId: id);
-      },
-    ),
-    GoRoute(
-      path: '/project/:id/deliveries',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id'] ?? '0');
-        return DeliveriesScreen(projectId: id);
-      },
-    ),
-    GoRoute(
-      path: '/project/:id/messages',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id'] ?? '0');
-        return ProjectMessagesScreen(projectId: id);
-      },
-    ),
-    GoRoute(
-      path: '/project/:id/change-requests',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id'] ?? '0');
-        final title = state.uri.queryParameters['title'] ?? '';
-        return ChangeRequestsScreen(
-          projectId: id,
-          projectTitle: title,
-        );
-      },
-    ),
-    GoRoute(
-      path: '/create-project',
-      builder: (context, state) => const CreateProjectWizardPage(),
-    ),
-    GoRoute(
-      path: '/project-success/:id',
-      builder: (context, state) {
-        final idStr = state.pathParameters['id'] ?? '0';
-        final id = int.tryParse(idStr) ?? 0;
-        return ProjectSuccessScreen(projectId: id);
-      },
-    ),
-    GoRoute(
-      path: '/talent/:id',
-      builder: (context, state) {
-        final id = int.parse(state.pathParameters['id'] ?? '0');
-        return TalentDetailsScreen(freelancerId: id);
-      },
-    ),
-    GoRoute(
-      path: '/edit-profile',
-      builder: (context, state) => const EditProfileScreen(),
-    ),
-    GoRoute(
-      path: '/change-password',
-      builder: (context, state) => const ChangePasswordScreen(),
-    ),
-    GoRoute(
-      path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
-    ),
-    GoRoute(
-      path: '/subscription',
-      redirect: (context, state) {
-        // Guard: Check user role - redirect handled in SubscriptionScreen
-        // This allows the screen to handle the check with proper provider access
-        return null;
-      },
-      builder: (context, state) => const SubscriptionScreen(),
-    ),
-    GoRoute(
-      path: '/health-check',
-      builder: (context, state) => const HealthCheckScreen(),
-    ),
-    GoRoute(
-      path: '/help-faq',
-      builder: (context, state) => const HelpFaqScreen(),
-    ),
-    GoRoute(
-      path: '/privacy-policy',
-      builder: (context, state) => const PrivacyPolicyScreen(),
-    ),
-    GoRoute(
-      path: '/terms',
-      builder: (context, state) => const TermsScreen(),
-    ),
-    GoRoute(
-      path: '/terms-conditions',
-      builder: (context, state) => const TermsScreen(),
-    ),
-    GoRoute(
-      path: '/settings/delete-account',
-      builder: (context, state) => const DeleteAccountScreen(),
-    ),
-    GoRoute(
-      path: '/settings/my-content',
-      builder: (context, state) => const MyContentScreen(),
-    ),
-    GoRoute(
-      path: '/support',
-      builder: (context, state) => const SupportScreen(),
-    ),
-    GoRoute(
-      path: '/settings/notifications',
-      builder: (context, state) => const NotificationsSettingsScreen(),
-    ),
-    GoRoute(
-      path: '/settings/security',
-      builder: (context, state) => const SecurityCenterScreen(),
-    ),
-    GoRoute(
-      path: '/settings/language',
-      builder: (context, state) => const LanguageSelectionScreen(),
-    ),
-  ];
+      }
+
+      // Otherwise, parse projectId from path and fetch from API
+      final idString = state.pathParameters['id'] ?? '0';
+      final id = int.tryParse(idString);
+      if (id == null || id == 0) {
+        // Invalid ID, show error screen
+        return const Scaffold(body: Center(child: Text('Invalid project ID')));
+      }
+
+      // Pass projectId to screen, which will fetch the project
+      return ProjectDetailsScreen(
+        projectId: id,
+        openApplicants: openApplicants,
+        openReceiveModal: openReceiveModal,
+        showDeliveries: showDeliveries,
+      );
+    },
+  ),
+  GoRoute(
+    path: '/project/:id/applicants',
+    builder: (context, state) {
+      final id = int.parse(state.pathParameters['id'] ?? '0');
+      return ApplicantsScreen(projectId: id);
+    },
+  ),
+  GoRoute(
+    path: '/project/:id/deliveries',
+    builder: (context, state) {
+      final id = int.parse(state.pathParameters['id'] ?? '0');
+      return DeliveriesScreen(projectId: id);
+    },
+  ),
+  GoRoute(
+    path: '/project/:id/messages',
+    builder: (context, state) {
+      final id = int.parse(state.pathParameters['id'] ?? '0');
+      return ProjectMessagesScreen(projectId: id);
+    },
+  ),
+  GoRoute(
+    path: '/project/:id/change-requests',
+    builder: (context, state) {
+      final id = int.parse(state.pathParameters['id'] ?? '0');
+      final title = state.uri.queryParameters['title'] ?? '';
+      return ChangeRequestsScreen(projectId: id, projectTitle: title);
+    },
+  ),
+  GoRoute(
+    path: '/create-project',
+    builder: (context, state) => const CreateProjectWizardPage(),
+  ),
+  GoRoute(
+    path: '/project-success/:id',
+    builder: (context, state) {
+      final idStr = state.pathParameters['id'] ?? '0';
+      final id = int.tryParse(idStr) ?? 0;
+      return ProjectSuccessScreen(projectId: id);
+    },
+  ),
+  GoRoute(
+    path: '/talent/:id',
+    builder: (context, state) {
+      final id = int.parse(state.pathParameters['id'] ?? '0');
+      return TalentDetailsScreen(freelancerId: id);
+    },
+  ),
+  GoRoute(
+    path: '/edit-profile',
+    builder: (context, state) => const EditProfileScreen(),
+  ),
+  GoRoute(
+    path: '/change-password',
+    builder: (context, state) => const ChangePasswordScreen(),
+  ),
+  GoRoute(
+    path: '/settings',
+    builder: (context, state) => const SettingsScreen(),
+  ),
+  GoRoute(
+    path: '/subscription',
+    redirect: (context, state) {
+      // Guard: Check user role - redirect handled in SubscriptionScreen
+      // This allows the screen to handle the check with proper provider access
+      return null;
+    },
+    builder: (context, state) => const SubscriptionScreen(),
+  ),
+  GoRoute(
+    path: '/health-check',
+    builder: (context, state) => const HealthCheckScreen(),
+  ),
+  GoRoute(
+    path: '/help-faq',
+    builder: (context, state) => const HelpFaqScreen(),
+  ),
+  GoRoute(
+    path: '/privacy-policy',
+    builder: (context, state) => const PrivacyPolicyScreen(),
+  ),
+  GoRoute(path: '/terms', builder: (context, state) => const TermsScreen()),
+  GoRoute(
+    path: '/terms-conditions',
+    builder: (context, state) => const TermsScreen(),
+  ),
+  GoRoute(
+    path: '/settings/delete-account',
+    builder: (context, state) => const DeleteAccountScreen(),
+  ),
+  GoRoute(
+    path: '/settings/my-content',
+    builder: (context, state) => const MyContentScreen(),
+  ),
+  GoRoute(path: '/support', builder: (context, state) => const SupportScreen()),
+  GoRoute(
+    path: '/settings/notifications',
+    builder: (context, state) => const NotificationsSettingsScreen(),
+  ),
+  GoRoute(
+    path: '/settings/security',
+    builder: (context, state) => const SecurityCenterScreen(),
+  ),
+  GoRoute(
+    path: '/settings/language',
+    builder: (context, state) => const LanguageSelectionScreen(),
+  ),
+];

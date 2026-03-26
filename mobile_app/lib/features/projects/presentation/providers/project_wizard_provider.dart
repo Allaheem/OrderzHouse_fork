@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/project_draft.dart';
@@ -47,7 +48,11 @@ class ProjectWizardNotifier extends StateNotifier<ProjectDraft> {
     );
   }
 
-  void updateCategory(int? categoryId, int? subCategoryId, int? subSubCategoryId) {
+  void updateCategory(
+    int? categoryId,
+    int? subCategoryId,
+    int? subSubCategoryId,
+  ) {
     state = ProjectDraft(
       title: state.title,
       description: state.description,
@@ -153,7 +158,11 @@ class ProjectWizardNotifier extends StateNotifier<ProjectDraft> {
     );
   }
 
-  void updateDuration(String? durationType, int? durationDays, int? durationHours) {
+  void updateDuration(
+    String? durationType,
+    int? durationDays,
+    int? durationHours,
+  ) {
     state = ProjectDraft(
       title: state.title,
       description: state.description,
@@ -244,5 +253,5 @@ class ProjectWizardNotifier extends StateNotifier<ProjectDraft> {
 
 final projectWizardProvider =
     StateNotifierProvider<ProjectWizardNotifier, ProjectDraft>((ref) {
-  return ProjectWizardNotifier();
-});
+      return ProjectWizardNotifier();
+    });

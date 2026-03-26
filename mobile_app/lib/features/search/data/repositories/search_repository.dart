@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../../../../core/models/search_result.dart';
 import '../../../../core/models/api_response.dart';
@@ -21,18 +22,15 @@ class SearchRepository {
         print('📡 REQUEST[GET] => Query: q=$query');
       }
 
-      final response = await _dio.get(
-        '/search',
-        queryParameters: {
-          'q': query,
-        },
-      );
+      final response = await _dio.get('/search', queryParameters: {'q': query});
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => PATH: /search');
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -80,10 +78,7 @@ class SearchRepository {
 
         return ApiResponse(
           success: true,
-          data: SearchResult(
-            projects: projects,
-            categories: categories,
-          ),
+          data: SearchResult(projects: projects, categories: categories),
           message: 'Search completed successfully',
         );
       }

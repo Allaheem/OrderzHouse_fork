@@ -1,3 +1,4 @@
+// ??? ????????
 /// Response from POST /stripe/project-checkout-session.
 /// Matches web: { url }, or { skipPayment: true, project_id? }.
 class ProjectCheckoutResult {
@@ -17,8 +18,8 @@ class ProjectCheckoutResult {
       skipPayment: json['skipPayment'] == true,
       projectId: json['project_id'] != null
           ? (json['project_id'] is int
-              ? json['project_id'] as int
-              : int.tryParse(json['project_id'].toString()))
+                ? json['project_id'] as int
+                : int.tryParse(json['project_id'].toString()))
           : null,
     );
   }

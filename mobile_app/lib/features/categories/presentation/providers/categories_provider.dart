@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/category.dart';
 import '../../../../core/cache/cache_service.dart';
@@ -9,10 +10,13 @@ final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
 });
 
 // In-memory cache for categories (instant access)
-final _categoriesCacheProvider = StateProvider.autoDispose<List<Category>?>((ref) => null);
+final _categoriesCacheProvider = StateProvider.autoDispose<List<Category>?>(
+  (ref) => null,
+);
 
-final exploreCategoriesProvider =
-    FutureProvider.autoDispose<List<Category>>((ref) async {
+final exploreCategoriesProvider = FutureProvider.autoDispose<List<Category>>((
+  ref,
+) async {
   final repository = ref.read(categoriesRepositoryProvider);
   ref.watch(authEpochProvider);
   const cacheKey = 'explore_categories';
@@ -22,19 +26,19 @@ final exploreCategoriesProvider =
   if (cached != null && cached.isNotEmpty) {
     // Return cached immediately, continue fetching fresh
   }
-  
+
   // 2. Try persistent cache
   final persistentCache = await CacheService.getList<Category>(
     cacheKey,
     (json) => Category.fromJson(json),
   );
-  
+
   if (persistentCache != null && persistentCache.isNotEmpty) {
     // Update in-memory cache
     ref.read(_categoriesCacheProvider.notifier).state = persistentCache;
     // Return cached immediately, continue fetching fresh
   }
-  
+
   // 3. Fetch fresh data
   try {
     final response = await repository.fetchExploreCategories();
@@ -73,8 +77,9 @@ final exploreCategoriesProvider =
 
 /// Selected category ID for explore projects
 /// null means "All" (no category filter)
-final selectedExploreCategoryIdProvider =
-    StateProvider.autoDispose<int?>((ref) => null);
+final selectedExploreCategoryIdProvider = StateProvider.autoDispose<int?>(
+  (ref) => null,
+);
 
 /// Shared state for selected category when navigating from Dashboard/Home
 /// This provider persists across navigation and is used to set the initial filter

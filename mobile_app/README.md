@@ -50,7 +50,7 @@ flutter run
 
 ## Project Structure
 
-```
+```text
 lib/
 ├── core/
 │   ├── config/          # App configuration
@@ -124,6 +124,27 @@ Strict linting rules are configured in `analysis_options.yaml`. Fix issues:
 ```bash
 flutter analyze
 ```
+
+## Quality Gates
+
+Run the production safety checks before opening a PR:
+
+```bash
+flutter pub get
+dart format .
+flutter analyze
+flutter test
+flutter test --coverage
+flutter test integration_test
+flutter test --update-goldens
+```
+
+Suggested CI order:
+1. `flutter pub get`
+2. `dart format --output=none --set-exit-if-changed .`
+3. `flutter analyze`
+4. `flutter test --coverage`
+5. `flutter test integration_test`
 
 ## Health Check
 

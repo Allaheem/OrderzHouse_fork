@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/project.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
@@ -35,23 +36,27 @@ class ExploreFilterState {
 
 final exploreFiltersProvider =
     StateNotifierProvider<ExploreFiltersNotifier, ExploreFilterState>((ref) {
-  return ExploreFiltersNotifier();
-});
+      return ExploreFiltersNotifier();
+    });
 
 class ExploreFiltersNotifier extends StateNotifier<ExploreFilterState> {
   ExploreFiltersNotifier() : super(ExploreFilterState.defaults);
 
   void setSort(String value) => state = state.copyWith(sort: value);
-  void setProjectType(String value) => state = state.copyWith(projectType: value);
-  void setBudgetFilter(String value) => state = state.copyWith(budgetFilter: value);
-  void setDurationFilter(String value) => state = state.copyWith(durationFilter: value);
+  void setProjectType(String value) =>
+      state = state.copyWith(projectType: value);
+  void setBudgetFilter(String value) =>
+      state = state.copyWith(budgetFilter: value);
+  void setDurationFilter(String value) =>
+      state = state.copyWith(durationFilter: value);
   void reset() => state = ExploreFilterState.defaults;
 }
 
 /// Returns budget value in JOD for filtering (single representative value).
 double _getBudgetForFilter(Project p) {
   if (p.projectType == 'fixed' && p.budget != null) return p.budget!;
-  if (p.projectType == 'hourly' && p.hourlyRate != null) return p.hourlyRate! * 3;
+  if (p.projectType == 'hourly' && p.hourlyRate != null)
+    return p.hourlyRate! * 3;
   if (p.projectType == 'bidding') {
     final min = p.budgetMin ?? 0;
     final max = p.budgetMax ?? min;
@@ -120,7 +125,9 @@ int _compareSort(Project a, Project b, String sort) {
 /// Applies ExploreFilterState to a list of projects.
 /// Used by both Explore (filteredExploreProjectsProvider) and My Projects (filteredMyProjectsProvider).
 List<Project> applyExploreFilters(
-    List<Project> list, ExploreFilterState filters) {
+  List<Project> list,
+  ExploreFilterState filters,
+) {
   final filtered = list.where((p) {
     if (!_passesProjectType(p, filters.projectType)) return false;
     if (!_passesBudget(p, filters.budgetFilter)) return false;
@@ -134,12 +141,12 @@ List<Project> applyExploreFilters(
 /// Filtered + sorted list. Depends on exploreProjectsStateProvider (cache-first) and exploreFiltersProvider.
 final filteredExploreProjectsProvider =
     Provider.autoDispose<AsyncValue<List<Project>>>((ref) {
-  final projectsAsync = ref.watch(exploreProjectsStateProvider);
-  final filters = ref.watch(exploreFiltersProvider);
+      final projectsAsync = ref.watch(exploreProjectsStateProvider);
+      final filters = ref.watch(exploreFiltersProvider);
 
-  return projectsAsync.when(
-    data: (list) => AsyncValue.data(applyExploreFilters(list, filters)),
-    loading: () => const AsyncValue.loading(),
-    error: (err, st) => AsyncValue.error(err, st),
-  );
-});
+      return projectsAsync.when(
+        data: (list) => AsyncValue.data(applyExploreFilters(list, filters)),
+        loading: () => const AsyncValue.loading(),
+        error: (err, st) => AsyncValue.error(err, st),
+      );
+    });

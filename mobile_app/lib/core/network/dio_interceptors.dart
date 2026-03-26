@@ -1,4 +1,6 @@
+// ??? ????????
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../storage/secure_store.dart';
 import '../config/app_config.dart';
 
@@ -17,9 +19,11 @@ class AuthInterceptor extends Interceptor {
 }
 
 class LoggingInterceptor extends Interceptor {
+  bool get _shouldLog => kDebugMode || AppConfig.isDevelopment;
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (AppConfig.isDevelopment) {
+    if (_shouldLog) {
       // Never log full tokens or sensitive data
       final safeHeaders = Map<String, dynamic>.from(options.headers);
       String? tokenPrefix;
@@ -53,7 +57,7 @@ class LoggingInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (AppConfig.isDevelopment) {
+    if (_shouldLog) {
       // ignore: avoid_print
       print(
         'RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}',
@@ -72,9 +76,11 @@ class LoggingInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (AppConfig.isDevelopment) {
+    if (_shouldLog) {
       // ignore: avoid_print
-      print('ERROR[${err.response?.statusCode ?? 'null'}] => PATH: ${err.requestOptions.path}');
+      print(
+        'ERROR[${err.response?.statusCode ?? 'null'}] => PATH: ${err.requestOptions.path}',
+      );
       // ignore: avoid_print
       print('ERROR => Type: ${err.type}');
       // ignore: avoid_print
@@ -132,7 +138,6 @@ class RetryInterceptor extends Interceptor {
     return err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.sendTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
-        (err.response?.statusCode != null &&
-            err.response!.statusCode! >= 500);
+        (err.response?.statusCode != null && err.response!.statusCode! >= 500);
   }
 }

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/health_check_service.dart';
@@ -36,9 +37,7 @@ class _HealthCheckScreenState extends ConsumerState<HealthCheckScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Health Check'),
-      ),
+      appBar: AppBar(title: const Text('Health Check')),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -51,10 +50,7 @@ class _HealthCheckScreenState extends ConsumerState<HealthCheckScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'API Configuration',
-                      style: AppTextStyles.titleLarge,
-                    ),
+                    Text('API Configuration', style: AppTextStyles.titleLarge),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       'Base URL: ${AppConfig.baseUrl}',
@@ -72,7 +68,9 @@ class _HealthCheckScreenState extends ConsumerState<HealthCheckScreen> {
             // Health check result
             if (_result != null)
               Card(
-                color: _result!.success ? Colors.green.shade50 : Colors.red.shade50,
+                color: _result!.success
+                    ? Colors.green.shade50
+                    : Colors.red.shade50,
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   child: Column(
@@ -86,9 +84,13 @@ class _HealthCheckScreenState extends ConsumerState<HealthCheckScreen> {
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
-                            _result!.success ? 'API Reachable' : 'API Unreachable',
+                            _result!.success
+                                ? 'API Reachable'
+                                : 'API Unreachable',
                             style: AppTextStyles.titleMedium.copyWith(
-                              color: _result!.success ? Colors.green : Colors.red,
+                              color: _result!.success
+                                  ? Colors.green
+                                  : Colors.red,
                             ),
                           ),
                         ],
@@ -108,10 +110,7 @@ class _HealthCheckScreenState extends ConsumerState<HealthCheckScreen> {
                         ),
                       ],
                       const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        _result!.message,
-                        style: AppTextStyles.bodySmall,
-                      ),
+                      Text(_result!.message, style: AppTextStyles.bodySmall),
                     ],
                   ),
                 ),
@@ -121,10 +120,7 @@ class _HealthCheckScreenState extends ConsumerState<HealthCheckScreen> {
                 children: [
                   const Icon(Icons.health_and_safety, size: 64),
                   const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'API Health Check',
-                    style: AppTextStyles.headlineLarge,
-                  ),
+                  Text('API Health Check', style: AppTextStyles.headlineLarge),
                   const SizedBox(height: AppSpacing.md),
                   Text(
                     'Test connectivity to the API server',

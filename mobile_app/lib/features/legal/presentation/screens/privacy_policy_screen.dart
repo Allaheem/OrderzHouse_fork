@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -72,177 +73,179 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
 
     final scrollContent = CustomScrollView(
       slivers: [
-            // App bar: back + title
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.chevron_left_rounded, size: 28),
-                      color: AppColors.accentOrange,
-                      onPressed: () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go('/client/profile');
-                        }
-                      },
-                    ),
-                    Expanded(
-                      child: Text(
-                        l10n.privacyPolicy,
-                        style: AppTextStyles.headlineSmall.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(width: 48),
-                  ],
-                ),
-              ),
+        // App bar: back + title
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
-            // Search
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: l10n.policySearchHint,
-                    prefixIcon: const Icon(
-                      Icons.search_rounded,
-                      color: AppColors.textTertiary,
-                    ),
-                    filled: true,
-                    fillColor: AppColors.surfaceVariant,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 12,
-                    ),
-                  ),
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            // Expand All / Collapse All
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
-                child: Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _expandAll(filtered),
-                      icon: const Icon(
-                        Icons.unfold_more_rounded,
-                        size: 18,
-                        color: AppColors.accentOrange,
-                      ),
-                      label: Text(
-                        l10n.expandAll,
-                        style: const TextStyle(
-                          color: AppColors.accentOrange,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _collapseAll(filtered),
-                      icon: const Icon(
-                        Icons.unfold_less_rounded,
-                        size: 18,
-                        color: AppColors.accentOrange,
-                      ),
-                      label: Text(
-                        l10n.collapseAll,
-                        style: const TextStyle(
-                          color: AppColors.accentOrange,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Data Lifecycle card
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.sm,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                ),
-                child: _LifecycleCard(content: content),
-              ),
-            ),
-            // Accordion sections (ExpansionTile)
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                0,
-                AppSpacing.md,
-                AppSpacing.lg,
-              ),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final section = filtered[index];
-                    final isExpanded = _expanded[section.id] ?? false;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: _SectionExpansionTile(
-                        section: section,
-                        initiallyExpanded: isExpanded,
-                        onExpansionChanged: (open) {
-                          setState(() => _expanded[section.id] = open);
-                        },
-                      ),
-                    );
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded, size: 28),
+                  color: AppColors.accentOrange,
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/client/profile');
+                    }
                   },
-                  childCount: filtered.length,
+                ),
+                Expanded(
+                  child: Text(
+                    l10n.privacyPolicy,
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 48),
+              ],
+            ),
+          ),
+        ),
+        // Search
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: l10n.policySearchHint,
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: AppColors.textTertiary,
+                ),
+                filled: true,
+                fillColor: AppColors.surfaceVariant,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: 12,
                 ),
               ),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
-            // Footer (exact web: "Last updated: Jan 2025 — We'll post updates here.")
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                  AppSpacing.xl + 24,
-                ),
-                child: Center(
-                  child: Text(
-                    '${l10n.lastUpdated}: ${content.lastUpdated}',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textTertiary,
+          ),
+        ),
+        // Expand All / Collapse All
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () => _expandAll(filtered),
+                  icon: const Icon(
+                    Icons.unfold_more_rounded,
+                    size: 18,
+                    color: AppColors.accentOrange,
+                  ),
+                  label: Text(
+                    l10n.expandAll,
+                    style: const TextStyle(
+                      color: AppColors.accentOrange,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
+                TextButton.icon(
+                  onPressed: () => _collapseAll(filtered),
+                  icon: const Icon(
+                    Icons.unfold_less_rounded,
+                    size: 18,
+                    color: AppColors.accentOrange,
+                  ),
+                  label: Text(
+                    l10n.collapseAll,
+                    style: const TextStyle(
+                      color: AppColors.accentOrange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Data Lifecycle card
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
+            child: _LifecycleCard(content: content),
+          ),
+        ),
+        // Accordion sections (ExpansionTile)
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.lg,
+          ),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final section = filtered[index];
+              final isExpanded = _expanded[section.id] ?? false;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: _SectionExpansionTile(
+                  section: section,
+                  initiallyExpanded: isExpanded,
+                  onExpansionChanged: (open) {
+                    setState(() => _expanded[section.id] = open);
+                  },
+                ),
+              );
+            }, childCount: filtered.length),
+          ),
+        ),
+        // Footer (exact web: "Last updated: Jan 2025 — We'll post updates here.")
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.lg,
+              AppSpacing.md,
+              AppSpacing.xl + 24,
+            ),
+            child: Center(
+              child: Text(
+                '${l10n.lastUpdated}: ${content.lastUpdated}',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
             ),
-          ],
-        );
+          ),
+        ),
+      ],
+    );
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -427,7 +430,11 @@ class _SectionExpansionTile extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(Icons.description_outlined, color: Colors.white, size: 22),
+          child: const Icon(
+            Icons.description_outlined,
+            color: Colors.white,
+            size: 22,
+          ),
         ),
         title: Text(
           section.title,

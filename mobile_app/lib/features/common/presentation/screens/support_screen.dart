@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -65,9 +66,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
       await launchUrl(emailUri);
     } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.somethingWentWrong)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.somethingWentWrong)));
       }
     }
   }
@@ -144,10 +145,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
         child: Column(
           children: [
             // Header
-            AppHeader(
-              title: l10n.support,
-              onBack: _handleBack,
-            ),
+            AppHeader(title: l10n.support, onBack: _handleBack),
 
             // Content
             Expanded(
@@ -239,10 +237,7 @@ class _EmailSupportCard extends StatelessWidget {
   final VoidCallback onCopy;
   final VoidCallback onOpenMailto;
 
-  const _EmailSupportCard({
-    required this.onCopy,
-    required this.onOpenMailto,
-  });
+  const _EmailSupportCard({required this.onCopy, required this.onOpenMailto});
 
   @override
   Widget build(BuildContext context) {
@@ -363,7 +358,10 @@ class _InAppFormCard extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accentOrange, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.accentOrange,
+                  width: 2,
+                ),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
@@ -402,7 +400,10 @@ class _InAppFormCard extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accentOrange, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.accentOrange,
+                  width: 2,
+                ),
               ),
               contentPadding: const EdgeInsets.all(AppSpacing.md),
             ),

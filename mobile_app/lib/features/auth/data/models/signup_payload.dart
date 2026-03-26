@@ -1,3 +1,4 @@
+// ??? ????????
 /// Payload for two-step signup: collected on register screen, sent after OTP verification.
 class SignupPayload {
   final int roleId;

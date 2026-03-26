@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,37 +27,37 @@ class DashboardScreen extends ConsumerWidget {
     // Prefetch data for likely next screens (non-blocking)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Prefetch My Projects and Explore data in background
-      ref.read(myProjectsProvider.future).catchError((_) {});
+      ref.read(myProjectsProvider.future).catchError((_) => <Project>[]);
       // Prefetch is already happening via watch above
     });
 
     return AppScaffold(
       body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1) TOP BAR
-              _buildTopBar(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1) TOP BAR
+            _buildTopBar(context),
 
-              const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
 
-              // 2) SECTION 1: Featured Banner
-              _buildFeaturedBanner(context),
+            // 2) SECTION 1: Featured Banner
+            _buildFeaturedBanner(context),
 
-              const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
-              // 3) SECTION 2: Popular Categories
-              _buildCategoriesSection(context, categoriesAsync),
+            // 3) SECTION 2: Popular Categories
+            _buildCategoriesSection(context, categoriesAsync),
 
-              const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
-              // 4) SECTION 3: Latest Projects
-              _buildLatestProjectsSection(context, latestProjectsAsync),
+            // 4) SECTION 3: Latest Projects
+            _buildLatestProjectsSection(context, latestProjectsAsync),
 
-              const SizedBox(height: AppSpacing.xl),
-            ],
-          ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
         ),
+      ),
     );
   }
 
@@ -104,7 +105,7 @@ class DashboardScreen extends ConsumerWidget {
                     builder: (context, ref, child) {
                       final unreadCountAsync = ref.watch(unreadCountProvider);
                       final unreadCount = unreadCountAsync.valueOrNull ?? 0;
-                      
+
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -115,7 +116,9 @@ class DashboardScreen extends ConsumerWidget {
                               size: 24,
                             ),
                             onPressed: () {
-                              final location = GoRouterState.of(context).uri.path;
+                              final location = GoRouterState.of(
+                                context,
+                              ).uri.path;
                               if (location.contains('/client')) {
                                 context.push('/client/notifications');
                               } else if (location.contains('/freelancer')) {
@@ -186,26 +189,26 @@ class DashboardScreen extends ConsumerWidget {
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
                             color: const Color(0xFF9CA3AF),
                           ),
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        color: Color(0xFF9CA3AF),
-                        size: 20,
-                      ),
-                      suffixIcon: IconButton(
-                        icon: const Icon(
-                          Icons.tune_rounded,
-                          color: Color(0xFF9CA3AF),
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          // TODO: Show filter dialog
-                        },
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.md,
-                      ),
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFF9CA3AF),
+                            size: 20,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: const Icon(
+                              Icons.tune_rounded,
+                              color: Color(0xFF9CA3AF),
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              // TODO: Show filter dialog
+                            },
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.md,
+                          ),
                         ),
                       );
                     },
@@ -276,10 +279,7 @@ class DashboardScreen extends ConsumerWidget {
                       gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary,
-                          Color(0xFF8B5CF6),
-                        ],
+                        colors: [AppColors.primary, Color(0xFF8B5CF6)],
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
@@ -294,100 +294,102 @@ class DashboardScreen extends ConsumerWidget {
                       children: [
                         // Left Content
                         Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            l10n.findTopFreelancersFast,
-                            style: AppTextStyles.headlineSmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: true,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Flexible(
-                          child: Text(
-                            l10n.postProjectGetOffers,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: true,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Flexible(
                                 child: Text(
-                                  l10n.postProject,
-                                  style: AppTextStyles.labelLarge.copyWith(
-                                    color: const Color(0xFF6D5FFD),
-                                    fontWeight: FontWeight.w600,
+                                  l10n.findTopFreelancersFast,
+                                  style: AppTextStyles.headlineSmall.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
                                 ),
                               ),
-                              const SizedBox(width: AppSpacing.xs),
-                              const Icon(
-                                Icons.arrow_forward_rounded,
-                                color: AppColors.primary,
-                                size: 16,
+                              const SizedBox(height: AppSpacing.sm),
+                              Flexible(
+                                child: Text(
+                                  l10n.postProjectGetOffers,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: true,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.md,
+                                  vertical: AppSpacing.sm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        l10n.postProject,
+                                        style: AppTextStyles.labelLarge
+                                            .copyWith(
+                                              color: const Color(0xFF6D5FFD),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    const Icon(
+                                      Icons.arrow_forward_rounded,
+                                      color: AppColors.primary,
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                        ),
                         // Right Illustration (Placeholder) - Responsive
                         PositionedDirectional(
-                    end: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final iconWidth = constraints.maxWidth * 0.3;
-                        return Container(
-                          width: iconWidth.clamp(80.0, 120.0),
-                          decoration: BoxDecoration(
-                            borderRadius: const BorderRadiusDirectional.only(
-                              topEnd: Radius.circular(20),
-                              bottomEnd: Radius.circular(20),
-                            ),
-                            color: Colors.white.withValues(alpha: 0.1),
+                          end: 0,
+                          top: 0,
+                          bottom: 0,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final iconWidth = constraints.maxWidth * 0.3;
+                              return Container(
+                                width: iconWidth.clamp(80.0, 120.0),
+                                decoration: BoxDecoration(
+                                  borderRadius:
+                                      const BorderRadiusDirectional.only(
+                                        topEnd: Radius.circular(20),
+                                        bottomEnd: Radius.circular(20),
+                                      ),
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    Icons.work_rounded,
+                                    color: Colors.white,
+                                    size: (iconWidth * 0.5).clamp(40.0, 60.0),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                          child: Center(
-                            child: Icon(
-                              Icons.work_rounded,
-                              color: Colors.white,
-                              size: (iconWidth * 0.5).clamp(40.0, 60.0),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                        ),
                       ],
                     ),
                   ),
@@ -484,7 +486,9 @@ class DashboardScreen extends ConsumerWidget {
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                          constraints: BoxConstraints(
+                            minWidth: constraints.maxWidth,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.max,
@@ -514,13 +518,14 @@ class DashboardScreen extends ConsumerWidget {
         return GestureDetector(
           onTap: () {
             // Set selected category in shared provider
-            ref.read(exploreSelectedCategoryIdProvider.notifier).state = category.id;
-            
+            ref.read(exploreSelectedCategoryIdProvider.notifier).state =
+                category.id;
+
             // Navigate to Explore screen based on user role
             final authState = ref.read(authStateProvider);
             final user = authState.user;
             final isFreelancer = user?.roleId == 3;
-            
+
             if (isFreelancer) {
               context.go('/freelancer/explore');
             } else {
@@ -541,7 +546,8 @@ class DashboardScreen extends ConsumerWidget {
                       width: 1,
                     ),
                   ),
-                  child: category.imageUrl != null &&
+                  child:
+                      category.imageUrl != null &&
                           category.imageUrl!.isNotEmpty &&
                           AppConfig.baseUrl.isNotEmpty
                       ? ClipRRect(
@@ -551,7 +557,8 @@ class DashboardScreen extends ConsumerWidget {
                                 ? category.imageUrl!
                                 : '${AppConfig.baseUrl}${category.imageUrl}',
                             fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => _buildCategoryIcon(category.name),
+                            errorWidget: (context, url, error) =>
+                                _buildCategoryIcon(category.name),
                           ),
                         )
                       : _buildCategoryIcon(category.name),
@@ -587,8 +594,7 @@ class DashboardScreen extends ConsumerWidget {
         nameLower.contains('programming') ||
         nameLower.contains('code')) {
       icon = Icons.code_rounded;
-    } else if (nameLower.contains('writing') ||
-        nameLower.contains('content')) {
+    } else if (nameLower.contains('writing') || nameLower.contains('content')) {
       icon = Icons.edit_rounded;
     } else if (nameLower.contains('marketing')) {
       icon = Icons.trending_up_rounded;
@@ -596,13 +602,7 @@ class DashboardScreen extends ConsumerWidget {
       icon = Icons.category_rounded;
     }
 
-    return Center(
-      child: Icon(
-        icon,
-        color: const Color(0xFF6D5FFD),
-        size: 32,
-      ),
-    );
+    return Center(child: Icon(icon, color: const Color(0xFF6D5FFD), size: 32));
   }
 
   Widget _buildCategoriesSkeleton() {
@@ -749,10 +749,8 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildProjectCard(BuildContext context, Project project) {
-    final budget = project.budget ??
-        project.budgetMax ??
-        project.budgetMin ??
-        0.0;
+    final budget =
+        project.budget ?? project.budgetMax ?? project.budgetMin ?? 0.0;
 
     return GestureDetector(
       onTap: () {
@@ -779,7 +777,8 @@ class DashboardScreen extends ConsumerWidget {
                 topLeft: Radius.circular(18),
                 topRight: Radius.circular(18),
               ),
-              child: project.coverPic != null &&
+              child:
+                  project.coverPic != null &&
                       project.coverPic!.isNotEmpty &&
                       AppConfig.baseUrl.isNotEmpty
                   ? CachedNetworkImage(

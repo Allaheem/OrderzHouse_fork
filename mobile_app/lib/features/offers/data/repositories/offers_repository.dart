@@ -1,10 +1,13 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/config/app_config.dart';
 
 class OffersRepository {
-  final Dio _dio = DioClient.instance;
+  OffersRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
+
+  final Dio _dio;
 
   /// Send offer for a bidding project
   /// Endpoint: POST /offers/:projectId/offers
@@ -19,7 +22,9 @@ class OffersRepository {
         // ignore: avoid_print
         print('📡 REQUEST[POST] => PATH: /offers/$projectId/offers');
         // ignore: avoid_print
-        print('📡 REQUEST[POST] => Body: { bid_amount: $bidAmount, proposal: ${proposal ?? "null"} }');
+        print(
+          '📡 REQUEST[POST] => Body: { bid_amount: $bidAmount, proposal: ${proposal ?? "null"} }',
+        );
       }
 
       final response = await _dio.post(
@@ -32,7 +37,9 @@ class OffersRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /offers/$projectId/offers');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /offers/$projectId/offers',
+        );
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => Data: ${response.data}');
       }
@@ -40,12 +47,16 @@ class OffersRepository {
       return ApiResponse(
         success: true,
         data: response.data as Map<String, dynamic>? ?? {},
-        message: (response.data as Map<String, dynamic>?)?['message'] as String? ?? 'Offer sent successfully',
+        message:
+            (response.data as Map<String, dynamic>?)?['message'] as String? ??
+            'Offer sent successfully',
       );
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/$projectId/offers');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/$projectId/offers',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Response Data: ${e.response?.data}');
       }
@@ -88,7 +99,9 @@ class OffersRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /offers/my/$projectId/pending');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /offers/my/$projectId/pending',
+        );
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => Data: ${response.data}');
       }
@@ -104,7 +117,9 @@ class OffersRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/my/$projectId/pending');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/my/$projectId/pending',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Response Data: ${e.response?.data}');
       }

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -77,21 +78,23 @@ class _CreateProjectWizardPageState
   void _nextStep() {
     final l10n = AppLocalizations.of(context)!;
     final draft = ref.read(projectWizardProvider);
-    
+
     // Validate current step before proceeding
     final errors = draft.validateStep(_currentStep);
     if (errors.isNotEmpty) {
       // Show first error message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_getLocalizedValidationError(l10n, errors.values.first)),
+          content: Text(
+            _getLocalizedValidationError(l10n, errors.values.first),
+          ),
           backgroundColor: AppColors.error,
           duration: const Duration(seconds: 3),
         ),
       );
       return; // Block navigation
     }
-    
+
     // Only proceed if validation passes
     if (_currentStep < _getTotalSteps() - 1) {
       _pageController.nextPage(
@@ -149,14 +152,18 @@ class _CreateProjectWizardPageState
     final step1Errors = draft.validateStep1();
     final step2Errors = draft.validateStep2();
     final step3Errors = draft.validateStep3();
-    if (step1Errors.isNotEmpty || step2Errors.isNotEmpty || step3Errors.isNotEmpty) {
+    if (step1Errors.isNotEmpty ||
+        step2Errors.isNotEmpty ||
+        step3Errors.isNotEmpty) {
       final allErrors = <String, String>{};
       allErrors.addAll(step1Errors);
       allErrors.addAll(step2Errors);
       allErrors.addAll(step3Errors);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_getLocalizedValidationError(l10n, allErrors.values.first)),
+          content: Text(
+            _getLocalizedValidationError(l10n, allErrors.values.first),
+          ),
           backgroundColor: AppColors.error,
           duration: const Duration(seconds: 3),
         ),
@@ -183,7 +190,9 @@ class _CreateProjectWizardPageState
           durationType: draft.durationType!,
           durationDays: draft.durationDays,
           durationHours: draft.durationHours,
-          preferredSkills: draft.preferredSkills.isNotEmpty ? draft.preferredSkills : null,
+          preferredSkills: draft.preferredSkills.isNotEmpty
+              ? draft.preferredSkills
+              : null,
           coverPicPath: draft.coverPic?.path,
         );
         if (!createResponse.success || createResponse.data == null) {
@@ -192,17 +201,26 @@ class _CreateProjectWizardPageState
         final idRaw = createResponse.data!['id'];
         final projectId = idRaw is int
             ? idRaw
-            : (idRaw is num ? idRaw.toInt() : int.tryParse(idRaw?.toString() ?? '') ?? 0);
+            : (idRaw is num
+                  ? idRaw.toInt()
+                  : int.tryParse(idRaw?.toString() ?? '') ?? 0);
         if (projectId <= 0) {
           throw Exception(createResponse.message ?? 'Invalid project id');
         }
         if (draft.projectFiles.isNotEmpty) {
           final filePaths = draft.projectFiles.map((f) => f.path).toList();
-          final uploadResponse = await repository.uploadProjectFiles(projectId, filePaths);
+          final uploadResponse = await repository.uploadProjectFiles(
+            projectId,
+            filePaths,
+          );
           if (!uploadResponse.success && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(l10n.projectCreatedButFilesFailed(uploadResponse.message ?? '')),
+                content: Text(
+                  l10n.projectCreatedButFilesFailed(
+                    uploadResponse.message ?? '',
+                  ),
+                ),
                 backgroundColor: AppColors.accentOrange,
               ),
             );
@@ -211,14 +229,18 @@ class _CreateProjectWizardPageState
         if (mounted) {
           ref.read(projectWizardProvider.notifier).reset();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.projectCreated), backgroundColor: Colors.green),
+            SnackBar(
+              content: Text(l10n.projectCreated),
+              backgroundColor: Colors.green,
+            ),
           );
           context.go('/project-success/$projectId');
         }
         return;
       }
 
-      final canSkipPayment = user?.canPostWithoutPayment == true && user?.roleId == 2;
+      final canSkipPayment =
+          user?.canPostWithoutPayment == true && user?.roleId == 2;
 
       // B) INTERNAL: skip payment, create project directly
       if (canSkipPayment) {
@@ -236,7 +258,9 @@ class _CreateProjectWizardPageState
           durationType: draft.durationType!,
           durationDays: draft.durationDays,
           durationHours: draft.durationHours,
-          preferredSkills: draft.preferredSkills.isNotEmpty ? draft.preferredSkills : null,
+          preferredSkills: draft.preferredSkills.isNotEmpty
+              ? draft.preferredSkills
+              : null,
           coverPicPath: draft.coverPic?.path,
         );
         if (!createResponse.success || createResponse.data == null) {
@@ -245,7 +269,9 @@ class _CreateProjectWizardPageState
         final idRawB = createResponse.data!['id'];
         final projectIdB = idRawB is int
             ? idRawB
-            : (idRawB is num ? idRawB.toInt() : int.tryParse(idRawB?.toString() ?? '') ?? 0);
+            : (idRawB is num
+                  ? idRawB.toInt()
+                  : int.tryParse(idRawB?.toString() ?? '') ?? 0);
         if (projectIdB <= 0) {
           throw Exception(createResponse.message ?? 'Invalid project id');
         }
@@ -256,7 +282,10 @@ class _CreateProjectWizardPageState
         if (mounted) {
           ref.read(projectWizardProvider.notifier).reset();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.projectCreated), backgroundColor: Colors.green),
+            SnackBar(
+              content: Text(l10n.projectCreated),
+              backgroundColor: Colors.green,
+            ),
           );
           context.go('/project-success/$projectIdB');
         }
@@ -278,7 +307,9 @@ class _CreateProjectWizardPageState
         durationType: draft.durationType!,
         durationDays: draft.durationDays,
         durationHours: draft.durationHours,
-        preferredSkills: draft.preferredSkills.isNotEmpty ? draft.preferredSkills : null,
+        preferredSkills: draft.preferredSkills.isNotEmpty
+            ? draft.preferredSkills
+            : null,
         coverPicPath: draft.coverPic?.path,
       );
       if (!createResponse.success || createResponse.data == null) {
@@ -287,7 +318,9 @@ class _CreateProjectWizardPageState
       final idRawC = createResponse.data!['id'];
       final projectIdC = idRawC is int
           ? idRawC
-          : (idRawC is num ? idRawC.toInt() : int.tryParse(idRawC?.toString() ?? '') ?? 0);
+          : (idRawC is num
+                ? idRawC.toInt()
+                : int.tryParse(idRawC?.toString() ?? '') ?? 0);
       if (projectIdC <= 0) {
         throw Exception(createResponse.message ?? 'Invalid project id');
       }
@@ -297,11 +330,16 @@ class _CreateProjectWizardPageState
         await repository.uploadProjectFiles(projectIdC, filePaths);
       }
 
-      final offlineResponse = await repository.setProjectOfflinePayment(projectIdC, 'cliq');
+      final offlineResponse = await repository.setProjectOfflinePayment(
+        projectIdC,
+        'cliq',
+      );
       if (!offlineResponse.success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(offlineResponse.message ?? 'Failed to set CliQ payment'),
+            content: Text(
+              offlineResponse.message ?? 'Failed to set CliQ payment',
+            ),
             backgroundColor: AppColors.accentOrange,
           ),
         );
@@ -310,7 +348,10 @@ class _CreateProjectWizardPageState
       if (mounted) {
         ref.read(projectWizardProvider.notifier).reset();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.projectCreated), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(l10n.projectCreated),
+            backgroundColor: Colors.green,
+          ),
         );
         context.go('/project-success/$projectIdC');
       }
@@ -358,10 +399,7 @@ class _CreateProjectWizardPageState
                 children: [
                   // Back button
                   IconButton(
-                    icon: const Icon(
-                      Icons.chevron_left_rounded,
-                      size: 28,
-                    ),
+                    icon: const Icon(Icons.chevron_left_rounded, size: 28),
                     color: AppColors.accentOrange,
                     onPressed: () {
                       if (context.canPop()) {
@@ -425,7 +463,9 @@ class _CreateProjectWizardPageState
                 ProjectDetailsStepView(
                   onNext: _nextStep, // _nextStep now validates internally
                 ),
-                ProjectCoverStepView(onNext: _nextStep), // _nextStep now validates internally
+                ProjectCoverStepView(
+                  onNext: _nextStep,
+                ), // _nextStep now validates internally
                 ProjectFilesStepView(
                   onNext: draft.projectType != 'bidding' ? _nextStep : null,
                 ),
@@ -436,9 +476,7 @@ class _CreateProjectWizardPageState
                           onCreateProject: _submitProjectFlow,
                           isSubmitting: _isSubmitting,
                         )
-                      : PaymentStepView(
-                          onSubmit: _submitProjectFlow,
-                        ),
+                      : PaymentStepView(onSubmit: _submitProjectFlow),
               ],
             ),
           ),
@@ -483,9 +521,7 @@ class _CreateProjectWizardPageState
                     ),
                     child: Text(
                       l10n.back,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -509,8 +545,8 @@ class _CreateProjectWizardPageState
                       onPressed: _isSubmitting
                           ? null
                           : (_currentStep == totalSteps - 1
-                              ? _submitProjectFlow
-                              : _nextStep),
+                                ? _submitProjectFlow
+                                : _nextStep),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: Colors.transparent,
@@ -526,8 +562,9 @@ class _CreateProjectWizardPageState
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(

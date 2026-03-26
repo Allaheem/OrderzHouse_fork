@@ -1,31 +1,65 @@
+// ??? ????????
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/models/api_response.dart';
 import '../../../../core/models/user.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/signup_payload.dart';
 import '../../../../core/storage/secure_store.dart';
 import '../../../../core/cache/cache_service.dart';
 import '../../../../core/routing/route_tracker.dart';
+import '../../../../core/storage/app_prefs.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
 });
 
 /// In-memory pending signup payload (set after OTP requested, cleared after verify-and-register or logout).
-final pendingSignupPayloadProvider = StateProvider<SignupPayload?>((ref) => null);
+final pendingSignupPayloadProvider = StateProvider<SignupPayload?>(
+  (ref) => null,
+);
 
 /// Incremented on login/logout so user-scoped providers can refresh without being invalidated from AuthNotifier.
 /// Prevents CircularDependencyError: do NOT call ref.invalidate() on providers that depend on auth from inside AuthNotifier.
 final authEpochProvider = StateProvider<int>((ref) => 0);
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-  (ref) {
-    return AuthNotifier(ref.read(authRepositoryProvider), ref);
-  },
-);
+final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(ref.read(authRepositoryProvider), ref);
+});
+
+typedef CacheClearer = Future<void> Function();
+typedef LastRouteClearer = Future<void> Function();
+typedef AccessTokenReader = Future<String?> Function();
+typedef CachedUserReader = Future<User?> Function();
+typedef CachedUserWriter = Future<void> Function(User user);
+typedef CachedUserClearer = Future<void> Function();
+
+const String _cachedAuthUserKey = 'cached_auth_user';
+
+Future<User?> _readCachedUserFromPrefs() async {
+  final raw = await AppPrefs.getString(_cachedAuthUserKey);
+  if (raw == null || raw.trim().isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is Map<String, dynamic>) {
+      return User.fromJson(decoded);
+    }
+  } catch (_) {}
+  return null;
+}
+
+Future<void> _writeCachedUserToPrefs(User user) async {
+  await AppPrefs.setString(_cachedAuthUserKey, jsonEncode(user.toJson()));
+}
+
+Future<void> _clearCachedUserFromPrefs() async {
+  await AppPrefs.remove(_cachedAuthUserKey);
+}
 
 class AuthState {
   final User? user;
   final bool isLoading;
+
   /// True while restoring session on app startup; router should show splash and not redirect to login.
   final bool isChecking;
   final String? error;
@@ -43,27 +77,62 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._repository, this._ref) : super(const AuthState(isChecking: true)) {
+  static const Duration _sessionBootstrapTimeout = Duration(seconds: 5);
+
+  AuthNotifier(
+    this._repository,
+    this._ref, {
+    CacheClearer? clearCache,
+    LastRouteClearer? clearLastRoute,
+    AccessTokenReader? readAccessToken,
+    CachedUserReader? readCachedUser,
+    CachedUserWriter? writeCachedUser,
+    CachedUserClearer? clearCachedUser,
+  }) : _clearCache = clearCache ?? CacheService.clearAll,
+       _clearLastRoute = clearLastRoute ?? RouteTracker.clearLastRoute,
+       _readAccessToken = readAccessToken ?? SecureStore.readAccessToken,
+       _readCachedUser = readCachedUser ?? _readCachedUserFromPrefs,
+       _writeCachedUser = writeCachedUser ?? _writeCachedUserToPrefs,
+       _clearCachedUser = clearCachedUser ?? _clearCachedUserFromPrefs,
+       super(const AuthState(isChecking: true)) {
     restoreSession();
   }
 
   final AuthRepository _repository;
   final Ref _ref;
+  final CacheClearer _clearCache;
+  final LastRouteClearer _clearLastRoute;
+  final AccessTokenReader _readAccessToken;
+  final CachedUserReader _readCachedUser;
+  final CachedUserWriter _writeCachedUser;
+  final CachedUserClearer _clearCachedUser;
 
   /// Restore session from secure storage on app startup.
   /// Sets isChecking false and either authenticated (with user) or unauthenticated.
   Future<void> restoreSession() async {
-    final token = await SecureStore.readAccessToken();
+    final token = await _readAccessToken();
     if (token == null) {
       state = const AuthState();
       return;
     }
-    final response = await _repository.getUserData();
+    final response = await _repository.getUserData().timeout(
+      _sessionBootstrapTimeout,
+      onTimeout: () => const ApiResponse<User>(
+        success: false,
+        message: 'Session restore timeout',
+      ),
+    );
     if (response.success && response.data != null) {
       state = AuthState(user: response.data);
+      await _writeCachedUser(response.data!);
       return;
     }
-    // Token invalid or expired; if we had refresh we could try here
+    final cachedUser = await _readCachedUser();
+    if (cachedUser != null) {
+      state = AuthState(user: cachedUser);
+      return;
+    }
+    // Token invalid/expired and no cached user fallback
     state = const AuthState();
   }
 
@@ -72,6 +141,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final response = await _repository.login(email: email, password: password);
     if (response.success && response.data != null) {
       state = AuthState(user: response.data);
+      await _writeCachedUser(response.data!);
       _ref.read(authEpochProvider.notifier).state++;
       return true;
     }
@@ -85,6 +155,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final response = await _repository.signInWithGoogle();
     if (response.success && response.data != null) {
       state = AuthState(user: response.data);
+      await _writeCachedUser(response.data!);
       _ref.read(authEpochProvider.notifier).state++;
       return true;
     }
@@ -97,6 +168,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final response = await _repository.verifyOtp(email: email, otp: otp);
     if (response.success && response.data != null) {
       state = AuthState(user: response.data);
+      await _writeCachedUser(response.data!);
       _ref.read(authEpochProvider.notifier).state++;
       return true;
     }
@@ -116,14 +188,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> verifyOtpAndCompleteSignup(String code) async {
     final payload = _ref.read(pendingSignupPayloadProvider);
     if (payload == null) {
-      state = const AuthState(error: 'Session expired. Please start signup again.');
+      state = const AuthState(
+        error: 'Session expired. Please start signup again.',
+      );
       return false;
     }
     state = const AuthState(isLoading: true);
-    final response = await _repository.verifyAndRegister(payload: payload, otp: code);
+    final response = await _repository.verifyAndRegister(
+      payload: payload,
+      otp: code,
+    );
     if (response.success && response.data != null) {
       _ref.read(pendingSignupPayloadProvider.notifier).state = null;
       state = AuthState(user: response.data);
+      await _writeCachedUser(response.data!);
       _ref.read(authEpochProvider.notifier).state++;
       return true;
     }
@@ -178,8 +256,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repository.logout();
-    await CacheService.clearAll();
-    await RouteTracker.clearLastRoute();
+    await _clearCache();
+    await _clearLastRoute();
+    await _clearCachedUser();
     _ref.read(pendingSignupPayloadProvider.notifier).state = null;
     _ref.read(authEpochProvider.notifier).state++;
     state = const AuthState();
@@ -189,6 +268,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final response = await _repository.getUserData();
     if (response.success && response.data != null) {
       state = AuthState(user: response.data);
+      await _writeCachedUser(response.data!);
     }
   }
 

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_colors.dart';
@@ -32,10 +33,7 @@ class StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: iconClr.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: iconClr.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [
@@ -46,11 +44,7 @@ class StatCard extends StatelessWidget {
               color: iconClr.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: iconClr,
-              size: 20,
-            ),
+            child: Icon(icon, color: iconClr, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

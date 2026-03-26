@@ -1,15 +1,11 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 
 class LoadingShimmer extends StatelessWidget {
-  const LoadingShimmer({
-    this.width,
-    this.height,
-    this.borderRadius,
-    super.key,
-  });
+  const LoadingShimmer({this.width, this.height, this.borderRadius, super.key});
 
   final double? width;
   final double? height;

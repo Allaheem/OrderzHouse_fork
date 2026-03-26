@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -5,11 +6,7 @@ import '../../core/theme/app_text_styles.dart';
 import 'primary_button.dart';
 
 class ErrorState extends StatelessWidget {
-  const ErrorState({
-    required this.message,
-    this.onRetry,
-    super.key,
-  });
+  const ErrorState({required this.message, this.onRetry, super.key});
 
   final String message;
   final VoidCallback? onRetry;
@@ -22,11 +19,7 @@ class ErrorState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Something went wrong',

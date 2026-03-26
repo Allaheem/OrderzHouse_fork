@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -53,9 +54,10 @@ class ForgotPasswordNotifier extends StateNotifier<ForgotPasswordState> {
 }
 
 final forgotPasswordProvider =
-    StateNotifierProvider.autoDispose<ForgotPasswordNotifier, ForgotPasswordState>(
-  (ref) => ForgotPasswordNotifier(AuthRepository()),
-);
+    StateNotifierProvider.autoDispose<
+      ForgotPasswordNotifier,
+      ForgotPasswordState
+    >((ref) => ForgotPasswordNotifier(AuthRepository()));
 
 // ==================== Reset OTP State ====================
 
@@ -159,8 +161,8 @@ class ResetOtpNotifier extends StateNotifier<ResetOtpState> {
 
 final resetOtpProvider =
     StateNotifierProvider.autoDispose<ResetOtpNotifier, ResetOtpState>(
-  (ref) => ResetOtpNotifier(AuthRepository()),
-);
+      (ref) => ResetOtpNotifier(AuthRepository()),
+    );
 
 // ==================== Reset Password State ====================
 
@@ -221,6 +223,7 @@ class ResetPasswordNotifier extends StateNotifier<ResetPasswordState> {
 }
 
 final resetPasswordProvider =
-    StateNotifierProvider.autoDispose<ResetPasswordNotifier, ResetPasswordState>(
-  (ref) => ResetPasswordNotifier(AuthRepository()),
-);
+    StateNotifierProvider.autoDispose<
+      ResetPasswordNotifier,
+      ResetPasswordState
+    >((ref) => ResetPasswordNotifier(AuthRepository()));

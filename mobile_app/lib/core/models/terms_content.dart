@@ -1,3 +1,4 @@
+// ??? ????????
 /// Reusable Terms & Conditions content structure
 /// Supports both Arabic and English localization
 class TermsContent {
@@ -262,10 +263,7 @@ class FundamentalTerms {
   final String title;
   final List<String> terms;
 
-  const FundamentalTerms({
-    required this.title,
-    required this.terms,
-  });
+  const FundamentalTerms({required this.title, required this.terms});
 
   static const FundamentalTerms arabic = FundamentalTerms(
     title: 'الشروط الأساسية',

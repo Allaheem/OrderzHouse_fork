@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,7 +20,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -67,7 +69,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
 
   Future<void> _handleResetPassword() async {
     final l10n = AppLocalizations.of(context)!;
-    
+
     if (!_formKey.currentState!.validate()) return;
 
     final notifier = ref.read(resetPasswordProvider.notifier);
@@ -141,7 +143,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
               // Main content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: Form(
                     key: _formKey,
                     child: Column(
@@ -189,8 +193,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           obscureText: _obscurePassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword 
-                                  ? Icons.visibility_off 
+                              _obscurePassword
+                                  ? Icons.visibility_off
                                   : Icons.visibility,
                               color: const Color(0xFF9CA3AF),
                             ),
@@ -211,18 +215,20 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                           obscureText: _obscureConfirmPassword,
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscureConfirmPassword 
-                                  ? Icons.visibility_off 
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off
                                   : Icons.visibility,
                               color: const Color(0xFF9CA3AF),
                             ),
                             onPressed: () {
                               setState(() {
-                                _obscureConfirmPassword = !_obscureConfirmPassword;
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
                               });
                             },
                           ),
-                          validator: (value) => _validateConfirmPassword(value, l10n),
+                          validator: (value) =>
+                              _validateConfirmPassword(value, l10n),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         // Password requirements
@@ -239,7 +245,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         // Save button
                         PrimaryGradientButton(
                           label: l10n.savePassword,
-                          onPressed: state.isLoading ? null : _handleResetPassword,
+                          onPressed: state.isLoading
+                              ? null
+                              : _handleResetPassword,
                           isLoading: state.isLoading,
                           width: double.infinity,
                           height: 54,
@@ -295,9 +303,7 @@ class _StyledTextField extends StatelessWidget {
         controller: controller,
         obscureText: obscureText,
         validator: validator,
-        style: AppTextStyles.bodyLarge.copyWith(
-          color: const Color(0xFF111827),
-        ),
+        style: AppTextStyles.bodyLarge.copyWith(color: const Color(0xFF111827)),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTextStyles.bodyMedium.copyWith(
@@ -315,31 +321,19 @@ class _StyledTextField extends StatelessWidget {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Color(0xFFE5E7EB),
-              width: 1,
-            ),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: Color(0xFFFB923C),
-              width: 2,
-            ),
+            borderSide: const BorderSide(color: Color(0xFFFB923C), width: 2),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: AppColors.error,
-              width: 1,
-            ),
+            borderSide: const BorderSide(color: AppColors.error, width: 1),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(
-              color: AppColors.error,
-              width: 2,
-            ),
+            borderSide: const BorderSide(color: AppColors.error, width: 2),
           ),
           filled: true,
           fillColor: Colors.white,

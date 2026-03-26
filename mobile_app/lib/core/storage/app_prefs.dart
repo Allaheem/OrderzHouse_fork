@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -132,5 +133,21 @@ class AppPrefs {
   static Future<void> setNotificationsOffers(bool value) async {
     final prefs = await _instance;
     await prefs.setBool(_notifOffersKey, value);
+  }
+
+  // ——— Generic lightweight helpers (non-sensitive values only) ———
+  static Future<String?> getString(String key) async {
+    final prefs = await _instance;
+    return prefs.getString(key);
+  }
+
+  static Future<void> setString(String key, String value) async {
+    final prefs = await _instance;
+    await prefs.setString(key, value);
+  }
+
+  static Future<void> remove(String key) async {
+    final prefs = await _instance;
+    await prefs.remove(key);
   }
 }

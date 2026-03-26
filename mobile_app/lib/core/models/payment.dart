@@ -1,3 +1,4 @@
+// ??? ????????
 class Payment {
   final int id;
   final double amount;
@@ -12,13 +13,14 @@ class Payment {
   final String? note; // Legacy
   // Additional fields
   final String? method;
-  
+
   // New enriched fields
   final String? source; // 'plan', 'project', or 'wallet'
   final String? title; // Enriched title
   final String? description; // Enriched description
   final PaymentProject? project; // Project details if source='project'
-  final PaymentReference? reference; // Reference details (paymentId, purpose, etc.)
+  final PaymentReference?
+  reference; // Reference details (paymentId, purpose, etc.)
 
   Payment({
     required this.id,
@@ -91,10 +93,14 @@ class Payment {
 
     // Determine source (new enriched field or fallback to legacy purpose)
     final source = json['source'] as String? ?? json['purpose'] as String?;
-    
+
     // Use enriched title/description if available, otherwise fallback to legacy
-    final title = json['title'] as String? ?? json['project_title'] as String? ?? json['purpose'] as String?;
-    final description = json['description'] as String? ?? json['note'] as String?;
+    final title =
+        json['title'] as String? ??
+        json['project_title'] as String? ??
+        json['purpose'] as String?;
+    final description =
+        json['description'] as String? ?? json['note'] as String?;
 
     // reference can be string (e.g. "Credit") or Map from API
     PaymentReference? ref;
@@ -113,7 +119,9 @@ class Payment {
       purpose: json['purpose'] as String?,
       referenceId: json['reference_id'] as int? ?? json['referenceId'] as int?,
       projectTitle: json['project_title'] as String?,
-      createdAt: parseDateTime(json['date'] ?? json['createdAt'] ?? json['created_at']),
+      createdAt: parseDateTime(
+        json['date'] ?? json['createdAt'] ?? json['created_at'],
+      ),
       type: json['type'] as String?,
       note: json['note'] as String?,
       method: json['method'] as String?,

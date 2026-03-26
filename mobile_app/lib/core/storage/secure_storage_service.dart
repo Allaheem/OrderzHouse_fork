@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Note: KeychainAccessibility is available in newer versions
@@ -7,9 +8,7 @@ class SecureStorageService {
   SecureStorageService._();
 
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(
-      encryptedSharedPreferences: true,
-    ),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(),
   );
 

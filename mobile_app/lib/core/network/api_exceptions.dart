@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../utils/failure.dart';
 
@@ -8,7 +9,8 @@ abstract final class ApiExceptions {
   static Failure fromDioException(DioException e) {
     final statusCode = e.response?.statusCode;
     final body = e.response?.data;
-    final message = _extractMessage(body) ?? _messageFromType(e.type, statusCode);
+    final message =
+        _extractMessage(body) ?? _messageFromType(e.type, statusCode);
     return Failure(
       message: message,
       statusCode: statusCode,

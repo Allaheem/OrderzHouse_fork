@@ -1,22 +1,50 @@
+// ??? ????????
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
   AppConfig._();
 
-  static String get baseUrl {
-    String? url;
+  static const String _releaseDefaultApiUrl =
+      'https://orderzhouse-backend.onrender.com';
+
+  static String? _readEnvValue(String key) {
     if (dotenv.isInitialized) {
-      url = dotenv.env['APP_API_URL'] ?? dotenv.env['BASE_URL'];
+      final value = dotenv.env[key];
+      if (value != null && value.trim().isNotEmpty) {
+        return value.trim();
+      }
     }
-    // When not set in .env: Android emulator use 10.0.2.2; iOS simulator use 127.0.0.1; physical device use LAN IP (e.g. http://192.168.x.x:5000) or set APP_API_URL in .env
-    return url ?? 'http://10.0.2.2:5000';
+
+    final defineValue = String.fromEnvironment(key);
+    if (defineValue.trim().isNotEmpty) {
+      return defineValue.trim();
+    }
+
+    return null;
+  }
+
+  static String get baseUrl {
+    final configuredUrl =
+        _readEnvValue('APP_API_URL') ?? _readEnvValue('BASE_URL');
+    if (configuredUrl != null) {
+      return configuredUrl;
+    }
+
+    // Default to production backend unless ENV explicitly says development.
+    // This avoids "empty data" confusion when .env is missing in test builds.
+    final env = _readEnvValue('ENV');
+    if ((env ?? '').toLowerCase() == 'development') {
+      return 'http://10.0.2.2:5000';
+    }
+    return _releaseDefaultApiUrl;
   }
 
   static String get environment {
-    if (dotenv.isInitialized) {
-      return dotenv.env['ENV'] ?? 'development';
+    final configuredEnv = _readEnvValue('ENV');
+    if (configuredEnv != null) {
+      return configuredEnv;
     }
-    return 'development';
+    return 'production';
   }
 
   static bool get isProduction => environment == 'production';

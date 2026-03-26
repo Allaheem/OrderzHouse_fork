@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,7 +79,11 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     } else {
       final error = ref.read(authStateProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Verification failed. Check the code and try again.')),
+        SnackBar(
+          content: Text(
+            error ?? 'Verification failed. Check the code and try again.',
+          ),
+        ),
       );
     }
   }
@@ -93,7 +98,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
       if (success) {
         _startCooldown();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('New code sent. Check your email (and spam folder).')),
+          const SnackBar(
+            content: Text('New code sent. Check your email (and spam folder).'),
+          ),
         );
       } else {
         final error = ref.read(authStateProvider).error;
@@ -109,25 +116,16 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     final authState = ref.watch(authStateProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verify Email'),
-      ),
+      appBar: AppBar(title: const Text('Verify Email')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.email,
-                size: 64,
-                color: AppColors.primary,
-              ),
+              const Icon(Icons.email, size: 64, color: AppColors.primary),
               const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Verify Your Email',
-                style: AppTextStyles.headlineLarge,
-              ),
+              Text('Verify Your Email', style: AppTextStyles.headlineLarge),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'We sent a verification code to\n${widget.email}',

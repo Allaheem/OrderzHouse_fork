@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,10 +20,12 @@ class NotificationsSettingsScreen extends ConsumerStatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  ConsumerState<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
+  ConsumerState<NotificationsSettingsScreen> createState() =>
+      _NotificationsSettingsScreenState();
 }
 
-class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSettingsScreen> {
+class _NotificationsSettingsScreenState
+    extends ConsumerState<NotificationsSettingsScreen> {
   bool _prefsLoaded = false;
 
   @override
@@ -61,11 +64,21 @@ class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSetti
 
   Future<void> _savePreferences(WidgetRef ref) async {
     try {
-      await AppPrefs.setNotificationsMaster(ref.read(masterNotificationsEnabledProvider));
-      await AppPrefs.setNotificationsProjects(ref.read(projectUpdatesEnabledProvider));
-      await AppPrefs.setNotificationsMessages(ref.read(messagesEnabledProvider));
-      await AppPrefs.setNotificationsPayments(ref.read(paymentsEnabledProvider));
-      await AppPrefs.setNotificationsOffers(ref.read(promotionsEnabledProvider));
+      await AppPrefs.setNotificationsMaster(
+        ref.read(masterNotificationsEnabledProvider),
+      );
+      await AppPrefs.setNotificationsProjects(
+        ref.read(projectUpdatesEnabledProvider),
+      );
+      await AppPrefs.setNotificationsMessages(
+        ref.read(messagesEnabledProvider),
+      );
+      await AppPrefs.setNotificationsPayments(
+        ref.read(paymentsEnabledProvider),
+      );
+      await AppPrefs.setNotificationsOffers(
+        ref.read(promotionsEnabledProvider),
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -153,7 +166,13 @@ class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSetti
                           Switch(
                             value: masterEnabled,
                             onChanged: (value) {
-                              ref.read(masterNotificationsEnabledProvider.notifier).state = value;
+                              ref
+                                      .read(
+                                        masterNotificationsEnabledProvider
+                                            .notifier,
+                                      )
+                                      .state =
+                                  value;
                               _savePreferences(ref);
                             },
                             activeThumbColor: AppColors.accentOrange,
@@ -186,27 +205,45 @@ class _NotificationsSettingsScreenState extends ConsumerState<NotificationsSetti
                               subtitle: l10n.noProjectsMessage,
                               value: projectUpdates,
                               onChanged: (value) {
-                                ref.read(projectUpdatesEnabledProvider.notifier).state = value;
+                                ref
+                                        .read(
+                                          projectUpdatesEnabledProvider
+                                              .notifier,
+                                        )
+                                        .state =
+                                    value;
                                 _savePreferences(ref);
                               },
                             ),
-                            const Divider(height: 1, color: AppColors.borderLight),
+                            const Divider(
+                              height: 1,
+                              color: AppColors.borderLight,
+                            ),
                             _NotificationCategoryTile(
                               title: l10n.messages,
                               subtitle: l10n.noNotificationsMessage,
                               value: messages,
                               onChanged: (value) {
-                                ref.read(messagesEnabledProvider.notifier).state = value;
+                                ref
+                                        .read(messagesEnabledProvider.notifier)
+                                        .state =
+                                    value;
                                 _savePreferences(ref);
                               },
                             ),
-                            const Divider(height: 1, color: AppColors.borderLight),
+                            const Divider(
+                              height: 1,
+                              color: AppColors.borderLight,
+                            ),
                             _NotificationCategoryTile(
                               title: l10n.payments,
                               subtitle: l10n.transactionHistory,
                               value: payments,
                               onChanged: (value) {
-                                ref.read(paymentsEnabledProvider.notifier).state = value;
+                                ref
+                                        .read(paymentsEnabledProvider.notifier)
+                                        .state =
+                                    value;
                                 _savePreferences(ref);
                               },
                             ),

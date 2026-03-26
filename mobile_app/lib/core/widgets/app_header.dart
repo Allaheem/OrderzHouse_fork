@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_colors.dart';
@@ -24,7 +25,7 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final safeTop = MediaQuery.of(context).padding.top;
-    
+
     return SafeArea(
       bottom: false,
       child: Container(
@@ -32,7 +33,10 @@ class AppHeader extends StatelessWidget {
         padding: EdgeInsets.only(top: safeTop),
         color: AppColors.background,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             children: [
               // Back button in circle
@@ -52,27 +56,26 @@ class AppHeader extends StatelessWidget {
                   ],
                 ),
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.chevron_left_rounded,
-                    size: 22,
-                  ),
+                  icon: const Icon(Icons.chevron_left_rounded, size: 22),
                   color: AppColors.textPrimary,
-                  onPressed: onBack ?? () {
-                    // Safe back navigation
-                    if (GoRouter.of(context).canPop()) {
-                      context.pop();
-                    } else {
-                      // Fallback: navigate to profile
-                      context.go('/client/profile');
-                    }
-                  },
+                  onPressed:
+                      onBack ??
+                      () {
+                        // Safe back navigation
+                        if (GoRouter.of(context).canPop()) {
+                          context.pop();
+                        } else {
+                          // Fallback: navigate to profile
+                          context.go('/client/profile');
+                        }
+                      },
                   padding: EdgeInsets.zero,
                 ),
               ),
-              
+
               // Spacer to center title
               const Spacer(),
-              
+
               // Centered title
               Text(
                 title,
@@ -81,13 +84,12 @@ class AppHeader extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              
+
               // Spacer to balance
               const Spacer(),
-              
+
               // Right placeholder to keep title centered
-              if (showRightPlaceholder)
-                const SizedBox(width: 40),
+              if (showRightPlaceholder) const SizedBox(width: 40),
             ],
           ),
         ),

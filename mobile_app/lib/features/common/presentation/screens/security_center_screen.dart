@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,10 +33,7 @@ class SecurityCenterScreen extends ConsumerWidget {
         child: Column(
           children: [
             // Header
-            AppHeader(
-              title: l10n.security,
-              onBack: () => _handleBack(context),
-            ),
+            AppHeader(title: l10n.security, onBack: () => _handleBack(context)),
 
             // Content
             Expanded(
@@ -47,7 +45,8 @@ class SecurityCenterScreen extends ConsumerWidget {
                     _TwoFactorCard(
                       enabled: twoFactorEnabled,
                       onToggle: () {
-                        ref.read(twoFactorEnabledProvider.notifier).state = !twoFactorEnabled;
+                        ref.read(twoFactorEnabledProvider.notifier).state =
+                            !twoFactorEnabled;
                         if (!twoFactorEnabled) {
                           // Show enable 2FA flow
                           _showEnable2FADialog(context, ref);
@@ -90,17 +89,23 @@ class SecurityCenterScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel, style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(dialogContext);
               // TODO: Implement 2FA enable flow
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.comingSoon)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.comingSoon)));
             },
-            child: Text(l10n.confirm, style: const TextStyle(color: AppColors.accentOrange)),
+            child: Text(
+              l10n.confirm,
+              style: const TextStyle(color: AppColors.accentOrange),
+            ),
           ),
         ],
       ),
@@ -118,7 +123,10 @@ class SecurityCenterScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel, style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -194,7 +202,10 @@ class _TwoFactorCard extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: enabled
                             ? AppColors.success.withOpacity(0.1)
@@ -204,7 +215,9 @@ class _TwoFactorCard extends StatelessWidget {
                       child: Text(
                         enabled ? l10n.active : l10n.notAvailable,
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: enabled ? AppColors.success : AppColors.textSecondary,
+                          color: enabled
+                              ? AppColors.success
+                              : AppColors.textSecondary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

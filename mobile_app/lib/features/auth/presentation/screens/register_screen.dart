@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -55,7 +56,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   // Get total step count based on role
-  int get _totalSteps => _selectedRole == 3 ? 5 : 4; // Freelancer = 5, Client = 4
+  int get _totalSteps =>
+      _selectedRole == 3 ? 5 : 4; // Freelancer = 5, Client = 4
 
   // Get actual step content type based on visual step and role
   String _getStepType(int visualStep) {
@@ -94,45 +96,83 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   bool _validateStep(int step) {
     final stepType = _getStepType(step);
-    
+
     switch (stepType) {
       case 'role':
         if (_selectedRole == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select a role')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Please select a role')));
           return false;
         }
         return true;
       case 'categories':
         if (_selectedRole == 3 && _selectedCategories.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please select at least one category')),
+            const SnackBar(
+              content: Text('Please select at least one category'),
+            ),
           );
           return false;
         }
         return true;
       case 'name':
-        final firstNameValid = Validators.required(_firstNameController.text, fieldName: 'First name') == null;
-        final lastNameValid = Validators.required(_lastNameController.text, fieldName: 'Last name') == null;
+        final firstNameValid =
+            Validators.required(
+              _firstNameController.text,
+              fieldName: 'First name',
+            ) ==
+            null;
+        final lastNameValid =
+            Validators.required(
+              _lastNameController.text,
+              fieldName: 'Last name',
+            ) ==
+            null;
         if (!firstNameValid || !lastNameValid) {
           _formKey.currentState?.validate();
           return false;
         }
         return true;
       case 'account':
-        final usernameValid = Validators.required(_usernameController.text, fieldName: 'Username') == null;
-        final emailValid = Validators.email(_emailController.text.trim()) == null;
-        final passwordValid = Validators.password(_passwordController.text) == null;
-        final confirmPasswordValid = Validators.match(_confirmPasswordController.text, _passwordController.text, fieldName: 'Password') == null;
-        if (!usernameValid || !emailValid || !passwordValid || !confirmPasswordValid) {
+        final usernameValid =
+            Validators.required(
+              _usernameController.text,
+              fieldName: 'Username',
+            ) ==
+            null;
+        final emailValid =
+            Validators.email(_emailController.text.trim()) == null;
+        final passwordValid =
+            Validators.password(_passwordController.text) == null;
+        final confirmPasswordValid =
+            Validators.match(
+              _confirmPasswordController.text,
+              _passwordController.text,
+              fieldName: 'Password',
+            ) ==
+            null;
+        if (!usernameValid ||
+            !emailValid ||
+            !passwordValid ||
+            !confirmPasswordValid) {
           _formKey.currentState?.validate();
           return false;
         }
         return true;
       case 'contact':
-        final phoneValid = Validators.required(_phoneController.text, fieldName: 'Phone number') == null;
-        final countryValid = Validators.required(_countryController.text, fieldName: 'Country') == null;
+        final phoneValid =
+            Validators.required(
+              _phoneController.text,
+              fieldName: 'Phone number',
+            ) ==
+            null;
+        final countryValid =
+            Validators.required(
+              _countryController.text,
+              fieldName: 'Country',
+            ) ==
+            null;
         if (!phoneValid || !countryValid) {
           _formKey.currentState?.validate();
           return false;
@@ -179,9 +219,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!allValid) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedRole == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a role')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a role')));
       return;
     }
 
@@ -220,7 +260,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } else {
       final error = ref.read(authStateProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error ?? 'Could not send verification code. Check your email or try again.')),
+        SnackBar(
+          content: Text(
+            error ??
+                'Could not send verification code. Check your email or try again.',
+          ),
+        ),
       );
     }
   }
@@ -259,7 +304,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           width: isActive ? 40 : 20,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: isActive ? const Color(0xFFFB923C) : const Color(0xFFE8E8EE), // Orange active, light gray inactive
+                            color: isActive
+                                ? const Color(0xFFFB923C)
+                                : const Color(
+                                    0xFFE8E8EE,
+                                  ), // Orange active, light gray inactive
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -285,7 +334,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 255, 215, 182), // Light pink
+                            color: const Color.fromARGB(
+                              255,
+                              255,
+                              215,
+                              182,
+                            ), // Light pink
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
@@ -298,7 +352,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: const Icon(
                             Icons.send_rounded,
                             size: 50,
-                      color: Color(0xFFEF4444), // Coral-red
+                            color: Color(0xFFEF4444), // Coral-red
                           ),
                         ),
                       ),
@@ -357,8 +411,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         horizontal: AppSpacing.md,
                         vertical: AppSpacing.sm,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
                             'Already have an account? ',
@@ -389,7 +444,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             child: OutlinedButton(
                               onPressed: _previousStep,
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFFFB923C), // Red accent
+                                foregroundColor: const Color(
+                                  0xFFFB923C,
+                                ), // Red accent
                                 side: const BorderSide(
                                   color: Color(0xFFFB923C), // Orange accent
                                   width: 2,
@@ -409,15 +466,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                           ),
                         ),
-                      if (_currentStep > 0) const SizedBox(width: AppSpacing.md),
+                      if (_currentStep > 0)
+                        const SizedBox(width: AppSpacing.md),
                       // Next/Sign Up button
                       Expanded(
                         flex: _currentStep > 0 ? 1 : 1,
                         child: GradientButton(
                           onPressed: authState.isLoading
                               ? null
-                              : (_currentStep == _totalSteps - 1 ? _handleRegister : _nextStep),
-                          label: _currentStep == _totalSteps - 1 ? l10n.signUp : l10n.next,
+                              : (_currentStep == _totalSteps - 1
+                                    ? _handleRegister
+                                    : _nextStep),
+                          label: _currentStep == _totalSteps - 1
+                              ? l10n.signUp
+                              : l10n.next,
                           isLoading: authState.isLoading,
                           height: 52,
                           borderRadius: 30, // Pill shape
@@ -747,19 +809,17 @@ class _RoleCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        constraints: const BoxConstraints(
-          minHeight: 120,
-          maxHeight: 130,
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 14,
-        ),
+        constraints: const BoxConstraints(minHeight: 120, maxHeight: 130),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.white, // White background
           borderRadius: BorderRadius.circular(17),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFB923C) : const Color(0xFFE8E8EE), // Red accent when selected, light gray when not
+            color: isSelected
+                ? const Color(0xFFFB923C)
+                : const Color(
+                    0xFFE8E8EE,
+                  ), // Red accent when selected, light gray when not
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: isSelected
@@ -788,7 +848,11 @@ class _RoleCard extends StatelessWidget {
             Icon(
               icon,
               size: 28,
-              color: isSelected ? const Color(0xFFFB923C) : const Color(0xFF8A8A95), // Red accent when selected, neutral gray when not
+              color: isSelected
+                  ? const Color(0xFFFB923C)
+                  : const Color(
+                      0xFF8A8A95,
+                    ), // Red accent when selected, neutral gray when not
             ),
             const SizedBox(height: 8),
             // Role title
@@ -796,7 +860,11 @@ class _RoleCard extends StatelessWidget {
               role,
               style: AppTextStyles.bodyMedium.copyWith(
                 fontSize: 14.5,
-                color: isSelected ? const Color(0xFF0B0B0F) : const Color(0xFF8A8A95), // Near-black when selected, neutral gray when not
+                color: isSelected
+                    ? const Color(0xFF0B0B0F)
+                    : const Color(
+                        0xFF8A8A95,
+                      ), // Near-black when selected, neutral gray when not
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -808,18 +876,18 @@ class _RoleCard extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? const Color(0xFFFB923C) : const Color(0xFFD1D5DB), // Red accent when selected
+                  color: isSelected
+                      ? const Color(0xFFFB923C)
+                      : const Color(0xFFD1D5DB), // Red accent when selected
                   width: 1.5,
                 ),
-                color: isSelected ? const Color(0xFFFB923C) : Colors.transparent, // Red accent when selected
+                color: isSelected
+                    ? const Color(0xFFFB923C)
+                    : Colors.transparent, // Red accent when selected
               ),
               child: isSelected
                   ? const Center(
-                      child: Icon(
-                        Icons.check,
-                        size: 10,
-                        color: Colors.white,
-                      ),
+                      child: Icon(Icons.check, size: 10, color: Colors.white),
                     )
                   : null,
             ),
@@ -856,7 +924,11 @@ class _CategoryCard extends StatelessWidget {
           color: Colors.white, // White background
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFB923C) : const Color(0xFFE8E8EE), // Red accent when selected, light gray when not
+            color: isSelected
+                ? const Color(0xFFFB923C)
+                : const Color(
+                    0xFFE8E8EE,
+                  ), // Red accent when selected, light gray when not
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: isSelected
@@ -883,7 +955,11 @@ class _CategoryCard extends StatelessWidget {
               child: Text(
                 category.name,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: isSelected ? const Color(0xFF0B0B0F) : const Color(0xFF8A8A95), // Near-black when selected, neutral gray when not
+                  color: isSelected
+                      ? const Color(0xFF0B0B0F)
+                      : const Color(
+                          0xFF8A8A95,
+                        ), // Near-black when selected, neutral gray when not
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
                 maxLines: 2,

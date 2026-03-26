@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/search_result.dart';
 import '../../data/repositories/search_repository.dart';
@@ -10,10 +11,11 @@ final searchRepositoryProvider = Provider<SearchRepository>((ref) {
 final searchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
 /// Search results provider (only fetches when query length >= 2)
-final searchResultsProvider =
-    FutureProvider.autoDispose<SearchResult>((ref) async {
+final searchResultsProvider = FutureProvider.autoDispose<SearchResult>((
+  ref,
+) async {
   final query = ref.watch(searchQueryProvider);
-  
+
   // Don't search if query is too short
   if (query.trim().length < 2) {
     return SearchResult.empty();

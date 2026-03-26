@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -26,10 +27,14 @@ class PlansRepository {
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => PATH: /plans');
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
+        );
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars');
-        
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars',
+        );
+
         // Debug: Print response.data keys and plans array length
         if (response.data is Map<String, dynamic>) {
           final data = response.data as Map<String, dynamic>;
@@ -42,7 +47,9 @@ class PlansRepository {
               print('🔍 DEBUG => plans array length: ${plansList.length}');
             } else {
               // ignore: avoid_print
-              print('⚠️ DEBUG => plans is not a List, type: ${plansList.runtimeType}');
+              print(
+                '⚠️ DEBUG => plans is not a List, type: ${plansList.runtimeType}',
+              );
             }
           } else {
             // ignore: avoid_print
@@ -52,7 +59,7 @@ class PlansRepository {
       }
 
       final data = response.data as Map<String, dynamic>;
-      
+
       // Match web behavior: Array.isArray(res.data.plans) ? res.data.plans : []
       final List<dynamic>? plansList = data['plans'] as List<dynamic>?;
 
@@ -72,7 +79,7 @@ class PlansRepository {
       for (var i = 0; i < plansList.length; i++) {
         try {
           final json = plansList[i] as Map<String, dynamic>;
-          
+
           // Pre-process features if it's a JSON string (before Plan.fromJson handles it)
           if (json['features'] is String) {
             try {
@@ -81,19 +88,23 @@ class PlansRepository {
             } catch (e) {
               if (AppConfig.isDevelopment) {
                 // ignore: avoid_print
-                print('⚠️ Failed to parse features JSON string for plan ${json['id']}: $e');
+                print(
+                  '⚠️ Failed to parse features JSON string for plan ${json['id']}: $e',
+                );
               }
               // Leave as null - _featuresFromJson will handle it
               json['features'] = null;
             }
           }
-          
+
           // Log raw values for debugging
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('🔍 Plan $i raw values: price=${json['price']} (${json['price'].runtimeType}), duration=${json['duration']} (${json['duration'].runtimeType}), features=${json['features']?.runtimeType}');
+            print(
+              '🔍 Plan $i raw values: price=${json['price']} (${json['price'].runtimeType}), duration=${json['duration']} (${json['duration'].runtimeType}), features=${json['features']?.runtimeType}',
+            );
           }
-          
+
           final plan = Plan.fromJson(json);
           plans.add(plan);
         } catch (e, stackTrace) {
@@ -111,7 +122,9 @@ class PlansRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ Parsed ${plans.length}/${plansList.length} plans successfully');
+        print(
+          '✅ Parsed ${plans.length}/${plansList.length} plans successfully',
+        );
         // ignore: avoid_print
         print('📊 Plans final count: ${plans.length}');
       }
@@ -146,7 +159,8 @@ class PlansRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch plans',
+        message:
+            e.response?.data?['message'] as String? ?? 'Failed to fetch plans',
         error: e.response?.data as Map<String, dynamic>?,
       );
     } catch (e) {

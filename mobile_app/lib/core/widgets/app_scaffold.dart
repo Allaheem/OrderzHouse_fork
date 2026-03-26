@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'top_glow_background.dart';
 
@@ -35,16 +36,13 @@ class AppScaffold extends StatelessWidget {
       extendBodyBehindAppBar: extendBodyBehindAppBar,
       appBar: showAppBar
           ? (appBar ??
-              AppBar(
-                title: title != null ? Text(title!) : null,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-              ))
+                AppBar(
+                  title: title != null ? Text(title!) : null,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                ))
           : null,
-      body: TopGlowBackground(
-        useSafeArea: useSafeArea,
-        child: body,
-      ),
+      body: TopGlowBackground(useSafeArea: useSafeArea, child: body),
       bottomNavigationBar: bottomNavigationBar,
       floatingActionButton: floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,

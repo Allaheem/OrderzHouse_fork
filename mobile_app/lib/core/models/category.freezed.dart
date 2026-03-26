@@ -1,3 +1,4 @@
+// ??? ????????
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -12,7 +13,8 @@ part of 'category.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Category _$CategoryFromJson(Map<String, dynamic> json) {
   return _Category.fromJson(json);
@@ -39,12 +41,13 @@ abstract class $CategoryCopyWith<$Res> {
   factory $CategoryCopyWith(Category value, $Res Function(Category) then) =
       _$CategoryCopyWithImpl<$Res, Category>;
   @useResult
-  $Res call(
-      {int id,
-      String name,
-      String? description,
-      @JsonKey(name: 'image_url') String? imageUrl,
-      @JsonKey(name: 'related_words') List<String>? relatedWords});
+  $Res call({
+    int id,
+    String name,
+    String? description,
+    @JsonKey(name: 'image_url') String? imageUrl,
+    @JsonKey(name: 'related_words') List<String>? relatedWords,
+  });
 }
 
 /// @nodoc
@@ -66,28 +69,31 @@ class _$CategoryCopyWithImpl<$Res, $Val extends Category>
     Object? imageUrl = freezed,
     Object? relatedWords = freezed,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: freezed == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String?,
-      imageUrl: freezed == imageUrl
-          ? _value.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      relatedWords: freezed == relatedWords
-          ? _value.relatedWords
-          : relatedWords // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as int,
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            description: freezed == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            imageUrl: freezed == imageUrl
+                ? _value.imageUrl
+                : imageUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            relatedWords: freezed == relatedWords
+                ? _value.relatedWords
+                : relatedWords // ignore: cast_nullable_to_non_nullable
+                      as List<String>?,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -95,16 +101,18 @@ class _$CategoryCopyWithImpl<$Res, $Val extends Category>
 abstract class _$$CategoryImplCopyWith<$Res>
     implements $CategoryCopyWith<$Res> {
   factory _$$CategoryImplCopyWith(
-          _$CategoryImpl value, $Res Function(_$CategoryImpl) then) =
-      __$$CategoryImplCopyWithImpl<$Res>;
+    _$CategoryImpl value,
+    $Res Function(_$CategoryImpl) then,
+  ) = __$$CategoryImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int id,
-      String name,
-      String? description,
-      @JsonKey(name: 'image_url') String? imageUrl,
-      @JsonKey(name: 'related_words') List<String>? relatedWords});
+  $Res call({
+    int id,
+    String name,
+    String? description,
+    @JsonKey(name: 'image_url') String? imageUrl,
+    @JsonKey(name: 'related_words') List<String>? relatedWords,
+  });
 }
 
 /// @nodoc
@@ -112,8 +120,9 @@ class __$$CategoryImplCopyWithImpl<$Res>
     extends _$CategoryCopyWithImpl<$Res, _$CategoryImpl>
     implements _$$CategoryImplCopyWith<$Res> {
   __$$CategoryImplCopyWithImpl(
-      _$CategoryImpl _value, $Res Function(_$CategoryImpl) _then)
-      : super(_value, _then);
+    _$CategoryImpl _value,
+    $Res Function(_$CategoryImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -124,42 +133,44 @@ class __$$CategoryImplCopyWithImpl<$Res>
     Object? imageUrl = freezed,
     Object? relatedWords = freezed,
   }) {
-    return _then(_$CategoryImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: freezed == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String?,
-      imageUrl: freezed == imageUrl
-          ? _value.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String?,
-      relatedWords: freezed == relatedWords
-          ? _value._relatedWords
-          : relatedWords // ignore: cast_nullable_to_non_nullable
-              as List<String>?,
-    ));
+    return _then(
+      _$CategoryImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as int,
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        description: freezed == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        imageUrl: freezed == imageUrl
+            ? _value.imageUrl
+            : imageUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        relatedWords: freezed == relatedWords
+            ? _value._relatedWords
+            : relatedWords // ignore: cast_nullable_to_non_nullable
+                  as List<String>?,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$CategoryImpl extends _Category {
-  const _$CategoryImpl(
-      {required this.id,
-      required this.name,
-      this.description,
-      @JsonKey(name: 'image_url') this.imageUrl,
-      @JsonKey(name: 'related_words') final List<String>? relatedWords})
-      : _relatedWords = relatedWords,
-        super._();
+  const _$CategoryImpl({
+    required this.id,
+    required this.name,
+    this.description,
+    @JsonKey(name: 'image_url') this.imageUrl,
+    @JsonKey(name: 'related_words') final List<String>? relatedWords,
+  }) : _relatedWords = relatedWords,
+       super._();
 
   factory _$CategoryImpl.fromJson(Map<String, dynamic> json) =>
       _$$CategoryImplFromJson(json);
@@ -200,14 +211,22 @@ class _$CategoryImpl extends _Category {
                 other.description == description) &&
             (identical(other.imageUrl, imageUrl) ||
                 other.imageUrl == imageUrl) &&
-            const DeepCollectionEquality()
-                .equals(other._relatedWords, _relatedWords));
+            const DeepCollectionEquality().equals(
+              other._relatedWords,
+              _relatedWords,
+            ));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, description, imageUrl,
-      const DeepCollectionEquality().hash(_relatedWords));
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    name,
+    description,
+    imageUrl,
+    const DeepCollectionEquality().hash(_relatedWords),
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -217,20 +236,18 @@ class _$CategoryImpl extends _Category {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$CategoryImplToJson(
-      this,
-    );
+    return _$$CategoryImplToJson(this);
   }
 }
 
 abstract class _Category extends Category {
-  const factory _Category(
-          {required final int id,
-          required final String name,
-          final String? description,
-          @JsonKey(name: 'image_url') final String? imageUrl,
-          @JsonKey(name: 'related_words') final List<String>? relatedWords}) =
-      _$CategoryImpl;
+  const factory _Category({
+    required final int id,
+    required final String name,
+    final String? description,
+    @JsonKey(name: 'image_url') final String? imageUrl,
+    @JsonKey(name: 'related_words') final List<String>? relatedWords,
+  }) = _$CategoryImpl;
   const _Category._() : super._();
 
   factory _Category.fromJson(Map<String, dynamic> json) =

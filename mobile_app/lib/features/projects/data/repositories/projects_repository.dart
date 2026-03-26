@@ -1,23 +1,29 @@
+// ??? ????????
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/project.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/config/app_config.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/repositories/projects_repository.dart';
 import '../datasources/remote/projects_remote_datasource.dart';
 import '../models/change_request_model.dart';
 
 class ProjectsRepository implements IProjectsRepository {
-  ProjectsRepository({Ref? ref, ProjectsRemoteDataSource? exploreRemote})
-      : _ref = ref,
-        _exploreRemote = exploreRemote ?? ProjectsRemoteDataSource(DioClient.instance);
+  ProjectsRepository({
+    Dio? dio,
+    ApiClient? apiClient,
+    int? Function()? currentUserRoleReader,
+    ProjectsRemoteDataSource? exploreRemote,
+  }) : _dio = dio ?? DioClient.instance,
+       _api = apiClient ?? ApiClient.instance,
+       _currentUserRoleReader = currentUserRoleReader,
+       _exploreRemote =
+           exploreRemote ?? ProjectsRemoteDataSource(DioClient.instance);
 
-  final Dio _dio = DioClient.instance;
-  final _api = ApiClient.instance;
-  final Ref? _ref;
+  final Dio _dio;
+  final ApiClient _api;
+  final int? Function()? _currentUserRoleReader;
   final ProjectsRemoteDataSource _exploreRemote;
 
   /// Get user's projects as raw JSON (for additional fields)
@@ -30,7 +36,8 @@ class ProjectsRepository implements IProjectsRepository {
   }) async {
     try {
       final params = <String, dynamic>{'page': page, 'limit': limit};
-      if (statusKey != null && statusKey.isNotEmpty) params['status'] = statusKey;
+      if (statusKey != null && statusKey.isNotEmpty)
+        params['status'] = statusKey;
       // Logging is handled by LoggingInterceptor, no need to duplicate here
       final response = await _dio.get(
         '/projects/myprojects',
@@ -46,7 +53,9 @@ class ProjectsRepository implements IProjectsRepository {
         if (data['data'] is List) {
           projectsList = data['data'] as List<dynamic>;
         } else if (data['data'] is Map && data['data']['projects'] is List) {
-          projectsList = (data['data'] as Map<String, dynamic>)['projects'] as List<dynamic>;
+          projectsList =
+              (data['data'] as Map<String, dynamic>)['projects']
+                  as List<dynamic>;
         }
       } else if (data['rows'] != null && data['rows'] is List) {
         projectsList = data['rows'] as List<dynamic>;
@@ -76,7 +85,9 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch projects',
+        message:
+            _extractErrorMessage(e.response?.data) ??
+            'Failed to fetch projects',
       );
     } catch (e) {
       // Error logging is handled by LoggingInterceptor, no need to duplicate here
@@ -121,7 +132,9 @@ class ProjectsRepository implements IProjectsRepository {
         if (data['data'] is List) {
           projectsList = data['data'] as List<dynamic>;
         } else if (data['data'] is Map && data['data']['projects'] is List) {
-          projectsList = (data['data'] as Map<String, dynamic>)['projects'] as List<dynamic>;
+          projectsList =
+              (data['data'] as Map<String, dynamic>)['projects']
+                  as List<dynamic>;
         }
       } else if (data['rows'] != null && data['rows'] is List) {
         projectsList = data['rows'] as List<dynamic>;
@@ -160,7 +173,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ Parsed ${projects.length}/${projectsList.length} projects successfully');
+        print(
+          '✅ Parsed ${projects.length}/${projectsList.length} projects successfully',
+        );
       }
 
       return ApiResponse(
@@ -173,9 +188,10 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ??
-            _getErrorMessage(e),
-        error: e.response?.data as Map<String, dynamic>?,
+        message: _extractErrorMessage(e.response?.data) ?? _getErrorMessage(e),
+        error: e.response?.data is Map<String, dynamic>
+            ? e.response?.data as Map<String, dynamic>
+            : null,
       );
     } catch (e) {
       // Error logging is handled by LoggingInterceptor, no need to duplicate here
@@ -190,14 +206,21 @@ class ProjectsRepository implements IProjectsRepository {
   /// Get current user role from auth provider
   /// Returns: 2 for client, 3 for freelancer, null if not available
   int? _getCurrentUserRole() {
-    final ref = _ref;
-    if (ref == null) return null;
     try {
-      final authState = ref.read(authStateProvider);
-      return authState.user?.roleId;
+      return _currentUserRoleReader?.call();
     } catch (e) {
       return null;
     }
+  }
+
+  String? _extractErrorMessage(Object? data) {
+    if (data is Map<String, dynamic>) {
+      final value = data['message'];
+      if (value is String && value.trim().isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
   }
 
   @override
@@ -224,6 +247,7 @@ class ProjectsRepository implements IProjectsRepository {
   }
 
   /// Fetch projects by category with fallback (used only by legacy paths; explore uses _exploreRemote)
+  // ignore: unused_element
   Future<ApiResponse<List<Project>>> _fetchProjectsByCategoryWithFallback(
     int categoryId,
     Map<String, dynamic> queryParams,
@@ -235,10 +259,13 @@ class ProjectsRepository implements IProjectsRepository {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /projects/category/$categoryId (authenticated)');
+        print(
+          '📡 REQUEST[GET] => PATH: /projects/category/$categoryId (authenticated)',
+        );
         // ignore: avoid_print
         print('📡 REQUEST[GET] => Query params: $queryParams');
-        final fullUrl = '${_dio.options.baseUrl}/projects/category/$categoryId?${Uri(queryParameters: queryParams.map((k, v) => MapEntry(k.toString(), v.toString()))).query}';
+        final fullUrl =
+            '${_dio.options.baseUrl}/projects/category/$categoryId?${Uri(queryParameters: queryParams.map((k, v) => MapEntry(k.toString(), v.toString()))).query}';
         // ignore: avoid_print
         print('📡 REQUEST[GET] => Final URL: $fullUrl');
       }
@@ -246,9 +273,11 @@ class ProjectsRepository implements IProjectsRepository {
       // Build full URL for logging
       final uri = Uri(
         path: '/projects/category/$categoryId',
-        queryParameters: queryParams.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')),
+        queryParameters: queryParams.map(
+          (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+        ),
       );
-      
+
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
         print('📡 [fetchProjectsByCategoryWithFallback] About to send request');
@@ -262,45 +291,62 @@ class ProjectsRepository implements IProjectsRepository {
         '/projects/category/$categoryId',
         queryParameters: queryParams,
       );
-      
+
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
         print('✅ REQUEST SENT => Actual URL: ${response.requestOptions.uri}');
         // ignore: avoid_print
-        print('✅ REQUEST SENT => Query params in request: ${response.requestOptions.queryParameters}');
+        print(
+          '✅ REQUEST SENT => Query params in request: ${response.requestOptions.queryParameters}',
+        );
         // ignore: avoid_print
-        print('✅ REQUEST SENT => Has search: ${response.requestOptions.queryParameters.containsKey('search')}');
+        print(
+          '✅ REQUEST SENT => Has search: ${response.requestOptions.queryParameters.containsKey('search')}',
+        );
         // ignore: avoid_print
-        print('✅ REQUEST SENT => Has sortBy: ${response.requestOptions.queryParameters.containsKey('sortBy')}');
+        print(
+          '✅ REQUEST SENT => Has sortBy: ${response.requestOptions.queryParameters.containsKey('sortBy')}',
+        );
       }
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/category/$categoryId');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/category/$categoryId',
+        );
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
+        );
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars',
+        );
       }
 
       return _parseProjectsResponse(response);
     } on DioException catch (e) {
       // If authenticated endpoint fails (401/403/404), try public endpoint
-      if (e.response?.statusCode == 401 || 
-          e.response?.statusCode == 403 || 
+      if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 403 ||
           e.response?.statusCode == 404) {
         if (AppConfig.isDevelopment) {
           // ignore: avoid_print
-          print('⚠️ Authenticated endpoint failed (${e.response?.statusCode}), trying public: /projects/public/category/$categoryId');
+          print(
+            '⚠️ Authenticated endpoint failed (${e.response?.statusCode}), trying public: /projects/public/category/$categoryId',
+          );
         }
 
         try {
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('📡 REQUEST[GET] => PATH: /projects/public/category/$categoryId (public fallback)');
+            print(
+              '📡 REQUEST[GET] => PATH: /projects/public/category/$categoryId (public fallback)',
+            );
             // ignore: avoid_print
             print('📡 REQUEST[GET] => Query params: $queryParams');
-            final fullUrl = '${_dio.options.baseUrl}/projects/public/category/$categoryId?${Uri(queryParameters: queryParams.map((k, v) => MapEntry(k.toString(), v.toString()))).query}';
+            final fullUrl =
+                '${_dio.options.baseUrl}/projects/public/category/$categoryId?${Uri(queryParameters: queryParams.map((k, v) => MapEntry(k.toString(), v.toString()))).query}';
             // ignore: avoid_print
             print('📡 REQUEST[GET] => Final URL: $fullUrl');
           }
@@ -308,12 +354,16 @@ class ProjectsRepository implements IProjectsRepository {
           // Build full URL for logging
           final fallbackUri = Uri(
             path: '/projects/public/category/$categoryId',
-            queryParameters: queryParams.map((k, v) => MapEntry(k.toString(), v?.toString() ?? '')),
+            queryParameters: queryParams.map(
+              (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+            ),
           );
-          
+
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('📡 [fetchProjectsByCategoryWithFallback] About to send fallback request');
+            print(
+              '📡 [fetchProjectsByCategoryWithFallback] About to send fallback request',
+            );
             // ignore: avoid_print
             print('📡 Query params map: $queryParams');
             // ignore: avoid_print
@@ -324,32 +374,48 @@ class ProjectsRepository implements IProjectsRepository {
             '/projects/public/category/$categoryId',
             queryParameters: queryParams,
           );
-          
+
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('✅ REQUEST SENT => Actual URL: ${fallbackResponse.requestOptions.uri}');
+            print(
+              '✅ REQUEST SENT => Actual URL: ${fallbackResponse.requestOptions.uri}',
+            );
             // ignore: avoid_print
-            print('✅ REQUEST SENT => Query params in request: ${fallbackResponse.requestOptions.queryParameters}');
+            print(
+              '✅ REQUEST SENT => Query params in request: ${fallbackResponse.requestOptions.queryParameters}',
+            );
             // ignore: avoid_print
-            print('✅ REQUEST SENT => Has search: ${fallbackResponse.requestOptions.queryParameters.containsKey('search')}');
+            print(
+              '✅ REQUEST SENT => Has search: ${fallbackResponse.requestOptions.queryParameters.containsKey('search')}',
+            );
             // ignore: avoid_print
-            print('✅ REQUEST SENT => Has sortBy: ${fallbackResponse.requestOptions.queryParameters.containsKey('sortBy')}');
+            print(
+              '✅ REQUEST SENT => Has sortBy: ${fallbackResponse.requestOptions.queryParameters.containsKey('sortBy')}',
+            );
           }
 
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('✅ RESPONSE[${fallbackResponse.statusCode}] => PATH: /projects/public/category/$categoryId');
+            print(
+              '✅ RESPONSE[${fallbackResponse.statusCode}] => PATH: /projects/public/category/$categoryId',
+            );
             // ignore: avoid_print
-            print('✅ RESPONSE[${fallbackResponse.statusCode}] => Final URL: ${fallbackResponse.requestOptions.uri}');
+            print(
+              '✅ RESPONSE[${fallbackResponse.statusCode}] => Final URL: ${fallbackResponse.requestOptions.uri}',
+            );
             // ignore: avoid_print
-            print('✅ RESPONSE[${fallbackResponse.statusCode}] => Response data length: ${fallbackResponse.data?.toString().length ?? 0} chars');
+            print(
+              '✅ RESPONSE[${fallbackResponse.statusCode}] => Response data length: ${fallbackResponse.data?.toString().length ?? 0} chars',
+            );
           }
 
           return _parseProjectsResponse(fallbackResponse);
         } on DioException catch (fallbackError) {
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('❌ ERROR[${fallbackError.response?.statusCode ?? 'null'}] => PATH: /projects/public/category/$categoryId');
+            print(
+              '❌ ERROR[${fallbackError.response?.statusCode ?? 'null'}] => PATH: /projects/public/category/$categoryId',
+            );
             // ignore: avoid_print
             print('❌ ERROR => Final URL: ${fallbackError.requestOptions.uri}');
             // ignore: avoid_print
@@ -359,7 +425,8 @@ class ProjectsRepository implements IProjectsRepository {
           return ApiResponse(
             success: false,
             data: [],
-            message: fallbackError.response?.data?['message'] as String? ??
+            message:
+                fallbackError.response?.data?['message'] as String? ??
                 'Failed to fetch projects',
             error: fallbackError.response?.data as Map<String, dynamic>?,
           );
@@ -369,7 +436,9 @@ class ProjectsRepository implements IProjectsRepository {
       // For other errors, return immediately
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/category/$categoryId');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/category/$categoryId',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Final URL: ${e.requestOptions.uri}');
         // ignore: avoid_print
@@ -379,8 +448,7 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ??
-            _getErrorMessage(e),
+        message: e.response?.data?['message'] as String? ?? _getErrorMessage(e),
         error: e.response?.data as Map<String, dynamic>?,
       );
     }
@@ -421,7 +489,9 @@ class ProjectsRepository implements IProjectsRepository {
     final projects = <Project>[];
     for (var i = 0; i < projectsList.length; i++) {
       try {
-        final json = projectsList[i] as Map<String, dynamic>;
+        final json = _normalizeProjectJson(
+          projectsList[i] as Map<String, dynamic>,
+        );
         final project = Project.fromJson(json);
         projects.add(project);
       } catch (e) {
@@ -437,7 +507,9 @@ class ProjectsRepository implements IProjectsRepository {
 
     if (AppConfig.isDevelopment) {
       // ignore: avoid_print
-      print('✅ Parsed ${projects.length}/${projectsList.length} projects successfully');
+      print(
+        '✅ Parsed ${projects.length}/${projectsList.length} projects successfully',
+      );
     }
 
     return ApiResponse(
@@ -447,8 +519,76 @@ class ProjectsRepository implements IProjectsRepository {
     );
   }
 
+  Map<String, dynamic> _normalizeProjectJson(Map<String, dynamic> raw) {
+    final normalized = Map<String, dynamic>.from(raw);
+
+    int? asInt(dynamic value) {
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
+    final fallbackId =
+        asInt(normalized['exposure_id']) ??
+        asInt(normalized['tender_vault_project_id']) ??
+        asInt(normalized['project_id']) ??
+        asInt(normalized['id']);
+    if (fallbackId != null) {
+      normalized['id'] = fallbackId;
+    }
+
+    normalized['user_id'] = asInt(normalized['user_id']) ?? 0;
+    normalized['project_type'] =
+        (normalized['project_type'] as String?)?.trim().isNotEmpty == true
+        ? normalized['project_type']
+        : 'bidding';
+    normalized['status'] =
+        (normalized['status'] as String?)?.trim().isNotEmpty == true
+        ? normalized['status']
+        : 'open';
+    normalized['created_at'] =
+        (normalized['created_at'] as String?)?.trim().isNotEmpty == true
+        ? normalized['created_at']
+        : DateTime.now().toIso8601String();
+
+    final coverPic = normalized['cover_pic'];
+    final coverPicMissing =
+        coverPic == null || (coverPic is String && coverPic.trim().isEmpty);
+    if (coverPicMissing &&
+        normalized['attachments'] is List &&
+        (normalized['attachments'] as List).isNotEmpty) {
+      final first = (normalized['attachments'] as List).first;
+      if (first is Map<String, dynamic>) {
+        final url = first['url'];
+        if (url is String && url.trim().isNotEmpty) {
+          normalized['cover_pic'] = url.trim();
+        }
+      }
+    }
+
+    if (normalized['duration_days'] == null &&
+        normalized['duration'] != null &&
+        normalized['duration_unit'] != null) {
+      final duration = asInt(normalized['duration']);
+      final unit = (normalized['duration_unit'] as String?)?.toLowerCase();
+      if (duration != null) {
+        if (unit == 'week' || unit == 'weeks') {
+          normalized['duration_days'] = duration * 7;
+        } else if (unit == 'day' || unit == 'days') {
+          normalized['duration_days'] = duration;
+        } else if (unit == 'hour' || unit == 'hours') {
+          normalized['duration_hours'] = duration;
+        }
+      }
+    }
+
+    return normalized;
+  }
+
   /// Fetch projects from all categories (for "All" selection)
   /// This requires categories to be loaded first
+  // ignore: unused_element
   Future<ApiResponse<List<Project>>> _fetchAllCategoriesProjects(
     Map<String, dynamic> queryParams,
   ) async {
@@ -466,23 +606,33 @@ class ProjectsRepository implements IProjectsRepository {
         // ignore: avoid_print
         print('📡 REQUEST[GET] => PATH: /category/ (for "All" selection)');
         // ignore: avoid_print
-        print('📡 REQUEST[GET] => Final URL: ${_dio.options.baseUrl}/category/');
+        print(
+          '📡 REQUEST[GET] => Final URL: ${_dio.options.baseUrl}/category/',
+        );
       }
 
       final categoriesResponse = await _dio.get('/category/');
-      
+
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${categoriesResponse.statusCode}] => PATH: /category/');
+        print(
+          '✅ RESPONSE[${categoriesResponse.statusCode}] => PATH: /category/',
+        );
         // ignore: avoid_print
-        print('✅ RESPONSE[${categoriesResponse.statusCode}] => Final URL: ${categoriesResponse.requestOptions.uri}');
+        print(
+          '✅ RESPONSE[${categoriesResponse.statusCode}] => Final URL: ${categoriesResponse.requestOptions.uri}',
+        );
         // ignore: avoid_print
-        print('✅ RESPONSE[${categoriesResponse.statusCode}] => Response data length: ${categoriesResponse.data?.toString().length ?? 0} chars');
+        print(
+          '✅ RESPONSE[${categoriesResponse.statusCode}] => Response data length: ${categoriesResponse.data?.toString().length ?? 0} chars',
+        );
       }
 
       final categoriesData = categoriesResponse.data as Map<String, dynamic>;
-      final categories = categoriesData['data'] as List<dynamic>? ?? 
-                         categoriesData['categories'] as List<dynamic>? ?? [];
+      final categories =
+          categoriesData['data'] as List<dynamic>? ??
+          categoriesData['categories'] as List<dynamic>? ??
+          [];
 
       if (categories.isEmpty) {
         if (AppConfig.isDevelopment) {
@@ -498,7 +648,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('📡 EXPLORE: Found ${categories.length} categories, fetching projects from all...');
+        print(
+          '📡 EXPLORE: Found ${categories.length} categories, fetching projects from all...',
+        );
       }
 
       // Extract category IDs
@@ -526,7 +678,9 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ EXPLORE ERROR: Failed to fetch categories for "All" selection');
+        print(
+          '❌ EXPLORE ERROR: Failed to fetch categories for "All" selection',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Status Code: ${e.response?.statusCode}');
         // ignore: avoid_print
@@ -536,7 +690,8 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch categories. Please try selecting a specific category.',
+        message:
+            'Failed to fetch categories. Please try selecting a specific category.',
         error: e.response?.data as Map<String, dynamic>?,
       );
     } catch (e) {
@@ -547,7 +702,8 @@ class ProjectsRepository implements IProjectsRepository {
       return const ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch projects. Please try selecting a specific category.',
+        message:
+            'Failed to fetch projects. Please try selecting a specific category.',
       );
     }
   }
@@ -559,16 +715,20 @@ class ProjectsRepository implements IProjectsRepository {
     Map<String, dynamic> queryParams,
   ) async {
     final allProjects = <Project>[];
-    
+
     // Fetch projects from each category and combine
     for (final categoryId in categoryIds) {
       // Try authenticated endpoint first, then public
       try {
         if (AppConfig.isDevelopment) {
           // ignore: avoid_print
-          print('📡 REQUEST[GET] => PATH: /projects/category/$categoryId (for "All")');
+          print(
+            '📡 REQUEST[GET] => PATH: /projects/category/$categoryId (for "All")',
+          );
           // ignore: avoid_print
-          print('📡 REQUEST[GET] => Final URL: ${_dio.options.baseUrl}/projects/category/$categoryId');
+          print(
+            '📡 REQUEST[GET] => Final URL: ${_dio.options.baseUrl}/projects/category/$categoryId',
+          );
         }
 
         final response = await _dio.get(
@@ -578,9 +738,13 @@ class ProjectsRepository implements IProjectsRepository {
 
         if (AppConfig.isDevelopment) {
           // ignore: avoid_print
-          print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/category/$categoryId');
+          print(
+            '✅ RESPONSE[${response.statusCode}] => PATH: /projects/category/$categoryId',
+          );
           // ignore: avoid_print
-          print('✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars');
+          print(
+            '✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars',
+          );
         }
 
         final parsed = _parseProjectsResponse(response);
@@ -589,20 +753,26 @@ class ProjectsRepository implements IProjectsRepository {
         }
       } on DioException catch (e) {
         // If auth fails, try public endpoint
-        if (e.response?.statusCode == 401 || 
-            e.response?.statusCode == 403 || 
+        if (e.response?.statusCode == 401 ||
+            e.response?.statusCode == 403 ||
             e.response?.statusCode == 404) {
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('⚠️ Authenticated endpoint failed (${e.response?.statusCode}), trying public: /projects/public/category/$categoryId');
+            print(
+              '⚠️ Authenticated endpoint failed (${e.response?.statusCode}), trying public: /projects/public/category/$categoryId',
+            );
           }
 
           try {
             if (AppConfig.isDevelopment) {
               // ignore: avoid_print
-              print('📡 REQUEST[GET] => PATH: /projects/public/category/$categoryId (public fallback for "All")');
+              print(
+                '📡 REQUEST[GET] => PATH: /projects/public/category/$categoryId (public fallback for "All")',
+              );
               // ignore: avoid_print
-              print('📡 REQUEST[GET] => Final URL: ${_dio.options.baseUrl}/projects/public/category/$categoryId');
+              print(
+                '📡 REQUEST[GET] => Final URL: ${_dio.options.baseUrl}/projects/public/category/$categoryId',
+              );
             }
 
             final publicResponse = await _dio.get(
@@ -612,9 +782,13 @@ class ProjectsRepository implements IProjectsRepository {
 
             if (AppConfig.isDevelopment) {
               // ignore: avoid_print
-              print('✅ RESPONSE[${publicResponse.statusCode}] => PATH: /projects/public/category/$categoryId');
+              print(
+                '✅ RESPONSE[${publicResponse.statusCode}] => PATH: /projects/public/category/$categoryId',
+              );
               // ignore: avoid_print
-              print('✅ RESPONSE[${publicResponse.statusCode}] => Response data length: ${publicResponse.data?.toString().length ?? 0} chars');
+              print(
+                '✅ RESPONSE[${publicResponse.statusCode}] => Response data length: ${publicResponse.data?.toString().length ?? 0} chars',
+              );
             }
 
             final parsed = _parseProjectsResponse(publicResponse);
@@ -625,21 +799,27 @@ class ProjectsRepository implements IProjectsRepository {
             // Continue with next category if both fail
             if (AppConfig.isDevelopment) {
               // ignore: avoid_print
-              print('❌ ERROR[${e2.response?.statusCode ?? 'null'}] => PATH: /projects/public/category/$categoryId');
+              print(
+                '❌ ERROR[${e2.response?.statusCode ?? 'null'}] => PATH: /projects/public/category/$categoryId',
+              );
               // ignore: avoid_print
               print('❌ ERROR => Response Data: ${e2.response?.data}');
             }
           } catch (e2) {
             if (AppConfig.isDevelopment) {
               // ignore: avoid_print
-              print('⚠️ EXPLORE: Failed to fetch from category $categoryId (both endpoints): $e2');
+              print(
+                '⚠️ EXPLORE: Failed to fetch from category $categoryId (both endpoints): $e2',
+              );
             }
           }
         } else {
           // Continue with next category if other error
           if (AppConfig.isDevelopment) {
             // ignore: avoid_print
-            print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/category/$categoryId');
+            print(
+              '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/category/$categoryId',
+            );
             // ignore: avoid_print
             print('❌ ERROR => Response Data: ${e.response?.data}');
           }
@@ -662,31 +842,31 @@ class ProjectsRepository implements IProjectsRepository {
           break;
         case 'price_low_to_high':
           allProjects.sort((a, b) {
-            final aPrice = a.projectType == 'fixed' 
-                ? (a.budget ?? 999999) 
-                : a.projectType == 'hourly' 
-                    ? (a.hourlyRate ?? 999999)
-                    : (a.budgetMin ?? 999999);
-            final bPrice = b.projectType == 'fixed' 
-                ? (b.budget ?? 999999) 
-                : b.projectType == 'hourly' 
-                    ? (b.hourlyRate ?? 999999)
-                    : (b.budgetMin ?? 999999);
+            final aPrice = a.projectType == 'fixed'
+                ? (a.budget ?? 999999)
+                : a.projectType == 'hourly'
+                ? (a.hourlyRate ?? 999999)
+                : (a.budgetMin ?? 999999);
+            final bPrice = b.projectType == 'fixed'
+                ? (b.budget ?? 999999)
+                : b.projectType == 'hourly'
+                ? (b.hourlyRate ?? 999999)
+                : (b.budgetMin ?? 999999);
             return aPrice.compareTo(bPrice);
           });
           break;
         case 'price_high_to_low':
           allProjects.sort((a, b) {
-            final aPrice = a.projectType == 'fixed' 
-                ? (a.budget ?? 0) 
-                : a.projectType == 'hourly' 
-                    ? (a.hourlyRate ?? 0)
-                    : (a.budgetMax ?? 0);
-            final bPrice = b.projectType == 'fixed' 
-                ? (b.budget ?? 0) 
-                : b.projectType == 'hourly' 
-                    ? (b.hourlyRate ?? 0)
-                    : (b.budgetMax ?? 0);
+            final aPrice = a.projectType == 'fixed'
+                ? (a.budget ?? 0)
+                : a.projectType == 'hourly'
+                ? (a.hourlyRate ?? 0)
+                : (a.budgetMax ?? 0);
+            final bPrice = b.projectType == 'fixed'
+                ? (b.budget ?? 0)
+                : b.projectType == 'hourly'
+                ? (b.hourlyRate ?? 0)
+                : (b.budgetMax ?? 0);
             return bPrice.compareTo(aPrice);
           });
           break;
@@ -695,9 +875,13 @@ class ProjectsRepository implements IProjectsRepository {
 
     if (AppConfig.isDevelopment) {
       // ignore: avoid_print
-      print('✅ EXPLORE: Fetched ${allProjects.length} projects from ${categoryIds.length} categories');
+      print(
+        '✅ EXPLORE: Fetched ${allProjects.length} projects from ${categoryIds.length} categories',
+      );
       // ignore: avoid_print
-      print('📊 Final projects count for "All": ${allProjects.length}, sortBy: $sortBy');
+      print(
+        '📊 Final projects count for "All": ${allProjects.length}, sortBy: $sortBy',
+      );
     }
 
     return ApiResponse(
@@ -719,7 +903,9 @@ class ProjectsRepository implements IProjectsRepository {
         // ignore: avoid_print
         print('📡 REQUEST[POST] => PATH: /projects/$projectId/apply');
         // ignore: avoid_print
-        print('📡 REQUEST[POST] => Body: ${message != null ? {'message': message} : {}}');
+        print(
+          '📡 REQUEST[POST] => Body: ${message != null ? {'message': message} : {}}',
+        );
       }
 
       final response = await _dio.post(
@@ -729,19 +915,25 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/apply');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/apply',
+        );
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => Data: ${response.data}');
       }
 
       return ApiResponse(
         success: true,
-        message: response.data['message'] as String? ?? 'Application submitted successfully',
+        message:
+            response.data['message'] as String? ??
+            'Application submitted successfully',
       );
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/apply');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/apply',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Type: ${e.type}');
         // ignore: avoid_print
@@ -760,7 +952,8 @@ class ProjectsRepository implements IProjectsRepository {
       final statusCode = e.response?.statusCode;
 
       // Check if error is subscription-related
-      final isSubscriptionError = statusCode == 403 ||
+      final isSubscriptionError =
+          statusCode == 403 ||
           statusCode == 402 ||
           (errorMessage?.toLowerCase().contains('subscription') ?? false) ||
           (errorMessage?.toLowerCase().contains('subscribe') ?? false) ||
@@ -791,7 +984,9 @@ class ProjectsRepository implements IProjectsRepository {
   /// Get assignment details for freelancer on a specific project
   /// Endpoint: GET /assignments/:projectId/my-assignment
   /// Response: { success: true, assignment: {...} }
-  Future<ApiResponse<Map<String, dynamic>?>> getMyAssignment(int projectId) async {
+  Future<ApiResponse<Map<String, dynamic>?>> getMyAssignment(
+    int projectId,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
@@ -802,7 +997,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /assignments/$projectId/my-assignment');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /assignments/$projectId/my-assignment',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -816,7 +1013,9 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /assignments/$projectId/my-assignment');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /assignments/$projectId/my-assignment',
+        );
       }
 
       // If 404, no assignment exists
@@ -831,12 +1030,16 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch assignment',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to fetch assignment',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /assignments/$projectId/my-assignment: $e');
+        print(
+          '❌ UNEXPECTED ERROR => /assignments/$projectId/my-assignment: $e',
+        );
       }
 
       return ApiResponse(
@@ -861,7 +1064,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /assignments/$projectId/check');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /assignments/$projectId/check',
+        );
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => Data: ${response.data}');
       }
@@ -877,7 +1082,9 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /assignments/$projectId/check');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /assignments/$projectId/check',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Response Data: ${e.response?.data}');
       }
@@ -929,11 +1136,12 @@ class ProjectsRepository implements IProjectsRepository {
       }
 
       final formData = FormData();
-      
+
       // Add text fields
       formData.fields.addAll([
         MapEntry('category_id', categoryId.toString()),
-        if (subCategoryId != null) MapEntry('sub_category_id', subCategoryId.toString()),
+        if (subCategoryId != null)
+          MapEntry('sub_category_id', subCategoryId.toString()),
         MapEntry('sub_sub_category_id', subSubCategoryId.toString()),
         MapEntry('title', title),
         MapEntry('description', description),
@@ -943,17 +1151,19 @@ class ProjectsRepository implements IProjectsRepository {
         if (budgetMin != null) MapEntry('budget_min', budgetMin.toString()),
         if (budgetMax != null) MapEntry('budget_max', budgetMax.toString()),
         MapEntry('duration_type', durationType),
-        if (durationDays != null) MapEntry('duration_days', durationDays.toString()),
-        if (durationHours != null) MapEntry('duration_hours', durationHours.toString()),
+        if (durationDays != null)
+          MapEntry('duration_days', durationDays.toString()),
+        if (durationHours != null)
+          MapEntry('duration_hours', durationHours.toString()),
       ]);
-      
+
       // Add preferred_skills as array (each skill as separate entry)
       if (preferredSkills != null && preferredSkills.isNotEmpty) {
         for (final skill in preferredSkills) {
           formData.fields.add(MapEntry('preferred_skills[]', skill));
         }
       }
-      
+
       // Add cover pic file
       if (coverPicPath != null) {
         formData.files.add(
@@ -989,7 +1199,9 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Message: ${e.message}');
       }
@@ -997,7 +1209,9 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: {},
-        message: e.response?.data?['message'] as String? ?? 'Failed to create project',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to create project',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1035,11 +1249,16 @@ class ProjectsRepository implements IProjectsRepository {
         );
       }
 
-      final response = await _dio.post('/projects/$projectId/files', data: formData);
+      final response = await _dio.post(
+        '/projects/$projectId/files',
+        data: formData,
+      );
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/files');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/files',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1060,13 +1279,16 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/files');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/files',
+        );
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to upload files',
+        message:
+            e.response?.data?['message'] as String? ?? 'Failed to upload files',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1084,7 +1306,9 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Get project for success page (includes payment_method, admin_approval_status, etc.)
   /// Endpoint: GET /projects/success/:id
-  Future<ApiResponse<Map<String, dynamic>>> getProjectSuccess(int projectId) async {
+  Future<ApiResponse<Map<String, dynamic>>> getProjectSuccess(
+    int projectId,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
@@ -1098,7 +1322,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/success/$projectId');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/success/$projectId',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1118,7 +1344,9 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/success/$projectId');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/success/$projectId',
+        );
       }
       final body = e.response?.data;
       final msg = body is Map ? (body['message'] as String?) : null;
@@ -1158,7 +1386,9 @@ class ProjectsRepository implements IProjectsRepository {
       );
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/offline-payment');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/offline-payment',
+        );
       }
       final data = response.data as Map<String, dynamic>;
       if (response.statusCode == 200 && data['success'] != false) {
@@ -1176,7 +1406,9 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode}] => PATH: /projects/$projectId/offline-payment');
+        print(
+          '❌ ERROR[${e.response?.statusCode}] => PATH: /projects/$projectId/offline-payment',
+        );
       }
       final body = e.response?.data;
       final msg = body is Map ? (body['message'] as String?) : null;
@@ -1217,7 +1449,9 @@ class ProjectsRepository implements IProjectsRepository {
       );
 
       if (AppConfig.isDevelopment) {
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/request-changes');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/request-changes',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1236,14 +1470,18 @@ class ProjectsRepository implements IProjectsRepository {
       );
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/request-changes');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/request-changes',
+        );
         print('Response: ${e.response?.data}');
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to send change request',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to send change request',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1261,7 +1499,9 @@ class ProjectsRepository implements IProjectsRepository {
   /// Get change requests for a project (freelancer)
   /// Endpoint: GET /projects/{projectId}/change-requests
   /// Response: { success: true, requests: [...] } or { items: [...] } or { data: [...] }
-  Future<ApiResponse<List<ChangeRequest>>> getProjectChangeRequests(int projectId) async {
+  Future<ApiResponse<List<ChangeRequest>>> getProjectChangeRequests(
+    int projectId,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         print('📡 REQUEST[GET] => PATH: /projects/$projectId/change-requests');
@@ -1270,12 +1510,14 @@ class ProjectsRepository implements IProjectsRepository {
       final response = await _api.getChangeRequests(projectId);
 
       if (AppConfig.isDevelopment) {
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/change-requests');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/change-requests',
+        );
         print('📦 Response data: ${response.data}');
       }
 
       final data = response.data as Map<String, dynamic>;
-      
+
       // Handle different response shapes: requests, items, or data itself being a List
       List<dynamic>? itemsList;
       if (data['requests'] != null && data['requests'] is List) {
@@ -1314,7 +1556,9 @@ class ProjectsRepository implements IProjectsRepository {
       );
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/change-requests');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/change-requests',
+        );
         print('Response: ${e.response?.data}');
       }
 
@@ -1330,7 +1574,9 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch change requests',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to fetch change requests',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1347,11 +1593,16 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Mark change requests as read/seen for current user (optional backend).
   /// If backend has PATCH /projects/:projectId/change-requests/mark-read, it will be called; otherwise no-op.
-  Future<void> markChangeRequestsRead(int projectId, {List<int>? ids, DateTime? lastSeenAt}) async {
+  Future<void> markChangeRequestsRead(
+    int projectId, {
+    List<int>? ids,
+    DateTime? lastSeenAt,
+  }) async {
     try {
       await _api.markChangeRequestsRead(projectId);
     } on DioException catch (e) {
-      if (e.response?.statusCode == 404 || e.response?.statusCode == 501) return;
+      if (e.response?.statusCode == 404 || e.response?.statusCode == 501)
+        return;
       if (AppConfig.isDevelopment) {
         print('⚠️ markChangeRequestsRead: ${e.message}');
       }
@@ -1361,7 +1612,10 @@ class ProjectsRepository implements IProjectsRepository {
   /// Deliver project (freelancer)
   /// Endpoint: POST /projects/{projectId}/deliver
   /// FormData key: "project_files" (multiple files)
-  Future<ApiResponse<void>> deliverProject(int projectId, List<String> filePaths) async {
+  Future<ApiResponse<void>> deliverProject(
+    int projectId,
+    List<String> filePaths,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
@@ -1381,11 +1635,16 @@ class ProjectsRepository implements IProjectsRepository {
         );
       }
 
-      final response = await _dio.post('/projects/$projectId/deliver', data: formData);
+      final response = await _dio.post(
+        '/projects/$projectId/deliver',
+        data: formData,
+      );
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/deliver');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/$projectId/deliver',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1406,13 +1665,17 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/deliver');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/deliver',
+        );
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to deliver project',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to deliver project',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1430,7 +1693,9 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Get project deliveries (for client review)
   /// Endpoint: GET /projects/{projectId}/deliveries
-  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectDeliveries(int projectId) async {
+  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectDeliveries(
+    int projectId,
+  ) async {
     try {
       // Logging is handled by LoggingInterceptor, no need to duplicate here
       final response = await _dio.get('/projects/$projectId/deliveries');
@@ -1449,7 +1714,9 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch deliveries',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to fetch deliveries',
       );
     } catch (e) {
       // Error logging is handled by LoggingInterceptor, no need to duplicate here
@@ -1489,13 +1756,17 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/approve');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/$projectId/approve',
+        );
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to approve delivery',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to approve delivery',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1513,7 +1784,10 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Request changes (client)
   /// Endpoint: POST /projects/{projectId}/request-changes
-  Future<ApiResponse<void>> requestChanges(int projectId, String message) async {
+  Future<ApiResponse<void>> requestChanges(
+    int projectId,
+    String message,
+  ) async {
     try {
       // Logging is handled by LoggingInterceptor, no need to duplicate here
       final response = await _dio.post(
@@ -1541,7 +1815,9 @@ class ProjectsRepository implements IProjectsRepository {
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to send change request',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to send change request',
       );
     } catch (e) {
       // Error logging is handled by LoggingInterceptor, no need to duplicate here
@@ -1555,7 +1831,9 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Get offers for a project (client - bidding projects)
   /// Endpoint: GET /offers/project/{projectId}/offers
-  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectOffers(int projectId) async {
+  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectOffers(
+    int projectId,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
@@ -1566,7 +1844,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /offers/project/$projectId/offers');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /offers/project/$projectId/offers',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1581,13 +1861,16 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/project/$projectId/offers');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/project/$projectId/offers',
+        );
       }
 
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch offers',
+        message:
+            e.response?.data?['message'] as String? ?? 'Failed to fetch offers',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1606,7 +1889,10 @@ class ProjectsRepository implements IProjectsRepository {
   /// Approve or reject an offer (client).
   /// For bidding accept: returns data with pendingAdminApproval and projectId when admin approval is required.
   /// Tries POST /offers/approve-reject first; on 404 retries POST /offers/offers/approve-reject (legacy).
-  Future<ApiResponse<Map<String, dynamic>?>> approveRejectOffer(int offerId, String action) async {
+  Future<ApiResponse<Map<String, dynamic>?>> approveRejectOffer(
+    int offerId,
+    String action,
+  ) async {
     final body = {'offerId': offerId, 'action': action};
     final paths = ['/offers/approve-reject', '/offers/offers/approve-reject'];
     for (final path in paths) {
@@ -1627,13 +1913,19 @@ class ProjectsRepository implements IProjectsRepository {
 
         if (data['success'] == true) {
           final payload = <String, dynamic>{};
-          if (data['pendingAdminApproval'] == true) payload['pendingAdminApproval'] = true;
+          if (data['pendingAdminApproval'] == true)
+            payload['pendingAdminApproval'] = true;
           final pid = data['projectId'];
-          if (pid != null) payload['projectId'] = pid is int ? pid : int.tryParse(pid.toString());
+          if (pid != null)
+            payload['projectId'] = pid is int
+                ? pid
+                : int.tryParse(pid.toString());
           return ApiResponse(
             success: true,
             data: payload.isEmpty ? null : payload,
-            message: data['message'] as String? ?? 'Offer action completed successfully',
+            message:
+                data['message'] as String? ??
+                'Offer action completed successfully',
           );
         }
 
@@ -1652,7 +1944,9 @@ class ProjectsRepository implements IProjectsRepository {
         return ApiResponse(
           success: false,
           data: null,
-          message: e.response?.data?['message'] as String? ?? 'Failed to process offer',
+          message:
+              e.response?.data?['message'] as String? ??
+              'Failed to process offer',
         );
       }
     }
@@ -1666,18 +1960,26 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Get applications for a project (client - fixed/hourly projects)
   /// Endpoint: GET /projects/project/{projectId}/applications
-  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectApplications(int projectId) async {
+  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectApplications(
+    int projectId,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /projects/project/$projectId/applications');
+        print(
+          '📡 REQUEST[GET] => PATH: /projects/project/$projectId/applications',
+        );
       }
 
-      final response = await _dio.get('/projects/project/$projectId/applications');
+      final response = await _dio.get(
+        '/projects/project/$projectId/applications',
+      );
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/project/$projectId/applications');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/project/$projectId/applications',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1692,18 +1994,24 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/project/$projectId/applications');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/project/$projectId/applications',
+        );
       }
 
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch applications',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to fetch applications',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /projects/project/$projectId/applications: $e');
+        print(
+          '❌ UNEXPECTED ERROR => /projects/project/$projectId/applications: $e',
+        );
       }
 
       return ApiResponse(
@@ -1716,7 +2024,11 @@ class ProjectsRepository implements IProjectsRepository {
 
   /// Accept or reject an application (client)
   /// Endpoint: POST /projects/applications/decision
-  Future<ApiResponse<void>> acceptRejectApplication(int assignmentId, int projectId, String action) async {
+  Future<ApiResponse<void>> acceptRejectApplication(
+    int assignmentId,
+    int projectId,
+    String action,
+  ) async {
     try {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
@@ -1734,7 +2046,9 @@ class ProjectsRepository implements IProjectsRepository {
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /projects/applications/decision');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => PATH: /projects/applications/decision',
+        );
       }
 
       final data = response.data as Map<String, dynamic>;
@@ -1755,13 +2069,17 @@ class ProjectsRepository implements IProjectsRepository {
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/applications/decision');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /projects/applications/decision',
+        );
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to process application',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to process application',
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -1796,6 +2114,39 @@ class ProjectsRepository implements IProjectsRepository {
         return 'Network error. Check your connection.';
       default:
         return 'Failed to fetch projects.';
+    }
+  }
+
+  /// Download file to local path using authenticated Dio client.
+  Future<ApiResponse<void>> downloadFile({
+    required String url,
+    required String savePath,
+    void Function(int received, int total)? onReceiveProgress,
+  }) async {
+    try {
+      await _dio.download(
+        url,
+        savePath,
+        options: Options(
+          headers: const <String, String>{'Accept': '*/*'},
+          responseType: ResponseType.bytes,
+          followRedirects: true,
+          validateStatus: (status) => status != null && status < 500,
+        ),
+        onReceiveProgress: onReceiveProgress,
+      );
+      return const ApiResponse(success: true);
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message:
+            _extractErrorMessage(e.response?.data) ?? 'Failed to download file',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Failed to download file: ${e.toString()}',
+      );
     }
   }
 }

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,7 +32,10 @@ class SettingsScreen extends ConsumerWidget {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     // Back button in circle
@@ -112,7 +116,9 @@ class SettingsScreen extends ConsumerWidget {
                       context: context,
                       icon: Icons.language_rounded,
                       title: l10n.language,
-                      subtitle: currentLocale.languageCode == 'ar' ? 'العربية' : 'English',
+                      subtitle: currentLocale.languageCode == 'ar'
+                          ? 'العربية'
+                          : 'English',
                       trailing: const Icon(
                         Icons.chevron_right_rounded,
                         color: AppColors.iconGray,
@@ -122,7 +128,7 @@ class SettingsScreen extends ConsumerWidget {
                         context.push('/settings/language');
                       },
                     ),
-                    
+
                     // Divider
                     const Divider(
                       height: 1,
@@ -130,7 +136,7 @@ class SettingsScreen extends ConsumerWidget {
                       color: AppColors.borderLight,
                       indent: 72,
                     ),
-                    
+
                     // Notifications Setting
                     _buildSettingTile(
                       context: context,
@@ -146,7 +152,7 @@ class SettingsScreen extends ConsumerWidget {
                         context.push('/settings/notifications');
                       },
                     ),
-                    
+
                     // Divider
                     const Divider(
                       height: 1,
@@ -373,7 +379,7 @@ class SettingsScreen extends ConsumerWidget {
     bool isDeleteAccount = false,
   }) {
     final isDelete = isDeleteAccount || title.toLowerCase().contains('delete');
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -390,10 +396,7 @@ class SettingsScreen extends ConsumerWidget {
                     ? AppColors.error.withOpacity(0.12)
                     : AppColors.gradientStart.withOpacity(0.15),
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.borderLight,
-                  width: 1,
-                ),
+                border: Border.all(color: AppColors.borderLight, width: 1),
               ),
               child: Icon(
                 icon,

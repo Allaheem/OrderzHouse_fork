@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../../../../../core/models/api_response.dart';
 import '../../../../../core/models/project.dart';
@@ -32,7 +33,9 @@ class ProjectsRemoteDataSource {
       }
 
       if (subSubCategoryId != null) {
-        final path = ApiEndpoints.projectPublicSubSubcategoryId(subSubCategoryId);
+        final path = ApiEndpoints.projectPublicSubSubcategoryId(
+          subSubCategoryId,
+        );
         return await _getAndParse(path, queryParams);
       }
       if (subCategoryId != null) {
@@ -87,7 +90,9 @@ class ProjectsRemoteDataSource {
           return ApiResponse(
             success: false,
             data: [],
-            message: e2.response?.data?['message'] as String? ?? 'Failed to fetch projects',
+            message:
+                e2.response?.data?['message'] as String? ??
+                'Failed to fetch projects',
             error: e2.response?.data as Map<String, dynamic>?,
           );
         }
@@ -107,7 +112,8 @@ class ProjectsRemoteDataSource {
     try {
       final response = await _dio.get(ApiEndpoints.categories);
       final data = response.data as Map<String, dynamic>;
-      final categories = data['data'] as List<dynamic>? ??
+      final categories =
+          data['data'] as List<dynamic>? ??
           data['categories'] as List<dynamic>? ??
           [];
       final categoryIds = <int>[];
@@ -129,14 +135,16 @@ class ProjectsRemoteDataSource {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch categories. Please try selecting a specific category.',
+        message:
+            'Failed to fetch categories. Please try selecting a specific category.',
         error: e.response?.data as Map<String, dynamic>?,
       );
     } catch (e) {
       return const ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch projects. Please try selecting a specific category.',
+        message:
+            'Failed to fetch projects. Please try selecting a specific category.',
       );
     }
   }
@@ -214,12 +222,17 @@ class ProjectsRemoteDataSource {
     list ??= data['data'] is List ? data['data'] as List<dynamic> : null;
     list ??= response.data is List ? response.data as List<dynamic> : null;
     if (list == null || list.isEmpty) {
-      return const ApiResponse(success: true, data: [], message: 'No projects found');
+      return const ApiResponse(
+        success: true,
+        data: [],
+        message: 'No projects found',
+      );
     }
     final projects = <Project>[];
     for (var i = 0; i < list.length; i++) {
       try {
-        projects.add(Project.fromJson(list[i] as Map<String, dynamic>));
+        final raw = list[i] as Map<String, dynamic>;
+        projects.add(Project.fromJson(_normalizeProjectJson(raw)));
       } catch (e) {
         if (AppConfig.isDevelopment) {
           print('⚠️ Failed to parse project at index $i: $e');
@@ -231,6 +244,71 @@ class ProjectsRemoteDataSource {
       data: projects,
       message: 'Projects fetched successfully',
     );
+  }
+
+  Map<String, dynamic> _normalizeProjectJson(Map<String, dynamic> raw) {
+    final normalized = Map<String, dynamic>.from(raw);
+
+    int? asInt(dynamic value) {
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value);
+      return null;
+    }
+
+    final fallbackId =
+        asInt(normalized['exposure_id']) ??
+        asInt(normalized['tender_vault_project_id']) ??
+        asInt(normalized['project_id']) ??
+        asInt(normalized['id']);
+    if (fallbackId != null) {
+      normalized['id'] = fallbackId;
+    }
+
+    normalized['user_id'] = asInt(normalized['user_id']) ?? 0;
+    normalized['project_type'] =
+        (normalized['project_type'] as String?)?.trim().isNotEmpty == true
+        ? normalized['project_type']
+        : 'bidding';
+    normalized['status'] =
+        (normalized['status'] as String?)?.trim().isNotEmpty == true
+        ? normalized['status']
+        : 'open';
+    normalized['created_at'] =
+        (normalized['created_at'] as String?)?.trim().isNotEmpty == true
+        ? normalized['created_at']
+        : DateTime.now().toIso8601String();
+
+    if ((normalized['cover_pic'] == null ||
+            (normalized['cover_pic'] as String).trim().isEmpty) &&
+        normalized['attachments'] is List &&
+        (normalized['attachments'] as List).isNotEmpty) {
+      final first = (normalized['attachments'] as List).first;
+      if (first is Map<String, dynamic>) {
+        final url = first['url'];
+        if (url is String && url.trim().isNotEmpty) {
+          normalized['cover_pic'] = url.trim();
+        }
+      }
+    }
+
+    if (normalized['duration_days'] == null &&
+        normalized['duration'] != null &&
+        normalized['duration_unit'] != null) {
+      final duration = asInt(normalized['duration']);
+      final unit = (normalized['duration_unit'] as String?)?.toLowerCase();
+      if (duration != null) {
+        if (unit == 'week' || unit == 'weeks') {
+          normalized['duration_days'] = duration * 7;
+        } else if (unit == 'day' || unit == 'days') {
+          normalized['duration_days'] = duration;
+        } else if (unit == 'hour' || unit == 'hours') {
+          normalized['duration_hours'] = duration;
+        }
+      }
+    }
+
+    return normalized;
   }
 
   static String _dioErrorMessage(DioException e) {

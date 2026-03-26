@@ -1,8 +1,8 @@
+// ??? ????????
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/profile_field_tile.dart';
@@ -10,8 +10,6 @@ import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/config/app_config.dart';
-import '../../../../core/network/dio_client.dart';
-import '../../../../core/storage/secure_store.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -38,7 +36,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _isFetching = true;
   File? _selectedImage;
   String? _profilePicUrl;
-  final Dio _dio = DioClient.instance;
 
   @override
   void initState() {
@@ -50,13 +47,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isFetching = true);
 
     try {
-      // Get user data directly from API to access phone_number and country
-      // which are not in the User model
-      final response = await _dio.get('/users/getUserdata');
-      
-      if (response.statusCode == 200 && response.data['success'] == true) {
-        final userData = response.data['user'] as Map<String, dynamic>;
-        
+      final repo = ref.read(authRepositoryProvider);
+      final result = await repo.getEditableProfile();
+      if (result.success && result.data != null) {
+        final userData = result.data!;
+
         // Extract all fields including phone_number and country
         final firstName = userData['first_name'] as String? ?? '';
         final lastName = userData['last_name'] as String? ?? '';
@@ -65,7 +60,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         final phoneNumber = userData['phone_number'] as String? ?? '';
         final country = userData['country'] as String? ?? '';
         final profilePicUrl = userData['profile_pic_url'] as String?;
-        
+
         // Set controllers with actual data from database
         _firstNameController.text = firstName;
         _lastNameController.text = lastName;
@@ -85,10 +80,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           'country': country,
           'profile_pic_url': profilePicUrl ?? '',
         };
-        
+
         // Clear validation errors on successful load
         _validationErrors.clear();
-        
+
         if (mounted) {
           setState(() {});
         }
@@ -96,7 +91,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response.data['message'] as String? ?? 'Failed to load profile'),
+              content: Text(result.message ?? 'Failed to load profile'),
               backgroundColor: Colors.red,
             ),
           );
@@ -117,7 +112,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       }
     }
   }
-
 
   bool _hasChanges() {
     return _firstNameController.text != _originalData['first_name'] ||
@@ -155,7 +149,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   bool _validateForm() {
     _validationErrors.clear();
 
-    final firstNameError = _validateField('first_name', _firstNameController.text);
+    final firstNameError = _validateField(
+      'first_name',
+      _firstNameController.text,
+    );
     if (firstNameError != null) {
       _validationErrors['first_name'] = firstNameError;
     }
@@ -208,52 +205,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final token = await SecureStore.readAccessToken();
-      if (token == null) {
-        throw Exception('Authentication required. Please login.');
-      }
-
-      // Prepare FormData for multipart upload
-      final formData = FormData();
-
-      // Add text fields
-      formData.fields.addAll([
-        MapEntry('first_name', _firstNameController.text.trim()),
-        MapEntry('last_name', _lastNameController.text.trim()),
-        MapEntry('username', _usernameController.text.trim()),
-        MapEntry('phone_number', _phoneController.text.replaceAll(RegExp(r'\D'), '')),
-        MapEntry('country', _countryController.text.trim()),
-      ]);
-
-      // Add image if selected
-      if (_selectedImage != null) {
-        formData.files.add(
-          MapEntry(
-            'files',
-            await MultipartFile.fromFile(
-              _selectedImage!.path,
-              filename: 'profile_pic.jpg',
-            ),
-          ),
-        );
-      } else if (_profilePicUrl != null && _profilePicUrl!.isNotEmpty) {
-        // Keep existing profile pic URL
-        formData.fields.add(MapEntry('profile_pic_url', _profilePicUrl!));
-      }
-
-      // Update headers for multipart
-      final response = await _dio.put(
-        '/users/edit',
-        data: formData,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
+      final repo = ref.read(authRepositoryProvider);
+      final response = await repo.updateEditableProfile(
+        fields: <String, String>{
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'username': _usernameController.text.trim(),
+          'phone_number': _phoneController.text.replaceAll(RegExp(r'\D'), ''),
+          'country': _countryController.text.trim(),
+        },
+        avatarFile: _selectedImage,
+        existingProfilePicUrl: _profilePicUrl,
       );
 
-      if (response.statusCode == 200 && response.data['success'] == true) {
+      if (response.success) {
         // Update original data
         _originalData = {
           'first_name': _firstNameController.text.trim(),
@@ -261,17 +226,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           'username': _usernameController.text.trim(),
           'phone_number': _phoneController.text.replaceAll(RegExp(r'\D'), ''),
           'country': _countryController.text.trim(),
-          'profile_pic_url': response.data['user']?['profile_pic_url'] ?? _profilePicUrl ?? '',
+          'profile_pic_url':
+              response.data?['profile_pic_url'] ?? _profilePicUrl ?? '',
         };
 
         // Update profile pic URL if changed
-        if (response.data['user']?['profile_pic_url'] != null) {
-          _profilePicUrl = response.data['user']['profile_pic_url'];
+        if (response.data?['profile_pic_url'] != null) {
+          _profilePicUrl = response.data?['profile_pic_url'] as String?;
           _selectedImage = null;
         }
 
         // Refresh auth state
-        ref.read(authStateProvider.notifier).refreshUser();
+        await ref.read(authStateProvider.notifier).refreshUser();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -288,7 +254,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           });
         }
       } else {
-        throw Exception(response.data['message'] ?? 'Failed to update profile');
+        throw Exception(response.message ?? 'Failed to update profile');
       }
     } catch (e) {
       if (mounted) {
@@ -317,6 +283,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() {});
   }
 
+  void _cancelEditing(BuildContext context) {
+    _discardChanges();
+    _handleBackNavigation(context);
+  }
+
   void _handleBackNavigation(BuildContext context) {
     // Use go_router's context.pop() which is safer than Navigator.pop()
     // It handles the navigation stack properly and avoids lock assertions
@@ -328,7 +299,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final user = ref.read(authStateProvider).user;
       if (user != null) {
         // Check role_id: 2 = client, 3 = freelancer
-        final profileRoute = user.roleId == 2 ? '/client/profile' : '/freelancer/profile';
+        final profileRoute = user.roleId == 2
+            ? '/client/profile'
+            : '/freelancer/profile';
         context.go(profileRoute);
       } else {
         // If no user, go to client home as default
@@ -351,7 +324,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final fullName = '${_firstNameController.text} ${_lastNameController.text}'.trim();
+    final fullName = '${_firstNameController.text} ${_lastNameController.text}'
+        .trim();
 
     if (_isFetching) {
       return const AppScaffold(
@@ -373,7 +347,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     // Back button in circle
@@ -500,7 +477,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         if (digitsOnly.length <= 10) {
                           _phoneController.value = TextEditingValue(
                             text: digitsOnly,
-                            selection: TextSelection.collapsed(offset: digitsOnly.length),
+                            selection: TextSelection.collapsed(
+                              offset: digitsOnly.length,
+                            ),
                           );
                         }
                         setState(() {
@@ -554,7 +533,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     // Discard Button
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: _isLoading ? null : _discardChanges,
+                        onPressed: _isLoading ? null : () => _cancelEditing(context),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           backgroundColor: AppColors.surface,
@@ -602,10 +581,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final imageUrl = _selectedImage != null
         ? null
         : (_profilePicUrl != null && _profilePicUrl!.isNotEmpty
-            ? (_profilePicUrl!.startsWith('http')
-                ? _profilePicUrl!
-                : '${AppConfig.baseUrl}$_profilePicUrl')
-            : null);
+              ? (_profilePicUrl!.startsWith('http')
+                    ? _profilePicUrl!
+                    : '${AppConfig.baseUrl}$_profilePicUrl')
+              : null);
 
     return Center(
       child: Container(
@@ -614,7 +593,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: AppColors.accentOrange.withOpacity(0.25),
+            color: AppColors.accentOrange.withValues(alpha: 0.25),
             width: 1,
           ),
         ),
@@ -628,42 +607,44 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               )
             : imageUrl != null
-                ? ClipOval(
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      width: 110,
-                      height: 110,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
-                        color: AppColors.accentOrange.withOpacity(0.10),
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
-                          ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: AppColors.accentOrange.withOpacity(0.10),
-                        child: const Icon(
-                          Icons.person_rounded,
-                          size: 55,
-                          color: AppColors.primary,
+            ? ClipOval(
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  width: 110,
+                  height: 110,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: AppColors.accentOrange.withValues(alpha: 0.10),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.accentOrange,
                         ),
                       ),
                     ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.accentOrange.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: AppColors.accentOrange.withValues(alpha: 0.10),
                     child: const Icon(
                       Icons.person_rounded,
                       size: 55,
                       color: AppColors.primary,
                     ),
                   ),
+                ),
+              )
+            : Container(
+                decoration: BoxDecoration(
+                  color: AppColors.accentOrange.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 55,
+                  color: AppColors.primary,
+                ),
+              ),
       ),
     );
   }

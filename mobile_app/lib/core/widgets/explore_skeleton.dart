@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_spacing.dart';
 
@@ -101,10 +102,7 @@ class ExploreSkeletonCard extends StatelessWidget {
 
 /// Grid of skeleton cards (2 columns, ~8 items). Matches Explore grid layout.
 class ExploreSkeletonGrid extends StatelessWidget {
-  const ExploreSkeletonGrid({
-    super.key,
-    this.itemCount = 8,
-  });
+  const ExploreSkeletonGrid({super.key, this.itemCount = 8});
 
   final int itemCount;
 

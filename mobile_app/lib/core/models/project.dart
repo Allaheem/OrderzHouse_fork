@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'project.freezed.dart';
@@ -35,7 +36,7 @@ int? _intFromJson(dynamic value) {
 @freezed
 class Project with _$Project {
   const Project._();
-  
+
   const factory Project({
     required int id,
     @JsonKey(name: 'user_id') required int userId,

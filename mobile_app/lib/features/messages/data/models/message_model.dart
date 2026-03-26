@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:intl/intl.dart';
 
 class Message {
@@ -8,7 +9,7 @@ class Message {
   final String content;
   final List<String>? fileUrls;
   final DateTime timeSent;
-  
+
   // Sender info (from backend join)
   final MessageSender? sender;
 
@@ -25,13 +26,15 @@ class Message {
 
   factory Message.fromJson(Map<String, dynamic> json) {
     print('🔍 [Message.fromJson] Parsing message JSON: ${json.keys.toList()}');
-    
+
     // Handle sender as object or nested JSON
     MessageSender? senderObj;
     if (json['sender'] != null) {
       if (json['sender'] is Map<String, dynamic>) {
         print('👤 [Message.fromJson] Parsing sender object: ${json['sender']}');
-        senderObj = MessageSender.fromJson(json['sender'] as Map<String, dynamic>);
+        senderObj = MessageSender.fromJson(
+          json['sender'] as Map<String, dynamic>,
+        );
       } else if (json['sender'] is String) {
         // If sender is a JSON string, parse it
         try {
@@ -59,12 +62,21 @@ class Message {
     }
 
     // Handle content field - backend may use 'content' or 'text'
-    final contentValue = json['content'] ?? json['text'] ?? json['message'] ?? '';
-    print('💬 [Message.fromJson] Content value: "$contentValue" (type: ${contentValue.runtimeType})');
-    
+    final contentValue =
+        json['content'] ?? json['text'] ?? json['message'] ?? '';
+    print(
+      '💬 [Message.fromJson] Content value: "$contentValue" (type: ${contentValue.runtimeType})',
+    );
+
     // Handle time_sent - backend uses time_sent column
-    final timeSentValue = json['time_sent'] ?? json['timeSent'] ?? json['created_at'] ?? json['createdAt'];
-    print('⏰ [Message.fromJson] Time sent value: $timeSentValue (type: ${timeSentValue?.runtimeType})');
+    final timeSentValue =
+        json['time_sent'] ??
+        json['timeSent'] ??
+        json['created_at'] ??
+        json['createdAt'];
+    print(
+      '⏰ [Message.fromJson] Time sent value: $timeSentValue (type: ${timeSentValue?.runtimeType})',
+    );
 
     final message = Message(
       id: json['id'] as int,
@@ -76,9 +88,11 @@ class Message {
       timeSent: _dateTimeFromJson(timeSentValue),
       sender: senderObj,
     );
-    
-    print('✅ [Message.fromJson] Created message: id=${message.id}, projectId=${message.projectId}, senderId=${message.senderId}, content="${message.content.substring(0, message.content.length > 30 ? 30 : message.content.length)}...", timeSent=${message.timeSent}');
-    
+
+    print(
+      '✅ [Message.fromJson] Created message: id=${message.id}, projectId=${message.projectId}, senderId=${message.senderId}, content="${message.content.substring(0, message.content.length > 30 ? 30 : message.content.length)}...", timeSent=${message.timeSent}',
+    );
+
     return message;
   }
 
@@ -127,8 +141,10 @@ class MessageSender {
   factory MessageSender.fromJson(Map<String, dynamic> json) {
     return MessageSender(
       id: json['id'] as int,
-      firstName: json['first_name'] as String? ?? json['firstName'] as String? ?? '',
-      lastName: json['last_name'] as String? ?? json['lastName'] as String? ?? '',
+      firstName:
+          json['first_name'] as String? ?? json['firstName'] as String? ?? '',
+      lastName:
+          json['last_name'] as String? ?? json['lastName'] as String? ?? '',
       avatar: json['avatar'] as String? ?? json['profile_pic_url'] as String?,
     );
   }

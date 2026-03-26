@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/messages_repository.dart';
 import '../../data/models/message_model.dart';
@@ -10,51 +11,60 @@ final messagesRepositoryProvider = Provider<MessagesRepository>((ref) {
 
 /// Provider to fetch messages for a project
 /// Watches userId to auto-invalidate on account switch/logout
-final projectMessagesProvider = FutureProvider.autoDispose.family<List<Message>, int>(
-  (ref, projectId) async {
-    // Watch userId to auto-invalidate when user changes
-    final userId = ref.watch(authStateProvider.select((state) => state.userId));
-    
-    print('🔄 [projectMessagesProvider] Fetching messages for projectId: $projectId, userId: $userId');
-    
-    // Guard against logged out state
-    if (userId == null) {
-      print('⚠️ [projectMessagesProvider] User not logged in, returning empty list');
-      return [];
-    }
-    
-    final repository = ref.read(messagesRepositoryProvider);
-    final response = await repository.getProjectMessages(projectId);
-    
-    print('📥 [projectMessagesProvider] Response: success=${response.success}, data length=${response.data?.length ?? 0}');
-    
-    if (response.success && response.data != null) {
-      final messages = response.data!;
-      print('✅ [projectMessagesProvider] Returning ${messages.length} messages');
-      return messages;
-    } else {
-      print('❌ [projectMessagesProvider] Error: ${response.message}');
-      throw Exception(response.message ?? 'Failed to fetch messages');
-    }
-  },
-);
+final projectMessagesProvider = FutureProvider.autoDispose.family<List<Message>, int>((
+  ref,
+  projectId,
+) async {
+  // Watch userId to auto-invalidate when user changes
+  final userId = ref.watch(authStateProvider.select((state) => state.userId));
+
+  print(
+    '🔄 [projectMessagesProvider] Fetching messages for projectId: $projectId, userId: $userId',
+  );
+
+  // Guard against logged out state
+  if (userId == null) {
+    print(
+      '⚠️ [projectMessagesProvider] User not logged in, returning empty list',
+    );
+    return [];
+  }
+
+  final repository = ref.read(messagesRepositoryProvider);
+  final response = await repository.getProjectMessages(projectId);
+
+  print(
+    '📥 [projectMessagesProvider] Response: success=${response.success}, data length=${response.data?.length ?? 0}',
+  );
+
+  if (response.success && response.data != null) {
+    final messages = response.data!;
+    print('✅ [projectMessagesProvider] Returning ${messages.length} messages');
+    return messages;
+  } else {
+    print('❌ [projectMessagesProvider] Error: ${response.message}');
+    throw Exception(response.message ?? 'Failed to fetch messages');
+  }
+});
 
 /// Unread count for project chat (current user). Used for red dot on messages icon.
 /// While loading: 0 (no dot, no flicker). 404/empty => 0.
-final projectUnreadProvider = FutureProvider.autoDispose.family<int, int>(
-  (ref, projectId) async {
-    final userId = ref.watch(authStateProvider.select((state) => state.userId));
-    if (userId == null) return 0;
-    final repository = ref.read(messagesRepositoryProvider);
-    final response = await repository.getUnreadCount(projectId);
-    if (response.success && response.data != null) return response.data!;
-    return 0;
-  },
-);
+final projectUnreadProvider = FutureProvider.autoDispose.family<int, int>((
+  ref,
+  projectId,
+) async {
+  final userId = ref.watch(authStateProvider.select((state) => state.userId));
+  if (userId == null) return 0;
+  final repository = ref.read(messagesRepositoryProvider);
+  final response = await repository.getUnreadCount(projectId);
+  if (response.success && response.data != null) return response.data!;
+  return 0;
+});
 
 /// Mark project messages as read and refresh unread count.
-final projectUnreadControllerProvider =
-    Provider<ProjectUnreadController>((ref) {
+final projectUnreadControllerProvider = Provider<ProjectUnreadController>((
+  ref,
+) {
   return ProjectUnreadController(ref: ref);
 });
 

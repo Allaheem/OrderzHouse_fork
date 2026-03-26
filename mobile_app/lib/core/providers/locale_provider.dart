@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/app_prefs.dart';
@@ -6,9 +7,9 @@ import '../storage/app_prefs.dart';
 class AppLocales {
   static const Locale english = Locale('en');
   static const Locale arabic = Locale('ar');
-  
+
   static const List<Locale> supported = [english, arabic];
-  
+
   /// Check if locale is RTL
   static bool isRtl(Locale locale) => locale.languageCode == 'ar';
 }
@@ -18,7 +19,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
   LocaleNotifier() : super(AppLocales.english) {
     _loadSavedLocale();
   }
-  
+
   /// Load saved locale from AppPrefs
   Future<void> _loadSavedLocale() async {
     try {
@@ -30,31 +31,31 @@ class LocaleNotifier extends StateNotifier<Locale> {
       debugPrint('Error loading saved locale: $e');
     }
   }
-  
+
   /// Change app locale and persist
   Future<void> setLocale(Locale locale) async {
     if (state == locale) return;
-    
+
     state = locale;
-    
+
     try {
       await AppPrefs.setLanguageCode(locale.languageCode);
     } catch (e) {
       debugPrint('Error saving locale: $e');
     }
   }
-  
+
   /// Toggle between English and Arabic
   Future<void> toggleLocale() async {
-    final newLocale = state.languageCode == 'en' 
-        ? AppLocales.arabic 
+    final newLocale = state.languageCode == 'en'
+        ? AppLocales.arabic
         : AppLocales.english;
     await setLocale(newLocale);
   }
-  
+
   /// Check if current locale is Arabic (RTL)
   bool get isArabic => state.languageCode == 'ar';
-  
+
   /// Check if current locale is RTL
   bool get isRtl => AppLocales.isRtl(state);
 }

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,112 +12,99 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/models/payment.dart';
 import '../../../../core/cache/cache_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../payments/data/repositories/payments_repository.dart';
+import '../../../payments/presentation/providers/payments_provider.dart';
 import '../../../referrals/presentation/providers/referrals_provider.dart';
 import '../../../../l10n/app_localizations.dart';
-
-// Provider for payments repository
-final paymentsRepositoryProvider = Provider<PaymentsRepository>((ref) {
-  return PaymentsRepository();
-});
 
 // Provider for filter selection (All / Plans / Projects / Wallet)
 final _selectedFilterProvider = StateProvider<String>((ref) => 'all');
 
 // In-memory cache for payment history
-final _paymentHistoryCacheProvider = StateProvider.family<Map<String, dynamic>?, String>((ref, type) => null);
+final _paymentHistoryCacheProvider =
+    StateProvider.family<Map<String, dynamic>?, String>((ref, type) => null);
 
 // Provider for unified payment history with caching
-final paymentHistoryProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, type) async {
-  final repository = ref.read(paymentsRepositoryProvider);
-  final userId = ref.read(authStateProvider).userId;
-  
-  if (userId == null) {
-    return {
-      'balance': 0.0,
-      'currency': 'JOD',
-      'transactions': <Payment>[],
-    };
-  }
-  
-  final cacheKey = 'payment_history_${userId}_$type';
-  
-  // 1. Check in-memory cache first (instant)
-  final cached = ref.read(_paymentHistoryCacheProvider(type));
-  if (cached != null) {
-    // Return cached immediately, continue fetching fresh
-  }
-  
-  // 2. Try persistent cache (for transactions list)
-  final persistentCache = await CacheService.getList<Payment>(
-    '${cacheKey}_transactions',
-    (json) => Payment.fromJson(json),
-  );
-  
-  if (persistentCache != null) {
-    final cachedData = {
-      'balance': cached?['balance'] ?? 0.0,
-      'currency': cached?['currency'] ?? 'JOD',
-      'transactions': persistentCache,
-    };
-    ref.read(_paymentHistoryCacheProvider(type).notifier).state = cachedData;
-    // Return cached immediately, continue fetching fresh
-  }
-  
-  // 3. Fetch fresh data
-  try {
-    final response = await repository.getPaymentHistory(type: type);
-    
-    if (response.success && response.data != null) {
-      // Save to both caches
-      ref.read(_paymentHistoryCacheProvider(type).notifier).state = response.data!;
-      final transactions = response.data!['transactions'] as List<Payment>?;
-      if (transactions != null) {
-        await CacheService.setList(
-          '${cacheKey}_transactions',
-          transactions,
-          (payment) => payment.toJson(),
-        );
+final paymentHistoryProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, type) async {
+      final repository = ref.read(paymentsRepositoryProvider);
+      final userId = ref.read(authStateProvider).userId;
+
+      if (userId == null) {
+        return {'balance': 0.0, 'currency': 'JOD', 'transactions': <Payment>[]};
       }
-      return response.data!;
-    }
-    
-    // If fetch fails, return cached data if available
-    if (persistentCache != null) {
-      return {
-        'balance': cached?['balance'] ?? 0.0,
-        'currency': cached?['currency'] ?? 'JOD',
-        'transactions': persistentCache,
-      };
-    }
-    if (cached != null) {
-      return cached;
-    }
-    
-    return {
-      'balance': 0.0,
-      'currency': 'JOD',
-      'transactions': <Payment>[],
-    };
-  } catch (e) {
-    // Return cached data on error if available
-    if (persistentCache != null) {
-      return {
-        'balance': cached?['balance'] ?? 0.0,
-        'currency': cached?['currency'] ?? 'JOD',
-        'transactions': persistentCache,
-      };
-    }
-    if (cached != null) {
-      return cached;
-    }
-    return {
-      'balance': 0.0,
-      'currency': 'JOD',
-      'transactions': <Payment>[],
-    };
-  }
-});
+
+      final cacheKey = 'payment_history_${userId}_$type';
+
+      // 1. Check in-memory cache first (instant)
+      final cached = ref.read(_paymentHistoryCacheProvider(type));
+      if (cached != null) {
+        // Return cached immediately, continue fetching fresh
+      }
+
+      // 2. Try persistent cache (for transactions list)
+      final persistentCache = await CacheService.getList<Payment>(
+        '${cacheKey}_transactions',
+        (json) => Payment.fromJson(json),
+      );
+
+      if (persistentCache != null) {
+        final cachedData = {
+          'balance': cached?['balance'] ?? 0.0,
+          'currency': cached?['currency'] ?? 'JOD',
+          'transactions': persistentCache,
+        };
+        ref.read(_paymentHistoryCacheProvider(type).notifier).state =
+            cachedData;
+        // Return cached immediately, continue fetching fresh
+      }
+
+      // 3. Fetch fresh data
+      try {
+        final response = await repository.getPaymentHistory(type: type);
+
+        if (response.success && response.data != null) {
+          // Save to both caches
+          ref.read(_paymentHistoryCacheProvider(type).notifier).state =
+              response.data!;
+          final transactions = response.data!['transactions'] as List<Payment>?;
+          if (transactions != null) {
+            await CacheService.setList(
+              '${cacheKey}_transactions',
+              transactions,
+              (payment) => payment.toJson(),
+            );
+          }
+          return response.data!;
+        }
+
+        // If fetch fails, return cached data if available
+        if (persistentCache != null) {
+          return {
+            'balance': cached?['balance'] ?? 0.0,
+            'currency': cached?['currency'] ?? 'JOD',
+            'transactions': persistentCache,
+          };
+        }
+        if (cached != null) {
+          return cached;
+        }
+
+        return {'balance': 0.0, 'currency': 'JOD', 'transactions': <Payment>[]};
+      } catch (e) {
+        // Return cached data on error if available
+        if (persistentCache != null) {
+          return {
+            'balance': cached?['balance'] ?? 0.0,
+            'currency': cached?['currency'] ?? 'JOD',
+            'transactions': persistentCache,
+          };
+        }
+        if (cached != null) {
+          return cached;
+        }
+        return {'balance': 0.0, 'currency': 'JOD', 'transactions': <Payment>[]};
+      }
+    });
 
 // Legacy provider for backward compatibility (still used for freelancer balance)
 final freelancerBalanceProvider = FutureProvider<double>((ref) async {
@@ -126,7 +114,9 @@ final freelancerBalanceProvider = FutureProvider<double>((ref) async {
 });
 
 // Derived provider for balance from payment history (reuses paymentHistoryProvider cache)
-final balanceFromHistoryProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final balanceFromHistoryProvider = FutureProvider<Map<String, dynamic>>((
+  ref,
+) async {
   try {
     final historyData = await ref.watch(paymentHistoryProvider('all').future);
     return {
@@ -183,7 +173,6 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     final user = ref.watch(authStateProvider).user;
     final roleId = user?.roleId ?? 0;
     final isClient = roleId == 2;
@@ -192,7 +181,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     // Fetch unified payment history (all transactions)
     final historyAsync = ref.watch(paymentHistoryProvider('all'));
     final selectedFilter = ref.watch(_selectedFilterProvider);
-    
+
     // Use filter-specific history if filter is not 'all'
     final filteredHistoryAsync = selectedFilter == 'all'
         ? historyAsync
@@ -219,7 +208,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               .cast<Payment>()
               .toList();
           final balance = (historyData['balance'] as num?)?.toDouble() ?? 0.0;
-          
+
           return _buildContent(
             context,
             ref,
@@ -268,7 +257,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     // Back button in circle
@@ -325,93 +317,95 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               ),
             ),
 
-                  const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-                  // Top Balance Section (Hero)
-                  _buildBalanceHero(
-                    context,
-                    displayBalance,
-                    isClient,
-                  ),
+            // Top Balance Section (Hero)
+            _buildBalanceHero(context, displayBalance, isClient),
 
-                  const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-                  // Filter chips (optional)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildFilterChips(context, ref, isFreelancer),
-                  ),
+            // Filter chips (optional)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildFilterChips(context, ref, isFreelancer),
+            ),
 
-                  const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-                  // Recent Activity Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _buildRecentActivitySection(
-                      context,
-                      transactions,
-                      isClient,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Refer & Earn Card (hidden by default)
-                  if (_showReferAndEarn)
-                    Padding(
-                      key: _referAndEarnKey,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildReferAndEarnCard(context, ref),
-                    ),
-
-                  if (_showReferAndEarn) const SizedBox(height: 24),
-
-                  // Toggle button for Refer & Earn
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    child: TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _showReferAndEarn = !_showReferAndEarn;
-                        });
-                        // Auto-scroll to Refer & Earn when showing
-                        if (_showReferAndEarn) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollToReferAndEarn();
-                          });
-                        }
-                      },
-                      icon: Icon(
-                        _showReferAndEarn ? Icons.expand_less : Icons.card_giftcard_rounded,
-                        size: 18,
-                      ),
-                      label: Text(
-                        l10n.referAndEarn,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF6B7280),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-                ],
+            // Recent Activity Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildRecentActivitySection(
+                context,
+                transactions,
+                isClient,
               ),
             ),
-          );
+
+            const SizedBox(height: 24),
+
+            // Refer & Earn Card (hidden by default)
+            if (_showReferAndEarn)
+              Padding(
+                key: _referAndEarnKey,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildReferAndEarnCard(context, ref),
+              ),
+
+            if (_showReferAndEarn) const SizedBox(height: 24),
+
+            // Toggle button for Refer & Earn
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _showReferAndEarn = !_showReferAndEarn;
+                  });
+                  // Auto-scroll to Refer & Earn when showing
+                  if (_showReferAndEarn) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _scrollToReferAndEarn();
+                    });
+                  }
+                },
+                icon: Icon(
+                  _showReferAndEarn
+                      ? Icons.expand_less
+                      : Icons.card_giftcard_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  l10n.referAndEarn,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF6B7280),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
   }
 
-  Widget _buildBalanceHero(BuildContext context, double balance, bool isClient) {
+  Widget _buildBalanceHero(
+    BuildContext context,
+    double balance,
+    bool isClient,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    final numberFormat = NumberFormat.currency(
-      symbol: '',
-      decimalDigits: 2,
-    );
+    final numberFormat = NumberFormat.currency(symbol: '', decimalDigits: 2);
     final formattedBalance = numberFormat.format(balance);
 
     return Padding(
@@ -470,7 +464,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   Widget _buildReferAndEarnCard(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final referralsAsync = ref.watch(myReferralsProvider);
-    
+
     return referralsAsync.when(
       loading: () => Container(
         padding: const EdgeInsets.all(20),
@@ -513,10 +507,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.failedToLoad,
-                  style: TextStyle(
-                    color: Colors.red.shade700,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.red.shade700, fontSize: 14),
                 ),
                 const SizedBox(height: 12),
                 TextButton(
@@ -531,7 +522,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       data: (referralInfo) {
         // Use the cleaned ReferralInfo model
         final hasValidCode = referralInfo.hasValidCode;
-        
+
         return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -581,7 +572,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                         Text(
                           l10n.inviteFriends,
                           style: TextStyle(
-                            color: const Color(0xFF111827).withValues(alpha: 0.6),
+                            color: const Color(
+                              0xFF111827,
+                            ).withValues(alpha: 0.6),
                             fontSize: 13,
                           ),
                         ),
@@ -591,17 +584,17 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              
+
               // Code box
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFE5E7EB),
-                    width: 1,
-                  ),
+                  border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
                 ),
                 child: Row(
                   children: [
@@ -638,7 +631,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           size: 20,
                         ),
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: referralInfo.code));
+                          Clipboard.setData(
+                            ClipboardData(text: referralInfo.code),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(l10n.codeCopied),
@@ -654,7 +649,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Share button
               SizedBox(
                 width: double.infinity,
@@ -665,8 +660,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   icon: const Icon(Icons.share_rounded, size: 20),
                   label: Text(l10n.shareInvite),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: hasValidCode 
-                        ? const Color(0xFFFB923C) 
+                    backgroundColor: hasValidCode
+                        ? const Color(0xFFFB923C)
                         : const Color(0xFF9CA3AF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -678,12 +673,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Stats row
               Row(
                 children: [
                   Expanded(
-                    child: _buildStatItem(l10n.invited, referralInfo.invited.toString()),
+                    child: _buildStatItem(
+                      l10n.invited,
+                      referralInfo.invited.toString(),
+                    ),
                   ),
                   Container(
                     width: 1,
@@ -691,7 +689,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     color: const Color(0xFFE5E7EB),
                   ),
                   Expanded(
-                    child: _buildStatItem(l10n.successful, referralInfo.successful.toString()),
+                    child: _buildStatItem(
+                      l10n.successful,
+                      referralInfo.successful.toString(),
+                    ),
                   ),
                   Container(
                     width: 1,
@@ -699,12 +700,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                     color: const Color(0xFFE5E7EB),
                   ),
                   Expanded(
-                    child: _buildStatItem(l10n.earned, '${referralInfo.earned.toStringAsFixed(1)} ${referralInfo.currency}'),
+                    child: _buildStatItem(
+                      l10n.earned,
+                      '${referralInfo.earned.toStringAsFixed(1)} ${referralInfo.currency}',
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Rules text
               Container(
                 padding: const EdgeInsets.all(12),
@@ -730,7 +734,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   }
 
   /// Handle share invite action
-  Future<void> _handleShareInvite(BuildContext context, ReferralInfo referralInfo) async {
+  Future<void> _handleShareInvite(
+    BuildContext context,
+    ReferralInfo referralInfo,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     if (!referralInfo.hasValidCode) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -745,7 +752,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     try {
       // Build share message
       String message = l10n.shareMessage(referralInfo.code);
-      
+
       // Append link if available
       if (referralInfo.link != null && referralInfo.link!.isNotEmpty) {
         message += '\n\n${referralInfo.link}';
@@ -767,7 +774,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       }
     }
   }
-  
+
   Widget _buildStatItem(String label, String value) {
     return Column(
       children: [
@@ -792,10 +799,14 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     );
   }
 
-  Widget _buildFilterChips(BuildContext context, WidgetRef ref, bool isFreelancer) {
+  Widget _buildFilterChips(
+    BuildContext context,
+    WidgetRef ref,
+    bool isFreelancer,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final selectedFilter = ref.watch(_selectedFilterProvider);
-    
+
     final filters = isFreelancer
         ? ['all', 'plan', 'project', 'wallet']
         : ['all', 'plan', 'project'];
@@ -808,11 +819,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           final label = filter == 'all'
               ? l10n.all
               : filter == 'plan'
-                  ? l10n.subscriptions
-                  : filter == 'project'
-                      ? l10n.projects
-                      : l10n.balance;
-          
+              ? l10n.subscriptions
+              : filter == 'project'
+              ? l10n.projects
+              : l10n.balance;
+
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
@@ -860,11 +871,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             TextButton(
               onPressed: () {
                 // Navigate to details if exists, otherwise no-op
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.viewDetails),
-                  ),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.viewDetails)));
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -896,10 +905,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             child: Center(
               child: Text(
                 l10n.noTransactions,
-                style: const TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontSize: 14,
-                ),
+                style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
               ),
             ),
           )
@@ -914,37 +920,45 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   Widget _buildTransactionCard(Payment payment, bool isClient) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final timeFormat = DateFormat('hh:mm a');
-    
+
     // Determine if income (for freelancers: wallet credit or escrow released)
     final source = payment.source ?? payment.purpose ?? '';
     final statusLower = payment.status.toLowerCase();
     final isIncome = isClient
         ? false // Client always pays (expense)
-        : (payment.type?.toLowerCase() == 'credit' || 
-           statusLower == 'released' ||
-           source == 'wallet');
+        : (payment.type?.toLowerCase() == 'credit' ||
+              statusLower == 'released' ||
+              source == 'wallet');
 
     final amountColor = isIncome ? Colors.green : Colors.red;
     final amountPrefix = isIncome ? '+' : '-';
 
     // Get enriched display name/title (use new enriched fields if available)
-    final String displayName = payment.title ?? 
-                        payment.projectTitle ?? 
-                        payment.note ?? 
-                        'Transaction';
-    
+    final String displayName =
+        payment.title ?? payment.projectTitle ?? payment.note ?? 'Transaction';
+
     // Get description/subtitle
-    String subtitle = payment.description ?? 
-                     (payment.source == 'plan' ? 'Plan Subscription' : 
-                      payment.source == 'project' ? 'Project Payment' :
-                      payment.source == 'wallet' ? 'Wallet Transaction' : '');
-    
+    String subtitle =
+        payment.description ??
+        (payment.source == 'plan'
+            ? 'Plan Subscription'
+            : payment.source == 'project'
+            ? 'Project Payment'
+            : payment.source == 'wallet'
+            ? 'Wallet Transaction'
+            : '');
+
     // Add status to subtitle if available
     if (payment.status != 'paid' && payment.status.isNotEmpty) {
-      final statusLabel = payment.status == 'held' ? 'Held' :
-                         payment.status == 'released' ? 'Released' :
-                         payment.status == 'refunded' ? 'Refunded' :
-                         payment.status == 'failed' ? 'Failed' : payment.status;
+      final statusLabel = payment.status == 'held'
+          ? 'Held'
+          : payment.status == 'released'
+          ? 'Released'
+          : payment.status == 'refunded'
+          ? 'Refunded'
+          : payment.status == 'failed'
+          ? 'Failed'
+          : payment.status;
       subtitle = subtitle.isNotEmpty ? '$subtitle • $statusLabel' : statusLabel;
     }
 
@@ -958,9 +972,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
         initials = words[0][0].toUpperCase();
       }
     }
-    
+
     // Format date + time
-    final dateTimeStr = '${dateFormat.format(payment.createdAt)} • ${timeFormat.format(payment.createdAt)}';
+    final dateTimeStr =
+        '${dateFormat.format(payment.createdAt)} • ${timeFormat.format(payment.createdAt)}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -968,10 +983,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -1057,7 +1069,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               if (payment.source != null) ...[
                 const SizedBox(height: 2),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),

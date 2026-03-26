@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -49,9 +50,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.md),
 
               // A) TOP HEADER
-              const HomeHeader(
-                roleRoute: '/freelancer',
-              ),
+              const HomeHeader(roleRoute: '/freelancer'),
 
               const SizedBox(height: AppSpacing.xl),
 
@@ -80,7 +79,13 @@ class FreelancerHomeScreen extends ConsumerWidget {
 
               const SizedBox(height: AppSpacing.md),
 
-              _buildWorkspaceContent(context, ref, workspaceAsync, selectedTab, l10n),
+              _buildWorkspaceContent(
+                context,
+                ref,
+                workspaceAsync,
+                selectedTab,
+                l10n,
+              ),
 
               const SizedBox(height: AppSpacing.xl),
 
@@ -104,11 +109,31 @@ class FreelancerHomeScreen extends ConsumerWidget {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 0,
         items: [
-          NavItem(icon: Icons.home_outlined, title: l10n.home, route: '/freelancer'),
-          NavItem(icon: Icons.work_outline, title: l10n.myProjects, route: '/freelancer/projects'),
-          NavItem(icon: Icons.explore_outlined, title: l10n.explore, route: '/freelancer/explore'),
-          NavItem(icon: Icons.payments_outlined, title: l10n.payments, route: '/freelancer/payments'),
-          NavItem(icon: Icons.person_outline, title: l10n.profile, route: '/freelancer/profile'),
+          NavItem(
+            icon: Icons.home_outlined,
+            title: l10n.home,
+            route: '/freelancer',
+          ),
+          NavItem(
+            icon: Icons.work_outline,
+            title: l10n.myProjects,
+            route: '/freelancer/projects',
+          ),
+          NavItem(
+            icon: Icons.explore_outlined,
+            title: l10n.explore,
+            route: '/freelancer/explore',
+          ),
+          NavItem(
+            icon: Icons.payments_outlined,
+            title: l10n.payments,
+            route: '/freelancer/payments',
+          ),
+          NavItem(
+            icon: Icons.person_outline,
+            title: l10n.profile,
+            route: '/freelancer/profile',
+          ),
         ],
       ),
     );
@@ -211,8 +236,10 @@ class FreelancerHomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               ListTile(
-                leading: const Icon(Icons.notifications_outlined,
-                    color: AppColors.accentOrange),
+                leading: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.accentOrange,
+                ),
                 title: Text(l10n.notifications),
                 onTap: () {
                   Navigator.pop(context);
@@ -220,8 +247,10 @@ class FreelancerHomeScreen extends ConsumerWidget {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.settings_outlined,
-                    color: AppColors.accentOrange),
+                leading: const Icon(
+                  Icons.settings_outlined,
+                  color: AppColors.accentOrange,
+                ),
                 title: Text(l10n.settings),
                 onTap: () {
                   Navigator.pop(context);
@@ -236,20 +265,43 @@ class FreelancerHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWorkspaceTabs(BuildContext context, WidgetRef ref, WorkspaceTab selectedTab, AppLocalizations l10n) {
+  Widget _buildWorkspaceTabs(
+    BuildContext context,
+    WidgetRef ref,
+    WorkspaceTab selectedTab,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Row(
         children: [
-          _buildTabChip(context, ref, l10n.actionRequired, WorkspaceTab.actionRequired, selectedTab),
+          _buildTabChip(
+            context,
+            ref,
+            l10n.actionRequired,
+            WorkspaceTab.actionRequired,
+            selectedTab,
+          ),
           const SizedBox(width: AppSpacing.md),
-          _buildTabChip(context, ref, l10n.active, WorkspaceTab.active, selectedTab),
+          _buildTabChip(
+            context,
+            ref,
+            l10n.active,
+            WorkspaceTab.active,
+            selectedTab,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTabChip(BuildContext context, WidgetRef ref, String label, WorkspaceTab tab, WorkspaceTab selectedTab) {
+  Widget _buildTabChip(
+    BuildContext context,
+    WidgetRef ref,
+    String label,
+    WorkspaceTab tab,
+    WorkspaceTab selectedTab,
+  ) {
     final isSelected = selectedTab == tab;
     return GestureDetector(
       onTap: () {
@@ -263,10 +315,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           gradient: isSelected
               ? const LinearGradient(
-                  colors: [
-                    AppColors.gradientStart,
-                    AppColors.gradientEnd,
-                  ],
+                  colors: [AppColors.gradientStart, AppColors.gradientEnd],
                 )
               : null,
           color: isSelected ? null : AppColors.surface,
@@ -323,7 +372,11 @@ class FreelancerHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWorkspaceErrorState(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+  Widget _buildWorkspaceErrorState(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Center(
@@ -354,7 +407,11 @@ class FreelancerHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyWorkspace(BuildContext context, WorkspaceTab selectedTab, AppLocalizations l10n) {
+  Widget _buildEmptyWorkspace(
+    BuildContext context,
+    WorkspaceTab selectedTab,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Center(
@@ -384,8 +441,11 @@ class FreelancerHomeScreen extends ConsumerWidget {
       ),
     );
   }
-  
-  Widget _buildGradientButton({required String label, required VoidCallback onTap}) {
+
+  Widget _buildGradientButton({
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(

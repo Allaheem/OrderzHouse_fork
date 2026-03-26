@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,13 +13,11 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 class ProjectMessagesScreen extends ConsumerStatefulWidget {
   final int projectId;
 
-  const ProjectMessagesScreen({
-    super.key,
-    required this.projectId,
-  });
+  const ProjectMessagesScreen({super.key, required this.projectId});
 
   @override
-  ConsumerState<ProjectMessagesScreen> createState() => _ProjectMessagesScreenState();
+  ConsumerState<ProjectMessagesScreen> createState() =>
+      _ProjectMessagesScreenState();
 }
 
 class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
@@ -58,7 +57,7 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
         ref.read(projectUnreadControllerProvider).markAsRead(widget.projectId);
       });
     }
-    
+
     final messagesAsync = ref.watch(projectMessagesProvider(widget.projectId));
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.user?.id;
@@ -116,19 +115,26 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
             child: messagesAsync.when(
               loading: () => const Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.accentOrange,
+                  ),
                 ),
               ),
               error: (error, stackTrace) => ErrorState(
                 message: error.toString().replaceAll('Exception: ', ''),
-                onRetry: () => ref.invalidate(projectMessagesProvider(widget.projectId)),
+                onRetry: () =>
+                    ref.invalidate(projectMessagesProvider(widget.projectId)),
               ),
               data: (messages) {
-                print('📱 [ProjectMessagesScreen] Received ${messages.length} messages');
-                
+                print(
+                  '📱 [ProjectMessagesScreen] Received ${messages.length} messages',
+                );
+
                 // Handle empty list safely
                 if (messages.isEmpty) {
-                  print('ℹ️ [ProjectMessagesScreen] Messages list is empty, showing empty state');
+                  print(
+                    'ℹ️ [ProjectMessagesScreen] Messages list is empty, showing empty state',
+                  );
                   return const EmptyState(
                     icon: Icons.chat_bubble_outline_rounded,
                     title: 'No messages yet',
@@ -136,8 +142,10 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
                   );
                 }
 
-                print('✅ [ProjectMessagesScreen] Displaying ${messages.length} messages');
-                
+                print(
+                  '✅ [ProjectMessagesScreen] Displaying ${messages.length} messages',
+                );
+
                 // Scroll to bottom when messages load
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _scrollToBottom();
@@ -145,11 +153,16 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
 
                 return ListView.builder(
                   controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final isCurrentUser = currentUserId != null && message.senderId == currentUserId;
+                    final isCurrentUser =
+                        currentUserId != null &&
+                        message.senderId == currentUserId;
                     return _buildMessageBubble(message, isCurrentUser);
                   },
                 );
@@ -163,11 +176,13 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
 
   Widget _buildMessageBubble(Message message, bool isCurrentUser) {
     final senderName = message.sender?.fullName ?? 'Unknown';
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isCurrentUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser) ...[
@@ -226,7 +241,9 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
                   Text(
                     message.content,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: isCurrentUser ? Colors.white : AppColors.textPrimary,
+                      color: isCurrentUser
+                          ? Colors.white
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),

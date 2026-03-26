@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,7 +28,7 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
         final locale = ref.watch(localeProvider);
         final termsContent = TermsContent.getContent(locale.languageCode);
         final isArabic = locale.languageCode == 'ar';
-        
+
         return PopScope(
           canPop: false, // Block back navigation
           onPopInvoked: (bool didPop) {
@@ -65,12 +66,16 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
                           // Fundamental Terms Section (unchanged)
                           _buildSection(
                             title: termsContent.fundamentalTerms.title,
-                            content: termsContent.fundamentalTerms.terms.join('\n\n'),
+                            content: termsContent.fundamentalTerms.terms.join(
+                              '\n\n',
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.xl),
                           // Refund Policy Section
                           _buildSection(
-                            title: isArabic ? 'سياسة الاسترداد' : 'Refund Policy',
+                            title: isArabic
+                                ? 'سياسة الاسترداد'
+                                : 'Refund Policy',
                             content: _getRefundPolicyContent(isArabic),
                           ),
                           const SizedBox(height: AppSpacing.xl),
@@ -91,9 +96,9 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 12),
                                   child: Text(
-                                    isArabic 
-                                      ? 'لقد قرأت وأوافق على الشروط والأحكام وسياسة الاسترداد'
-                                      : 'I have read and agree to the Terms & Conditions and Refund Policy',
+                                    isArabic
+                                        ? 'لقد قرأت وأوافق على الشروط والأحكام وسياسة الاسترداد'
+                                        : 'I have read and agree to the Terms & Conditions and Refund Policy',
                                     style: AppTextStyles.bodyMedium,
                                   ),
                                 ),
@@ -110,7 +115,9 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: PrimaryGradientButton(
                       label: isArabic ? 'قبول والمتابعة' : 'Accept & Continue',
-                      onPressed: _agreed && !_isSubmitting ? _handleAccept : null,
+                      onPressed: _agreed && !_isSubmitting
+                          ? _handleAccept
+                          : null,
                       isLoading: _isSubmitting,
                       height: 54,
                       borderRadius: 16,
@@ -237,7 +244,7 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
 10) الدعم
 اتصل بالدعم مع رقم الطلب، وسبب النزاع، والأدلة.''';
     }
-    
+
     return '''Refund Policy – ORDERZHOUSE
 
 At ORDERZHOUSE, we aim to provide a safe and fair marketplace for both Clients and Service Providers. ORDERZHOUSE acts as a digital intermediary that organizes orders, secures payments, and manages disputes. This policy explains how refunds work, with the main principle that approved refunds are returned to the user's ORDERZHOUSE Wallet to be used for future purchases.

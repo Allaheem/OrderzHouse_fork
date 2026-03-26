@@ -1147,7 +1147,40 @@ const verifyAndRegister = async (req, res) => {
   } catch (err) {
     await client.query("ROLLBACK");
     console.error("verifyAndRegister Error:", err);
-    return res.status(500).json({ success: false, message: "Registration failed", error: err.message });
+    if (err?.code === "23505") {
+      const constraint = String(err?.constraint || "");
+      if (constraint.includes("users_phone_number_key")) {
+        return res.status(409).json({
+          success: false,
+          message: "Phone number already registered",
+          error: err.message,
+        });
+      }
+      if (constraint.includes("users_email_key")) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already registered",
+          error: err.message,
+        });
+      }
+      if (constraint.includes("users_username_key")) {
+        return res.status(409).json({
+          success: false,
+          message: "Username already taken",
+          error: err.message,
+        });
+      }
+      return res.status(409).json({
+        success: false,
+        message: "Duplicate data",
+        error: err.message,
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: "Registration failed",
+      error: err.message,
+    });
   } finally {
     client.release();
   }

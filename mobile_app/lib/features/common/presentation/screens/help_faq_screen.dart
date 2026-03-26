@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -77,7 +78,9 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Support request submitted. We\'ll get back to you soon!'),
+          content: Text(
+            'Support request submitted. We\'ll get back to you soon!',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -90,9 +93,11 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
     }
     final query = _searchController.text.toLowerCase();
     return _faqs
-        .where((faq) =>
-            faq['question']!.toLowerCase().contains(query) ||
-            faq['answer']!.toLowerCase().contains(query))
+        .where(
+          (faq) =>
+              faq['question']!.toLowerCase().contains(query) ||
+              faq['answer']!.toLowerCase().contains(query),
+        )
         .toList();
   }
 
@@ -116,10 +121,7 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
         child: Column(
           children: [
             // Header
-            AppHeader(
-              title: l10n.helpFaq,
-              onBack: _handleBack,
-            ),
+            AppHeader(title: l10n.helpFaq, onBack: _handleBack),
             // Search Bar
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -148,7 +150,10 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: AppColors.accentOrange, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.accentOrange,
+                      width: 2,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
@@ -181,9 +186,12 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                       ),
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                      ),
                       itemCount: filteredFaqs.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: AppSpacing.md),
                       itemBuilder: (context, index) {
                         final faqIndex = _faqs.indexOf(filteredFaqs[index]);
                         final isExpanded = _expandedItems[faqIndex] ?? false;
@@ -268,7 +276,9 @@ class _FaqCard extends StatelessWidget {
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Icon(
-                    isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                    isExpanded
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
                     color: AppColors.textSecondary,
                   ),
                 ],

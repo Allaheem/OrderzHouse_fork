@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -5,48 +6,48 @@ import 'package:intl/intl.dart';
 class NotificationType {
   static const String projectCreated = 'project_created';
   static const String projectStatusChanged = 'project_status_changed';
-  
+
   static const String offerSubmitted = 'offer_submitted';
   static const String offerApproved = 'offer_approved';
   static const String offerRejected = 'offer_rejected';
-  
+
   static const String freelancerAssigned = 'freelancer_assigned';
   static const String freelancerRemoved = 'freelancer_removed';
-  
+
   static const String workSubmitted = 'work_submitted';
   static const String workApproved = 'work_approved';
   static const String workRevisionRequested = 'work_revision_requested';
-  
+
   static const String escrowCreated = 'escrow_created';
   static const String escrowReleased = 'escrow_released';
-  
+
   static const String paymentReleased = 'payment_released';
   static const String paymentApproved = 'payment_approved';
   static const String paymentRejected = 'payment_rejected';
   static const String paymentPending = 'payment_pending';
-  
+
   static const String taskRequested = 'task_requested';
   static const String taskRequestAccepted = 'task_request_accepted';
   static const String taskRequestRejected = 'task_request_rejected';
   static const String taskCompleted = 'task_completed';
   static const String taskNeedsApproval = 'task_needs_approval';
-  
+
   static const String userRegistered = 'user_registered';
   static const String userVerified = 'user_verified';
   static const String userVerificationRejected = 'user_verification_rejected';
-  
+
   static const String reviewSubmitted = 'review_submitted';
   static const String messageReceived = 'message_received';
-  
+
   static const String appointmentScheduled = 'appointment_scheduled';
   static const String appointmentCancelled = 'appointment_cancelled';
   static const String appointmentRequested = 'appointment_requested';
   static const String appointmentRescheduled = 'appointment_rescheduled';
   static const String appointmentCompleted = 'appointment_completed';
-  
+
   static const String courseEnrolled = 'course_enrolled';
   static const String subscriptionStatusChanged = 'subscription_status_changed';
-  
+
   static const String systemAnnouncement = 'system_announcement';
   static const String chatsAdmin = 'chats_admin';
 }
@@ -72,7 +73,7 @@ class AppNotification {
   final String? entityType;
   final bool isRead;
   final DateTime createdAt;
-  
+
   // Additional IDs for navigation (extracted from metadata or referenceId)
   final int? projectId;
   final int? assignmentId;
@@ -100,55 +101,73 @@ class AppNotification {
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     // Extract IDs from various possible fields
-    final refId = json['reference_id'] as int? ?? 
-                  json['referenceId'] as int? ?? 
-                  json['related_entity_id'] as int?;
-    
+    final refId =
+        json['reference_id'] as int? ??
+        json['referenceId'] as int? ??
+        json['related_entity_id'] as int?;
+
     // Try to extract specific IDs from metadata or separate fields
     final metadata = json['metadata'] as Map<String, dynamic>?;
-    final projectId = json['project_id'] as int? ?? 
-                      json['projectId'] as int? ??
-                      metadata?['project_id'] as int? ??
-                      metadata?['projectId'] as int?;
-    
-    final assignmentId = json['assignment_id'] as int? ?? 
-                         json['assignmentId'] as int? ??
-                         metadata?['assignment_id'] as int? ??
-                         metadata?['assignmentId'] as int?;
-    
-    final offerId = json['offer_id'] as int? ?? 
-                    json['offerId'] as int? ??
-                    metadata?['offer_id'] as int? ??
-                    metadata?['offerId'] as int?;
-    
-    final paymentId = json['payment_id'] as int? ?? 
-                      json['paymentId'] as int? ??
-                      metadata?['payment_id'] as int? ??
-                      metadata?['paymentId'] as int?;
-    
-    final messageId = json['message_id'] as int? ?? 
-                      json['messageId'] as int? ??
-                      metadata?['message_id'] as int? ??
-                      metadata?['messageId'] as int?;
-    
-    final taskId = json['task_id'] as int? ?? 
-                   json['taskId'] as int? ??
-                   metadata?['task_id'] as int? ??
-                   metadata?['taskId'] as int?;
-    
+    final projectId =
+        json['project_id'] as int? ??
+        json['projectId'] as int? ??
+        metadata?['project_id'] as int? ??
+        metadata?['projectId'] as int?;
+
+    final assignmentId =
+        json['assignment_id'] as int? ??
+        json['assignmentId'] as int? ??
+        metadata?['assignment_id'] as int? ??
+        metadata?['assignmentId'] as int?;
+
+    final offerId =
+        json['offer_id'] as int? ??
+        json['offerId'] as int? ??
+        metadata?['offer_id'] as int? ??
+        metadata?['offerId'] as int?;
+
+    final paymentId =
+        json['payment_id'] as int? ??
+        json['paymentId'] as int? ??
+        metadata?['payment_id'] as int? ??
+        metadata?['paymentId'] as int?;
+
+    final messageId =
+        json['message_id'] as int? ??
+        json['messageId'] as int? ??
+        metadata?['message_id'] as int? ??
+        metadata?['messageId'] as int?;
+
+    final taskId =
+        json['task_id'] as int? ??
+        json['taskId'] as int? ??
+        metadata?['task_id'] as int? ??
+        metadata?['taskId'] as int?;
+
     // If entityType is 'project' and we have referenceId but no projectId, use referenceId
-    final entityType = json['entity_type'] as String? ?? json['entityType'] as String?;
-    final resolvedProjectId = projectId ?? 
-                              (entityType == 'project' ? refId : null);
-    
+    final entityType =
+        json['entity_type'] as String? ?? json['entityType'] as String?;
+    final resolvedProjectId =
+        projectId ?? (entityType == 'project' ? refId : null);
+
     return AppNotification(
       id: json['id'] as int,
-      title: json['title'] as String? ?? json['notification_title'] as String? ?? 'Notification',
-      body: json['body'] as String? ?? json['message'] as String? ?? json['notification_body'] as String?,
+      title:
+          json['title'] as String? ??
+          json['notification_title'] as String? ??
+          'Notification',
+      body:
+          json['body'] as String? ??
+          json['message'] as String? ??
+          json['notification_body'] as String?,
       type: json['type'] as String? ?? json['notification_type'] as String?,
       referenceId: refId,
       entityType: entityType,
-      isRead: json['is_read'] as bool? ?? json['read_status'] as bool? ?? json['isRead'] as bool? ?? false,
+      isRead:
+          json['is_read'] as bool? ??
+          json['read_status'] as bool? ??
+          json['isRead'] as bool? ??
+          false,
       createdAt: _dateTimeFromJson(json['created_at'] ?? json['createdAt']),
       projectId: resolvedProjectId,
       assignmentId: assignmentId,
@@ -158,56 +177,59 @@ class AppNotification {
       taskId: taskId,
     );
   }
-  
+
   /// Get the primary project ID for navigation (projectId or referenceId if entityType is project)
   int? get primaryProjectId {
     if (projectId != null) return projectId;
-    if (entityType == EntityType.project && referenceId != null) return referenceId;
+    if (entityType == EntityType.project && referenceId != null)
+      return referenceId;
     return null;
   }
-  
+
   /// Check if this notification should open project details
   bool get isProjectRelated {
-    if (entityType == EntityType.project || entityType == EntityType.escrow) return true;
+    if (entityType == EntityType.project || entityType == EntityType.escrow)
+      return true;
     final t = type?.toLowerCase() ?? '';
-    return t.contains('project') || 
-           t.contains('work') || 
-           t.contains('freelancer_assigned') ||
-           t.contains('freelancer_removed');
+    return t.contains('project') ||
+        t.contains('work') ||
+        t.contains('freelancer_assigned') ||
+        t.contains('freelancer_removed');
   }
-  
+
   /// Check if this notification should open applicants/offers
   bool get isOfferRelated {
     if (entityType == EntityType.offer) return true;
     final t = type?.toLowerCase() ?? '';
     return t.contains('offer');
   }
-  
+
   /// Check if this is a delivery/work notification
   bool get isDeliveryRelated {
     final t = type?.toLowerCase() ?? '';
     return t == NotificationType.workSubmitted ||
-           t == NotificationType.workApproved ||
-           t == NotificationType.workRevisionRequested;
+        t == NotificationType.workApproved ||
+        t == NotificationType.workRevisionRequested;
   }
-  
+
   /// Check if this is a payment notification
   bool get isPaymentRelated {
     if (entityType == EntityType.escrow) return true;
     final t = type?.toLowerCase() ?? '';
     return t.contains('payment') || t.contains('escrow');
   }
-  
+
   /// Check if this is a message notification
   bool get isMessageRelated {
     if (entityType == EntityType.message) return true;
     final t = type?.toLowerCase() ?? '';
     return t.contains('message');
   }
-  
+
   /// Check if this is a task notification
   bool get isTaskRelated {
-    if (entityType == EntityType.task || entityType == EntityType.taskRequest) return true;
+    if (entityType == EntityType.task || entityType == EntityType.taskRequest)
+      return true;
     final t = type?.toLowerCase() ?? '';
     return t.contains('task');
   }
@@ -242,7 +264,7 @@ class AppNotification {
 
   IconData get iconData {
     if (type == null) return Icons.notifications_outlined;
-    
+
     switch (type!.toLowerCase()) {
       case 'project_created':
       case 'project_status_changed':

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/models/project.dart';
@@ -27,7 +28,8 @@ class ExploreProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double imageHeight = 120.0; // Reduced from 140 to make card shorter
-    const double cardRadius = 16.0; // Rounded corners matching screenshot (16-20px range)
+    const double cardRadius =
+        16.0; // Rounded corners matching screenshot (16-20px range)
 
     return GestureDetector(
       onTap: onTap,
@@ -59,7 +61,8 @@ class ExploreProjectCard extends StatelessWidget {
                       topLeft: Radius.circular(cardRadius),
                       topRight: Radius.circular(cardRadius),
                     ),
-                    child: project.coverPic != null &&
+                    child:
+                        project.coverPic != null &&
                             project.coverPic!.isNotEmpty &&
                             AppConfig.baseUrl.isNotEmpty
                         ? CachedNetworkImage(
@@ -76,14 +79,18 @@ class ExploreProjectCard extends StatelessWidget {
                               child: const Center(
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ),
                             errorWidget: (context, url, error) => Container(
                               height: imageHeight,
                               width: double.infinity,
-                              color: const Color(0xFFE5E7EB), // Light gray placeholder
+                              color: const Color(
+                                0xFFE5E7EB,
+                              ), // Light gray placeholder
                               child: const Center(
                                 child: Icon(
                                   Icons.work_outline_rounded,
@@ -96,7 +103,9 @@ class ExploreProjectCard extends StatelessWidget {
                         : Container(
                             height: imageHeight,
                             width: double.infinity,
-                            color: const Color(0xFFE5E7EB), // Light gray placeholder
+                            color: const Color(
+                              0xFFE5E7EB,
+                            ), // Light gray placeholder
                             child: const Center(
                               child: Icon(
                                 Icons.work_outline_rounded,
@@ -168,7 +177,9 @@ class ExploreProjectCard extends StatelessWidget {
                       Text(
                         project.budgetDisplay,
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: const Color(0xFF111827), // Near-black, matching screenshot
+                          color: const Color(
+                            0xFF111827,
+                          ), // Near-black, matching screenshot
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -177,9 +188,9 @@ class ExploreProjectCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 6),
-                  
+
                   // Description (1-2 lines)
                   Text(
                     project.description,

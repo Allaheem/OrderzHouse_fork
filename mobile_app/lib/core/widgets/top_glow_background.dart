@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -35,10 +36,7 @@ class TopGlowBackground extends StatelessWidget {
           ),
         ),
         // Content layer
-        if (useSafeArea)
-          SafeArea(child: child)
-        else
-          child,
+        if (useSafeArea) SafeArea(child: child) else child,
       ],
     );
   }

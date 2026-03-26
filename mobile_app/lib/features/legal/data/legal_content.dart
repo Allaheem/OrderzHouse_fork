@@ -1,3 +1,4 @@
+// ??? ????????
 /// In-memory legal content matching web Policy.jsx, Terms.jsx, and Faq.jsx.
 /// Use [getPrivacyContent], [getTermsContent], and [defaultFaqs].
 library;
@@ -243,7 +244,8 @@ const List<DataLifecycleStep> _privacyLifecycleStepsAr = [
   ),
   DataLifecycleStep(
     title: 'التخزين (مشفّر أثناء النقل)',
-    desc: 'الحركة تستخدم TLS (HTTPS). التخزين يستخدم خدمات آمنة ومُتحكم بالوصول إليها.',
+    desc:
+        'الحركة تستخدم TLS (HTTPS). التخزين يستخدم خدمات آمنة ومُتحكم بالوصول إليها.',
   ),
   DataLifecycleStep(
     title: 'الاستخدام (مرتبط بالغرض)',
@@ -487,10 +489,10 @@ PrivacyContent getPrivacyContent(String languageCode) {
   return PrivacyContent(
     sections: isAr ? privacyPolicyAr : privacyPolicyEn,
     lifecycleTitle: isAr ? _privacyLifecycleTitleAr : _privacyLifecycleTitleEn,
-    lifecycleSubtitle:
-        isAr ? _privacyLifecycleSubtitleAr : _privacyLifecycleSubtitleEn,
-    lifecycleSteps:
-        isAr ? _privacyLifecycleStepsAr : _privacyLifecycleStepsEn,
+    lifecycleSubtitle: isAr
+        ? _privacyLifecycleSubtitleAr
+        : _privacyLifecycleSubtitleEn,
+    lifecycleSteps: isAr ? _privacyLifecycleStepsAr : _privacyLifecycleStepsEn,
     lastUpdated: isAr ? _privacyLastUpdatedAr : _privacyLastUpdatedEn,
   );
 }
@@ -515,7 +517,10 @@ const List<FaqItem> defaultFaqs = [
     q: 'Can I upgrade or downgrade my plan?',
     a: 'Yes, but only after your current subscription period ends.',
   ),
-  FaqItem(q: 'Can I freeze my plan subscription?', a: 'No, plans cannot be frozen.'),
+  FaqItem(
+    q: 'Can I freeze my plan subscription?',
+    a: 'No, plans cannot be frozen.',
+  ),
   FaqItem(
     q: 'When does my plan period start?',
     a: 'The plan time counter starts after you receive your first project.',

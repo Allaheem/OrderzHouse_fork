@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'notification_model.dart';
@@ -88,14 +89,13 @@ class NotificationTargetMapper {
           );
         } else {
           // Freelancer: navigate to their projects or offers screen
-          return const NotificationTarget(
-            route: '/freelancer/projects',
-          );
+          return const NotificationTarget(route: '/freelancer/projects');
         }
       }
 
       // Freelancer assigned/removed - both roles see project
-      if (type.contains('freelancer_assigned') || type.contains('freelancer_removed')) {
+      if (type.contains('freelancer_assigned') ||
+          type.contains('freelancer_removed')) {
         return NotificationTarget(
           route: '/project/:id',
           pathParams: {'id': projectId.toString()},
@@ -113,9 +113,7 @@ class NotificationTargetMapper {
     if (notification.isPaymentRelated) {
       // Navigate to payments screen
       final rolePrefix = isClient ? '/client' : '/freelancer';
-      return NotificationTarget(
-        route: '$rolePrefix/payments',
-      );
+      return NotificationTarget(route: '$rolePrefix/payments');
     }
 
     // MESSAGE-RELATED NOTIFICATIONS
@@ -141,16 +139,12 @@ class NotificationTargetMapper {
     // REVIEW-RELATED
     if (type == NotificationType.reviewSubmitted) {
       final rolePrefix = isClient ? '/client' : '/freelancer';
-      return NotificationTarget(
-        route: '$rolePrefix/profile',
-      );
+      return NotificationTarget(route: '$rolePrefix/profile');
     }
 
     // SUBSCRIPTION-RELATED
     if (type.contains('subscription')) {
-      return const NotificationTarget(
-        route: '/plans',
-      );
+      return const NotificationTarget(route: '/plans');
     }
 
     // APPOINTMENT-RELATED

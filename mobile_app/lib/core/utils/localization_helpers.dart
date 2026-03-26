@@ -1,3 +1,4 @@
+// ??? ????????
 import '../../l10n/app_localizations.dart';
 
 /// Helper class for localizing backend values like status, project type, etc.
@@ -5,7 +6,7 @@ class LocalizationHelpers {
   /// Convert project status string from backend to localized text
   static String localizeStatus(AppLocalizations l10n, String? status) {
     if (status == null || status.isEmpty) return l10n.naNotAvailable;
-    
+
     switch (status.toLowerCase().replaceAll('_', '').replaceAll('-', '')) {
       case 'active':
         return l10n.statusActive;
@@ -46,8 +47,9 @@ class LocalizationHelpers {
         return l10n.statusAwaitingPayment;
       default:
         // Return the original status with first letter capitalized
-        return status.isNotEmpty 
-            ? status[0].toUpperCase() + status.substring(1).toLowerCase().replaceAll('_', ' ')
+        return status.isNotEmpty
+            ? status[0].toUpperCase() +
+                  status.substring(1).toLowerCase().replaceAll('_', ' ')
             : status;
     }
   }
@@ -55,7 +57,7 @@ class LocalizationHelpers {
   /// Convert project type string to localized text
   static String localizeProjectType(AppLocalizations l10n, String? type) {
     if (type == null || type.isEmpty) return l10n.naNotAvailable;
-    
+
     switch (type.toLowerCase()) {
       case 'fixed':
         return l10n.fixed;
@@ -71,7 +73,7 @@ class LocalizationHelpers {
   /// Convert category name to localized text (for common categories)
   static String localizeCategory(AppLocalizations l10n, String? category) {
     if (category == null || category.isEmpty) return l10n.naNotAvailable;
-    
+
     switch (category.toLowerCase()) {
       case 'development':
         return l10n.development;

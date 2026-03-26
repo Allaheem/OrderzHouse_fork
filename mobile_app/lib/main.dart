@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,7 +26,7 @@ void main() async {
   // Step 4: Initialize Hive for local cache (non-sensitive data only; no tokens)
   await Hive.initFlutter();
   await CacheService.init();
-  
+
   // Step 5: Load environment variables (gracefully handle missing .env file)
   try {
     await dotenv.load(fileName: '.env');
@@ -37,31 +38,31 @@ void main() async {
     print('⚠️ Warning: .env file not found, using defaults');
     dotenv.testLoad(fileInput: '');
   }
-  
+
   // Step 6: Log baseUrl for debugging
   // ignore: avoid_print
   print('🌐 API Base URL: ${AppConfig.baseUrl}');
-  
+
   // Step 7: Perform health check (non-blocking)
-  unawaited(HealthCheckService.ping().then((result) {
-    if (result.success) {
-      // ignore: avoid_print
-      print('✅ ${result.message}');
-    } else {
-      // ignore: avoid_print
-      print('❌ ${result.message}');
-    }
-  }).catchError((error) {
-    // ignore: avoid_print
-    print('❌ Health check error: $error');
-  }));
-  
-  // Step 8: Run app (only once)
-  runApp(
-    const ProviderScope(
-      child: OrderzHouse(),
-    ),
+  unawaited(
+    HealthCheckService.ping()
+        .then((result) {
+          if (result.success) {
+            // ignore: avoid_print
+            print('✅ ${result.message}');
+          } else {
+            // ignore: avoid_print
+            print('❌ ${result.message}');
+          }
+        })
+        .catchError((error) {
+          // ignore: avoid_print
+          print('❌ Health check error: $error');
+        }),
   );
+
+  // Step 8: Run app (only once)
+  runApp(const ProviderScope(child: OrderzHouse()));
 }
 
 class OrderzHouse extends ConsumerWidget {

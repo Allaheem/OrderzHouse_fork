@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,10 +38,7 @@ class NotificationsPage extends ConsumerWidget {
                 children: [
                   // Back button
                   IconButton(
-                    icon: const Icon(
-                      Icons.chevron_left_rounded,
-                      size: 28,
-                    ),
+                    icon: const Icon(Icons.chevron_left_rounded, size: 28),
                     color: AppColors.accentOrange,
                     onPressed: () {
                       if (context.canPop()) {
@@ -78,7 +76,9 @@ class NotificationsPage extends ConsumerWidget {
             child: notificationsAsync.when(
               loading: () => const Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.accentOrange,
+                  ),
                 ),
               ),
               error: (error, stackTrace) => ErrorState(
@@ -106,7 +106,8 @@ class NotificationsPage extends ConsumerWidget {
                       vertical: AppSpacing.md,
                     ),
                     itemCount: notifications.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final notification = notifications[index];
                       return _buildNotificationCard(context, ref, notification);
@@ -135,8 +136,8 @@ class NotificationsPage extends ConsumerWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: notification.isRead 
-                ? AppColors.borderLight 
+            color: notification.isRead
+                ? AppColors.borderLight
                 : AppColors.accentOrange.withOpacity(0.3),
             width: 1,
           ),
@@ -199,7 +200,8 @@ class NotificationsPage extends ConsumerWidget {
                       ],
                     ],
                   ),
-                  if (notification.body != null && notification.body!.isNotEmpty) ...[
+                  if (notification.body != null &&
+                      notification.body!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
                       notification.body!,
@@ -234,9 +236,7 @@ class NotificationsPage extends ConsumerWidget {
     // Mark as read if unread (optimistic UI - don't block navigation on failure)
     if (!notification.isRead) {
       try {
-        await ref.read(
-          markNotificationAsReadProvider(notification.id).future,
-        );
+        await ref.read(markNotificationAsReadProvider(notification.id).future);
         // Refresh notifications list
         ref.invalidate(notificationsProvider);
         ref.invalidate(unreadCountProvider);
@@ -251,7 +251,7 @@ class NotificationsPage extends ConsumerWidget {
     // Get user role for mapper
     final authState = ref.read(authStateProvider);
     final userRoleId = authState.user?.roleId;
-    
+
     if (userRoleId == null) {
       _showErrorSnackbar(context, 'User role not found');
       return;
@@ -278,7 +278,9 @@ class NotificationsPage extends ConsumerWidget {
     // Navigate to target (same go_router route as MyProjects: /project/:id)
     if (AppConfig.isDevelopment) {
       // ignore: avoid_print
-      print('Current locale before navigation: ${Localizations.localeOf(context)}');
+      print(
+        'Current locale before navigation: ${Localizations.localeOf(context)}',
+      );
     }
     try {
       target.navigate(context);
@@ -290,10 +292,7 @@ class NotificationsPage extends ConsumerWidget {
 
   void _showErrorSnackbar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-      ),
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
     );
   }
 }

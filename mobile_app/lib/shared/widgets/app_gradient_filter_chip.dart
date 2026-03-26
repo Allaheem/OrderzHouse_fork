@@ -1,9 +1,10 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
 /// Reusable gradient filter chip widget that matches primary button style when selected
-/// 
+///
 /// Usage:
 /// ```dart
 /// AppGradientFilterChip(
@@ -45,7 +46,7 @@ class AppGradientFilterChip extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       AppColors.gradientStart, // #FB923C
-                      AppColors.gradientEnd,   // #EF4444
+                      AppColors.gradientEnd, // #EF4444
                     ],
                   )
                 : null,
@@ -53,10 +54,7 @@ class AppGradientFilterChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             border: selected
                 ? null
-                : Border.all(
-                    color: AppColors.border,
-                    width: 1,
-                  ),
+                : Border.all(color: AppColors.border, width: 1),
             boxShadow: selected
                 ? null
                 : [
@@ -80,7 +78,9 @@ class AppGradientFilterChip extends StatelessWidget {
                           center: Alignment.topRight,
                           radius: 1.1,
                           colors: [
-                            Colors.white.withOpacity(0.20), // Subtle white touch
+                            Colors.white.withOpacity(
+                              0.20,
+                            ), // Subtle white touch
                             Colors.transparent,
                           ],
                           stops: const [0.0, 0.55],
@@ -100,19 +100,17 @@ class AppGradientFilterChip extends StatelessWidget {
                       Icon(
                         icon,
                         size: 18,
-                        color: selected
-                            ? Colors.white
-                            : AppColors.accentOrange,
+                        color: selected ? Colors.white : AppColors.accentOrange,
                       ),
                       const SizedBox(width: 8),
                     ],
                     Text(
                       label,
                       style: AppTextStyles.labelMedium.copyWith(
-                        color: selected
-                            ? Colors.white
-                            : AppColors.textPrimary,
-                        fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                        color: selected ? Colors.white : AppColors.textPrimary,
+                        fontWeight: selected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         height: 1.0, // Stable line height for perfect centering
                       ),
                       textAlign: TextAlign.center,

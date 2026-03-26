@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -17,12 +18,16 @@ class CacheService {
   }
 
   static Box<String> get _instance {
-    if (_box == null) throw StateError('CacheService.init() must be called before use');
+    if (_box == null)
+      throw StateError('CacheService.init() must be called before use');
     return _box!;
   }
 
   /// Get cached value. Returns null if missing or decode fails.
-  static T? getCached<T>(String key, T Function(Map<String, dynamic>) fromJson) {
+  static T? getCached<T>(
+    String key,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
     try {
       final raw = _instance.get(key);
       if (raw == null) return null;
@@ -65,28 +70,36 @@ class CacheService {
   }
 
   /// Get cached list (sync). Returns null if missing or decode fails.
-  static List<T>? getListSync<T>(String key, T Function(Map<String, dynamic>) fromJson) {
+  static List<T>? getListSync<T>(
+    String key,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
     try {
       final raw = _instance.get(key);
       if (raw == null) return null;
       final map = json.decode(raw) as Map<String, dynamic>;
       final list = map['v'];
       if (list == null || list is! List) return null;
-      return (list)
-          .map((e) => fromJson(e as Map<String, dynamic>))
-          .toList();
+      return (list).map((e) => fromJson(e as Map<String, dynamic>)).toList();
     } catch (e) {
       return null;
     }
   }
 
   /// Get cached list (async). Compatible with existing await CacheService.getList(...).
-  static Future<List<T>?> getList<T>(String key, T Function(Map<String, dynamic>) fromJson) async {
+  static Future<List<T>?> getList<T>(
+    String key,
+    T Function(Map<String, dynamic>) fromJson,
+  ) async {
     return getListSync(key, fromJson);
   }
 
   /// Set cached list with current timestamp.
-  static Future<void> setList<T>(String key, List<T> data, Map<String, dynamic> Function(T) toJson) async {
+  static Future<void> setList<T>(
+    String key,
+    List<T> data,
+    Map<String, dynamic> Function(T) toJson,
+  ) async {
     final ts = DateTime.now().millisecondsSinceEpoch;
     try {
       final list = data.map((e) => toJson(e)).toList();

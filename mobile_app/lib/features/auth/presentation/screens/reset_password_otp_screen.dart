@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,18 +16,17 @@ class ResetPasswordOtpScreen extends ConsumerStatefulWidget {
   const ResetPasswordOtpScreen({required this.email, super.key});
 
   @override
-  ConsumerState<ResetPasswordOtpScreen> createState() => _ResetPasswordOtpScreenState();
+  ConsumerState<ResetPasswordOtpScreen> createState() =>
+      _ResetPasswordOtpScreenState();
 }
 
-class _ResetPasswordOtpScreenState extends ConsumerState<ResetPasswordOtpScreen> {
+class _ResetPasswordOtpScreenState
+    extends ConsumerState<ResetPasswordOtpScreen> {
   final List<TextEditingController> _otpControllers = List.generate(
     6,
     (index) => TextEditingController(),
   );
-  final List<FocusNode> _focusNodes = List.generate(
-    6,
-    (index) => FocusNode(),
-  );
+  final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
 
   @override
   void initState() {
@@ -68,7 +68,7 @@ class _ResetPasswordOtpScreenState extends ConsumerState<ResetPasswordOtpScreen>
   Future<void> _handleVerify() async {
     final l10n = AppLocalizations.of(context)!;
     final otp = _getOtpCode();
-    
+
     if (otp.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -104,7 +104,7 @@ class _ResetPasswordOtpScreenState extends ConsumerState<ResetPasswordOtpScreen>
   Future<void> _handleResend() async {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.read(resetOtpProvider);
-    
+
     if (!state.canResend) return;
 
     final notifier = ref.read(resetOtpProvider.notifier);
@@ -172,7 +172,9 @@ class _ResetPasswordOtpScreenState extends ConsumerState<ResetPasswordOtpScreen>
               // Main content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                  ),
                   child: Column(
                     children: [
                       const SizedBox(height: AppSpacing.xl),
@@ -328,9 +330,7 @@ class _OtpInputField extends StatelessWidget {
         style: AppTextStyles.headlineMedium.copyWith(
           color: const Color(0xFF111827),
         ),
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,

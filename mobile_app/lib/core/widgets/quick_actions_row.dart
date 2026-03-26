@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -7,10 +8,7 @@ import '../theme/app_text_styles.dart';
 class QuickActionsRow extends StatelessWidget {
   final List<QuickAction> actions;
 
-  const QuickActionsRow({
-    super.key,
-    required this.actions,
-  });
+  const QuickActionsRow({super.key, required this.actions});
 
   @override
   Widget build(BuildContext context) {
@@ -53,11 +51,7 @@ class QuickActionsRow extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(
-                action.icon,
-                color: AppColors.accentOrange,
-                size: 26,
-              ),
+              child: Icon(action.icon, color: AppColors.accentOrange, size: 26),
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(

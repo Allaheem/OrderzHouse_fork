@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,10 +10,7 @@ import '../../providers/project_wizard_provider.dart';
 class ProjectFilesStepView extends ConsumerWidget {
   final VoidCallback? onNext;
 
-  const ProjectFilesStepView({
-    super.key,
-    this.onNext,
-  });
+  const ProjectFilesStepView({super.key, this.onNext});
 
   Future<void> _pickFiles(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
@@ -44,7 +42,9 @@ class ProjectFilesStepView extends ConsumerWidget {
         }
 
         currentFiles.addAll(newFiles);
-        ref.read(projectWizardProvider.notifier).updateProjectFiles(currentFiles);
+        ref
+            .read(projectWizardProvider.notifier)
+            .updateProjectFiles(currentFiles);
       }
     } catch (e) {
       if (context.mounted) {
@@ -85,10 +85,7 @@ class ProjectFilesStepView extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.projectFilesDescription,
-            style: const TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -98,9 +95,7 @@ class ProjectFilesStepView extends ConsumerWidget {
                 ? null
                 : () => _pickFiles(context, ref),
             icon: const Icon(Icons.add),
-            label: Text(
-              l10n.addFilesCount(draft.projectFiles.length, 5),
-            ),
+            label: Text(l10n.addFilesCount(draft.projectFiles.length, 5)),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg,
@@ -126,9 +121,7 @@ class ProjectFilesStepView extends ConsumerWidget {
               child: Center(
                 child: Text(
                   l10n.noFilesAddedYet,
-                  style: const TextStyle(
-                    color: Color(0xFF6B7280),
-                  ),
+                  style: const TextStyle(color: Color(0xFF6B7280)),
                 ),
               ),
             )
@@ -137,7 +130,8 @@ class ProjectFilesStepView extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: draft.projectFiles.length,
-              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(height: AppSpacing.sm),
               itemBuilder: (context, index) {
                 final file = draft.projectFiles[index];
                 final fileName = file.path.split('/').last;
@@ -183,9 +177,13 @@ class ProjectFilesStepView extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.red),
                         onPressed: () {
-                          final updatedFiles = List<File>.from(draft.projectFiles);
+                          final updatedFiles = List<File>.from(
+                            draft.projectFiles,
+                          );
                           updatedFiles.removeAt(index);
-                          ref.read(projectWizardProvider.notifier).updateProjectFiles(updatedFiles);
+                          ref
+                              .read(projectWizardProvider.notifier)
+                              .updateProjectFiles(updatedFiles);
                         },
                       ),
                     ],

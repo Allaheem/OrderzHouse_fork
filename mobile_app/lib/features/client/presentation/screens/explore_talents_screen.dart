@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -62,7 +63,10 @@ class ExploreTalentsScreen extends StatelessWidget {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'My Projects'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Explore Talents'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Explore Talents',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payments'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],

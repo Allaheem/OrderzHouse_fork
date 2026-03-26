@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/empty_state.dart';
 
@@ -9,9 +10,7 @@ class ApplicantsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Applicants'),
-      ),
+      appBar: AppBar(title: const Text('Applicants')),
       body: const EmptyState(
         icon: Icons.people_outline,
         title: 'No applicants yet',

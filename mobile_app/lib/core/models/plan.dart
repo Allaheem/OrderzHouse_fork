@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'plan.freezed.dart';
@@ -51,9 +52,13 @@ class Plan with _$Plan {
     required String name,
     @JsonKey(fromJson: _descriptionFromJson) String? description,
     @JsonKey(fromJson: _priceFromJson) required num price,
-    @JsonKey(fromJson: _durationFromJson) required int duration, // Duration in days
-    @JsonKey(name: 'plan_type') required String planType, // 'monthly', 'yearly', 'popular'
-    @JsonKey(fromJson: _featuresFromJson) @Default([]) List<String> features, // Features list
+    @JsonKey(fromJson: _durationFromJson)
+    required int duration, // Duration in days
+    @JsonKey(name: 'plan_type')
+    required String planType, // 'monthly', 'yearly', 'popular'
+    @JsonKey(fromJson: _featuresFromJson)
+    @Default([])
+    List<String> features, // Features list
   }) = _Plan;
 
   factory Plan.fromJson(Map<String, dynamic> json) => _$PlanFromJson(json);
@@ -63,8 +68,8 @@ class Plan with _$Plan {
     final durationLabel = planType == 'monthly'
         ? '$duration Month'
         : planType == 'yearly'
-            ? '$duration Year'
-            : name;
+        ? '$duration Year'
+        : name;
     return '$price JD / $durationLabel';
   }
 

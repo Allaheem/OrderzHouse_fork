@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/primary_button.dart';
@@ -11,9 +12,7 @@ class CreateProjectScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.createProject),
-      ),
+      appBar: AppBar(title: Text(l10n.createProject)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
@@ -27,7 +26,10 @@ class CreateProjectScreen extends StatelessWidget {
               items: [
                 DropdownMenuItem(value: 'fixed', child: Text(l10n.fixedPrice)),
                 DropdownMenuItem(value: 'hourly', child: Text(l10n.hourlyRate)),
-                const DropdownMenuItem(value: 'bidding', child: Text('Bidding')),
+                const DropdownMenuItem(
+                  value: 'bidding',
+                  child: Text('Bidding'),
+                ),
               ],
               onChanged: (value) {},
             ),
@@ -40,9 +42,9 @@ class CreateProjectScreen extends StatelessWidget {
             PrimaryButton(
               label: l10n.createProject,
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.projectCreated)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.projectCreated)));
                 Navigator.pop(context);
               },
             ),

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 
 class DeliveriesScreen extends StatelessWidget {
@@ -8,9 +9,7 @@ class DeliveriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Deliveries'),
-      ),
+      appBar: AppBar(title: const Text('Deliveries')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -23,10 +22,7 @@ class DeliveriesScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'No deliveries yet',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
           ],
         ),

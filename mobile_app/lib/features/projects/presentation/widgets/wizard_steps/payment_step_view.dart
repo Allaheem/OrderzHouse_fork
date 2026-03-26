@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -9,10 +10,7 @@ import '../../providers/project_wizard_provider.dart';
 class PaymentStepView extends ConsumerWidget {
   final Future<void> Function() onSubmit;
 
-  const PaymentStepView({
-    super.key,
-    required this.onSubmit,
-  });
+  const PaymentStepView({super.key, required this.onSubmit});
 
   String _formatProjectType(AppLocalizations l10n, String? type) {
     switch (type) {
@@ -57,10 +55,7 @@ class PaymentStepView extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.paymentSummaryDescription,
-            style: const TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
           ),
           const SizedBox(height: AppSpacing.xl),
           Container(
@@ -82,7 +77,11 @@ class PaymentStepView extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.work_outline, color: Color(0xFF6D5FFD), size: 20),
+                    const Icon(
+                      Icons.work_outline,
+                      color: Color(0xFF6D5FFD),
+                      size: 20,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -99,7 +98,10 @@ class PaymentStepView extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 const Divider(),
                 const SizedBox(height: AppSpacing.md),
-                _buildSummaryRow(l10n.projectTypeLabel.replaceAll(' *', ''), _formatProjectType(l10n, draft.projectType)),
+                _buildSummaryRow(
+                  l10n.projectTypeLabel.replaceAll(' *', ''),
+                  _formatProjectType(l10n, draft.projectType),
+                ),
                 if (amount != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   _buildSummaryRow(l10n.amountLabel, formatter.format(amount)),
@@ -118,8 +120,22 @@ class PaymentStepView extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(l10n.totalLabel, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF111827))),
-                      Text(formatter.format(amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF6D5FFD))),
+                      Text(
+                        l10n.totalLabel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      Text(
+                        formatter.format(amount),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Color(0xFF6D5FFD),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -143,12 +159,19 @@ class PaymentStepView extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, size: 20, color: Colors.amber.shade800),
+                Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: Colors.amber.shade800,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Your project will be created but will remain hidden until admin approves your payment.',
-                    style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.amber.shade900,
+                    ),
                   ),
                 ),
               ],
@@ -163,8 +186,18 @@ class PaymentStepView extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF111827), fontSize: 14)),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF111827),
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -219,9 +252,22 @@ class _PaymentOptionCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: Color(0xFF111827))),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
                   ],
                 ),
               ),

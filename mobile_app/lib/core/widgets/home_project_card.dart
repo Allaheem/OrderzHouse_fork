@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_colors.dart';
@@ -23,7 +24,7 @@ class HomeProjectCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     // Debug log for price display (temporary)
     _debugPriceDisplay();
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -49,7 +50,8 @@ class HomeProjectCard extends StatelessWidget {
                 topLeft: Radius.circular(18),
                 topRight: Radius.circular(18),
               ),
-              child: project.coverPic != null &&
+              child:
+                  project.coverPic != null &&
                       project.coverPic!.isNotEmpty &&
                       AppConfig.baseUrl.isNotEmpty
                   ? CachedNetworkImage(
@@ -59,8 +61,7 @@ class HomeProjectCard extends StatelessWidget {
                       height: 100,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorWidget: (context, url, error) =>
-                          _buildPlaceholder(),
+                      errorWidget: (context, url, error) => _buildPlaceholder(),
                     )
                   : _buildPlaceholder(),
             ),
@@ -86,19 +87,9 @@ class HomeProjectCard extends StatelessWidget {
                     spacing: AppSpacing.xs,
                     runSpacing: AppSpacing.xs,
                     children: [
-                      _buildChip(
-                        project.budgetDisplay,
-                        AppColors.accentOrange,
-                      ),
-                      _buildChip(
-                        _getTypeDisplay(l10n),
-                        AppColors.info,
-                      ),
-                      if (_isUrgent())
-                        _buildChip(
-                          l10n.urgent,
-                          AppColors.error,
-                        ),
+                      _buildChip(project.budgetDisplay, AppColors.accentOrange),
+                      _buildChip(_getTypeDisplay(l10n), AppColors.info),
+                      if (_isUrgent()) _buildChip(l10n.urgent, AppColors.error),
                     ],
                   ),
                 ],
@@ -133,9 +124,7 @@ class HomeProjectCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-        ),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         label,
@@ -151,8 +140,12 @@ class HomeProjectCard extends StatelessWidget {
   // Removed _getBudgetDisplay() - now using project.budgetDisplay extension
   // Debug log for price display (temporary - remove after verification)
   void _debugPriceDisplay() {
-    print('🔍 [HomeProjectCard] Project ID: ${project.id}, Title: ${project.title}');
-    print('   Raw fields: budget=${project.budget}, budgetMin=${project.budgetMin}, budgetMax=${project.budgetMax}, hourlyRate=${project.hourlyRate}');
+    print(
+      '🔍 [HomeProjectCard] Project ID: ${project.id}, Title: ${project.title}',
+    );
+    print(
+      '   Raw fields: budget=${project.budget}, budgetMin=${project.budgetMin}, budgetMax=${project.budgetMax}, hourlyRate=${project.hourlyRate}',
+    );
     print('   Project type: ${project.projectType}');
     print('   Final display text: ${project.budgetDisplay}');
   }

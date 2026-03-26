@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -12,7 +13,8 @@ class OffersBottomSheet extends StatelessWidget {
   final bool isLoading;
   final bool isSubmitting;
   final VoidCallback onClose;
-  final Future<void> Function(int offerId, String action) onAction; // action: 'accept' or 'reject'
+  final Future<void> Function(int offerId, String action)
+  onAction; // action: 'accept' or 'reject'
 
   const OffersBottomSheet({
     super.key,
@@ -110,23 +112,43 @@ class OffersBottomSheet extends StatelessWidget {
                   shrinkWrap: true,
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   itemCount: offers.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  separatorBuilder: (context, index) =>
+                      const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final offer = offers[index];
-                    final offerId = offer['id'] ?? offer['offer_id'] ?? offer['offerId'] ?? 0;
-                    final userId = offer['user_id'] ?? offer['freelancer_id'] ?? offer['freelancerId'] ?? offerId;
-                    final bidAmountRaw = offer['bid_amount'] ?? offer['bidAmount'] ?? offer['amount'];
+                    final offerId =
+                        offer['id'] ??
+                        offer['offer_id'] ??
+                        offer['offerId'] ??
+                        0;
+                    final userId =
+                        offer['user_id'] ??
+                        offer['freelancer_id'] ??
+                        offer['freelancerId'] ??
+                        offerId;
+                    final bidAmountRaw =
+                        offer['bid_amount'] ??
+                        offer['bidAmount'] ??
+                        offer['amount'];
                     final bidAmount = bidAmountRaw != null
                         ? (bidAmountRaw is num
-                            ? bidAmountRaw.toDouble()
-                            : double.tryParse(bidAmountRaw.toString()))
+                              ? bidAmountRaw.toDouble()
+                              : double.tryParse(bidAmountRaw.toString()))
                         : null;
-                    final proposal = offer['proposal'] ?? offer['message'] ?? '';
-                    final status = (offer['status'] ?? offer['offer_status'] ?? 'pending').toString().toLowerCase();
+                    final proposal =
+                        offer['proposal'] ?? offer['message'] ?? '';
+                    final status =
+                        (offer['status'] ?? offer['offer_status'] ?? 'pending')
+                            .toString()
+                            .toLowerCase();
 
-                    final isPending = status == 'pending' || status == 'pending_client_approval';
-                    final isAccepted = status == 'accepted' || status == 'approved';
-                    final isRejected = status == 'rejected' || status == 'declined';
+                    final isPending =
+                        status == 'pending' ||
+                        status == 'pending_client_approval';
+                    final isAccepted =
+                        status == 'accepted' || status == 'approved';
+                    final isRejected =
+                        status == 'rejected' || status == 'declined';
 
                     return Container(
                       padding: const EdgeInsets.all(AppSpacing.md),
@@ -137,8 +159,8 @@ class OffersBottomSheet extends StatelessWidget {
                           color: isAccepted
                               ? Colors.green.shade200
                               : isRejected
-                                  ? Colors.red.shade200
-                                  : Colors.grey.shade200,
+                              ? Colors.red.shade200
+                              : Colors.grey.shade200,
                         ),
                       ),
                       child: Column(
@@ -157,13 +179,16 @@ class OffersBottomSheet extends StatelessWidget {
                                 ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isAccepted
                                       ? Colors.green.shade50
                                       : isRejected
-                                          ? Colors.red.shade50
-                                          : Colors.amber.shade50,
+                                      ? Colors.red.shade50
+                                      : Colors.amber.shade50,
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
@@ -172,8 +197,8 @@ class OffersBottomSheet extends StatelessWidget {
                                     color: isAccepted
                                         ? Colors.green.shade700
                                         : isRejected
-                                            ? Colors.red.shade700
-                                            : Colors.amber.shade700,
+                                        ? Colors.red.shade700
+                                        : Colors.amber.shade700,
                                     fontWeight: FontWeight.w600,
                                     fontSize: 10,
                                   ),
@@ -216,32 +241,54 @@ class OffersBottomSheet extends StatelessWidget {
                                             ? null
                                             : () async {
                                                 try {
-                                                  await onAction(offerId, 'reject');
+                                                  await onAction(
+                                                    offerId,
+                                                    'reject',
+                                                  );
                                                   if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
                                                       const SnackBar(
-                                                        content: Text('Offer rejected'),
-                                                        backgroundColor: Colors.orange,
+                                                        content: Text(
+                                                          'Offer rejected',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.orange,
                                                       ),
                                                     );
                                                   }
                                                 } catch (e) {
                                                   if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
                                                       SnackBar(
-                                                        content: Text('Failed: $e'),
-                                                        backgroundColor: Colors.red,
+                                                        content: Text(
+                                                          'Failed: $e',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.red,
                                                       ),
                                                     );
                                                   }
                                                 }
                                               },
                                         style: OutlinedButton.styleFrom(
-                                          foregroundColor: const Color(0xFF111827),
-                                          side: const BorderSide(color: Color(0xFFE5E7EB)),
-                                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                          foregroundColor: const Color(
+                                            0xFF111827,
+                                          ),
+                                          side: const BorderSide(
+                                            color: Color(0xFFE5E7EB),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 16,
+                                          ),
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                         ),
                                         child: const Text('Reject'),
@@ -257,21 +304,34 @@ class OffersBottomSheet extends StatelessWidget {
                                             ? null
                                             : () async {
                                                 try {
-                                                  await onAction(offerId, 'accept');
+                                                  await onAction(
+                                                    offerId,
+                                                    'accept',
+                                                  );
                                                   if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
                                                       const SnackBar(
-                                                        content: Text('Offer accepted ✅'),
-                                                        backgroundColor: Colors.green,
+                                                        content: Text(
+                                                          'Offer accepted ✅',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.green,
                                                       ),
                                                     );
                                                   }
                                                 } catch (e) {
                                                   if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                    ScaffoldMessenger.of(
+                                                      context,
+                                                    ).showSnackBar(
                                                       SnackBar(
-                                                        content: Text('Failed: $e'),
-                                                        backgroundColor: Colors.red,
+                                                        content: Text(
+                                                          'Failed: $e',
+                                                        ),
+                                                        backgroundColor:
+                                                            Colors.red,
                                                       ),
                                                     );
                                                   }
@@ -297,7 +357,9 @@ class OffersBottomSheet extends StatelessWidget {
             ),
           ),
 
-          SizedBox(height: MediaQuery.of(context).padding.bottom + AppSpacing.md),
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom + AppSpacing.md,
+          ),
         ],
       ),
     );

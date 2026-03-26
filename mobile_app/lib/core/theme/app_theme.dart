@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'app_colors.dart';
@@ -31,9 +32,7 @@ class AppTheme {
           fontSize: AppFont.f18,
           fontWeight: FontWeight.bold,
         ),
-        iconTheme: const IconThemeData(
-          color: AppColors.textPrimary,
-        ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -67,9 +66,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.r24),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        hintStyle: const TextStyle(
-          color: AppColors.textTertiary,
-        ),
+        hintStyle: const TextStyle(color: AppColors.textTertiary),
         contentPadding: EdgeInsets.symmetric(
           horizontal: AppSize.s16,
           vertical: AppSize.s16,

@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
@@ -13,10 +14,10 @@ class AppGradients {
     end: Alignment.bottomCenter,
     colors: [
       AppColors.gradientStart, // Orange-400
-      AppColors.gradientEnd,   // Red-500
+      AppColors.gradientEnd, // Red-500
     ],
   );
-  
+
   // Legacy alias for backward compatibility
   static const LinearGradient primaryButton = primaryButtonGradient;
 }

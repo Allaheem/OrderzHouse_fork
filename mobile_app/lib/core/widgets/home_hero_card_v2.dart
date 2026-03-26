@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -10,12 +11,12 @@ class HomeHeroCardV2 extends StatelessWidget {
   final String? iconLabel; // Optional label for top-right icon
   final IconData? iconData; // Optional icon for top-right shortcut
   final VoidCallback? onIconTap; // Optional tap for top-right icon
-  
+
   // Main content
   final String title;
   final String? bigNumber; // For freelancer balance (optional)
   final String subtitle;
-  
+
   // CTA button
   final String ctaLabel;
   final IconData? ctaIcon; // Optional icon for CTA
@@ -88,7 +89,7 @@ class HomeHeroCardV2 extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Content
             Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -138,9 +139,9 @@ class HomeHeroCardV2 extends StatelessWidget {
                         ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: AppSpacing.md),
-                  
+
                   // Title
                   Text(
                     title,
@@ -153,7 +154,7 @@ class HomeHeroCardV2 extends StatelessWidget {
                     softWrap: true,
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   // Big Number (for freelancer balance)
                   if (bigNumber != null) ...[
                     const SizedBox(height: 4),
@@ -169,9 +170,9 @@ class HomeHeroCardV2 extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                   ],
-                  
+
                   const SizedBox(height: 4),
-                  
+
                   // Subtitle
                   Text(
                     subtitle,
@@ -183,9 +184,9 @@ class HomeHeroCardV2 extends StatelessWidget {
                     softWrap: true,
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: AppSpacing.lg),
-                  
+
                   // CTA Button (WHITE to contrast with gradient)
                   SizedBox(
                     width: double.infinity,

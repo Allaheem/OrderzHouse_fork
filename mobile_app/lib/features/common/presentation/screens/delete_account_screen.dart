@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,8 @@ class DeleteAccountScreen extends ConsumerStatefulWidget {
   const DeleteAccountScreen({super.key});
 
   @override
-  ConsumerState<DeleteAccountScreen> createState() => _DeleteAccountScreenState();
+  ConsumerState<DeleteAccountScreen> createState() =>
+      _DeleteAccountScreenState();
 }
 
 class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
@@ -26,7 +28,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     super.dispose();
   }
 
-  bool get _canDelete => _confirmationController.text.trim().toUpperCase() == 'DELETE';
+  bool get _canDelete =>
+      _confirmationController.text.trim().toUpperCase() == 'DELETE';
 
   void _handleBack() {
     final router = GoRouter.of(context);
@@ -56,9 +59,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: Text(l10n.deleteAccount),
           ),
         ],
@@ -71,9 +72,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
     try {
       print('🔍 [DeleteAccountScreen] Calling deleteAccount API...');
-      final success = await ref.read(authStateProvider.notifier).deleteAccount(
-        reason: 'Deleted by user via app',
-      );
+      final success = await ref
+          .read(authStateProvider.notifier)
+          .deleteAccount(reason: 'Deleted by user via app');
 
       if (!mounted) return;
 
@@ -120,17 +121,14 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             // Header
-            AppHeader(
-              title: l10n.deleteAccount,
-              onBack: _handleBack,
-            ),
+            AppHeader(title: l10n.deleteAccount, onBack: _handleBack),
 
             // Content
             Expanded(
@@ -157,7 +155,9 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
                     // Delete button
                     PrimaryGradientButton(
-                      onPressed: _canDelete && !_isDeleting ? _handleDeleteAccount : null,
+                      onPressed: _canDelete && !_isDeleting
+                          ? _handleDeleteAccount
+                          : null,
                       label: l10n.deleteAccount,
                       isLoading: _isDeleting,
                       height: 54,
@@ -176,7 +176,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
 
 class _WarningCard extends StatelessWidget {
   final AppLocalizations l10n;
-  
+
   const _WarningCard({required this.l10n});
 
   @override
@@ -234,7 +234,7 @@ class _WarningCard extends StatelessWidget {
 
 class _WhatWillBeDeletedCard extends StatelessWidget {
   final AppLocalizations l10n;
-  
+
   const _WhatWillBeDeletedCard({required this.l10n});
 
   @override
@@ -379,7 +379,10 @@ class _ConfirmationCard extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accentOrange, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.accentOrange,
+                  width: 2,
+                ),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,

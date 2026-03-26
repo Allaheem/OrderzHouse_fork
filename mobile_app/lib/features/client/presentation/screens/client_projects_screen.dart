@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,7 +28,8 @@ class ClientProjectsScreen extends ConsumerStatefulWidget {
   const ClientProjectsScreen({super.key});
 
   @override
-  ConsumerState<ClientProjectsScreen> createState() => _ClientProjectsScreenState();
+  ConsumerState<ClientProjectsScreen> createState() =>
+      _ClientProjectsScreenState();
 }
 
 class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
@@ -65,13 +67,13 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
     if (_isFetchingRawData || _hasFetchedRawData) {
       return;
     }
-    
+
     _isFetchingRawData = true;
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.getMyProjectsRaw();
-      
+
       if (response.success && response.data != null && mounted) {
         setState(() {
           for (var rawProject in response.data!) {
@@ -94,7 +96,7 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
       }
     }
   }
-  
+
   // Reset raw data fetch flag when refreshing
   void _onRefresh() {
     setState(() {
@@ -138,7 +140,9 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
               value: 'budget_low_to_high',
               isSelected: currentSort == 'budget_low_to_high',
               onTap: () {
-                ref.read(myProjectsFiltersProvider.notifier).setSort('budget_low_to_high');
+                ref
+                    .read(myProjectsFiltersProvider.notifier)
+                    .setSort('budget_low_to_high');
                 Navigator.pop(context);
               },
             ),
@@ -147,7 +151,9 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
               value: 'budget_high_to_low',
               isSelected: currentSort == 'budget_high_to_low',
               onTap: () {
-                ref.read(myProjectsFiltersProvider.notifier).setSort('budget_high_to_low');
+                ref
+                    .read(myProjectsFiltersProvider.notifier)
+                    .setSort('budget_high_to_low');
                 Navigator.pop(context);
               },
             ),
@@ -166,7 +172,8 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
     final user = authState.user;
     final selectedStatus = ref.watch(myProjectsStatusProvider);
 
-    final statuses = projectsAsync.value?.map((p) => p.status).toSet().toList() ?? [];
+    final statuses =
+        projectsAsync.value?.map((p) => p.status).toSet().toList() ?? [];
     final allStatuses = [l10n.all, ...statuses];
 
     final safe = MediaQuery.of(context).padding.bottom;
@@ -177,13 +184,13 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
         children: [
           // 1) Top Bar
           _buildTopBar(context, user),
-          
+
           // 2) Search + Actions Row
           _buildSearchRow(context, ref),
-          
+
           // 3) Category Chips Row
           _buildCategoryChips(context, allStatuses, selectedStatus),
-          
+
           // 4) Projects Grid
           Expanded(
             child: RefreshIndicator(
@@ -195,25 +202,31 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
               child: filteredAsync.when(
                 data: (filteredProjects) {
                   _fetchRawProjectDataForProjects(
-                      projectsAsync.value ?? filteredProjects);
-                  final hasFilters = ref.read(myProjectsSearchQueryProvider).trim().isNotEmpty ||
+                    projectsAsync.value ?? filteredProjects,
+                  );
+                  final hasFilters =
+                      ref
+                          .read(myProjectsSearchQueryProvider)
+                          .trim()
+                          .isNotEmpty ||
                       ref.read(myProjectsStatusProvider) != null;
                   if (filteredProjects.isEmpty) {
                     return EmptyState(
                       icon: Icons.work_outline,
-                      title: hasFilters
-                          ? l10n.noResultsFound
-                          : l10n.noProjects,
+                      title: hasFilters ? l10n.noResultsFound : l10n.noProjects,
                       message: hasFilters
                           ? l10n.noResultsFound
                           : l10n.noProjectsMessage,
                     );
                   }
                   return _buildProjectsGrid(
-                      context, filteredProjects,
-                      bottomPadding: contentBottomPadding);
+                    context,
+                    filteredProjects,
+                    bottomPadding: contentBottomPadding,
+                  );
                 },
-                loading: () => _LoadingGrid(bottomPadding: contentBottomPadding),
+                loading: () =>
+                    _LoadingGrid(bottomPadding: contentBottomPadding),
                 error: (error, stackTrace) => ErrorState(
                   message: error.toString().replaceAll('Exception: ', ''),
                   onRetry: () {
@@ -227,19 +240,37 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: GradientFab(
-          onPressed: () => context.go('/create-project'),
-        ),
+        child: GradientFab(onPressed: () => context.go('/create-project')),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 1,
         items: [
-          NavItem(icon: Icons.home_outlined, title: l10n.home, route: '/client'),
-          NavItem(icon: Icons.work_outline, title: l10n.myProjects, route: '/client/projects'),
-          NavItem(icon: Icons.explore_outlined, title: l10n.explore, route: '/client/explore'),
-          NavItem(icon: Icons.payments_outlined, title: l10n.payments, route: '/client/payments'),
-          NavItem(icon: Icons.person_outline, title: l10n.profile, route: '/client/profile'),
+          NavItem(
+            icon: Icons.home_outlined,
+            title: l10n.home,
+            route: '/client',
+          ),
+          NavItem(
+            icon: Icons.work_outline,
+            title: l10n.myProjects,
+            route: '/client/projects',
+          ),
+          NavItem(
+            icon: Icons.explore_outlined,
+            title: l10n.explore,
+            route: '/client/explore',
+          ),
+          NavItem(
+            icon: Icons.payments_outlined,
+            title: l10n.payments,
+            route: '/client/payments',
+          ),
+          NavItem(
+            icon: Icons.person_outline,
+            title: l10n.profile,
+            route: '/client/profile',
+          ),
         ],
       ),
     );
@@ -286,7 +317,6 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
               )
             else
               const SizedBox(width: 40), // Spacer if no back button
-            
             // Center: Title
             Text(
               l10n.myProjects,
@@ -295,13 +325,14 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             // Right: Avatar
             GestureDetector(
               onTap: () {
                 context.go('/client/profile');
               },
-              child: user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
+              child:
+                  user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
                   ? ClipOval(
                       child: CachedNetworkImage(
                         imageUrl: user.profilePicUrl!.startsWith('http')
@@ -310,7 +341,8 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
+                        errorWidget: (context, url, error) =>
+                            _buildAvatarPlaceholder(),
                       ),
                     )
                   : _buildAvatarPlaceholder(),
@@ -370,7 +402,8 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
                 },
                 onSubmitted: (value) {
                   _debounceTimer?.cancel();
-                  ref.read(myProjectsSearchQueryProvider.notifier).state = value;
+                  ref.read(myProjectsSearchQueryProvider.notifier).state =
+                      value;
                 },
                 decoration: InputDecoration(
                   hintText: l10n.searchProjects,
@@ -412,8 +445,10 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
                 color: Color(0xFF111827),
                 size: 20,
               ),
-              onPressed: () =>
-                  showProjectsFilterBottomSheet(context, ProjectsFilterTarget.myProjects),
+              onPressed: () => showProjectsFilterBottomSheet(
+                context,
+                ProjectsFilterTarget.myProjects,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -447,7 +482,10 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
 
   // 3) Category Chips Row (status filter - same pattern as Explore)
   Widget _buildCategoryChips(
-      BuildContext context, List<String> statuses, String? selectedStatus) {
+    BuildContext context,
+    List<String> statuses,
+    String? selectedStatus,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       height: 50,
@@ -456,19 +494,22 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         itemCount: statuses.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           final status = statuses[index];
           final isAll = status == l10n.all;
-          final isSelected =
-              isAll ? selectedStatus == null : selectedStatus == status;
+          final isSelected = isAll
+              ? selectedStatus == null
+              : selectedStatus == status;
 
           return AppGradientFilterChip(
             label: status,
             selected: isSelected,
             onTap: () {
-              ref.read(myProjectsStatusProvider.notifier).state =
-                  isAll ? null : status;
+              ref.read(myProjectsStatusProvider.notifier).state = isAll
+                  ? null
+                  : status;
             },
           );
         },
@@ -477,10 +518,15 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
   }
 
   // 4) Projects Grid (responsive aspect ratio to avoid overflow on small screens)
-  Widget _buildProjectsGrid(BuildContext context, List<Project> projects, {double bottomPadding = 0}) {
+  Widget _buildProjectsGrid(
+    BuildContext context,
+    List<Project> projects, {
+    double bottomPadding = 0,
+  }) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     const crossAxisCount = 2;
-    const horizontalPadding = AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
+    const horizontalPadding =
+        AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
     final cellWidth = (screenWidth - horizontalPadding) / crossAxisCount;
     const imageHeight = 120.0;
     const minContentHeight = 90.0;
@@ -506,10 +552,7 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
           project: project,
           projectData: _projectDataMap[project.id],
           onTap: () {
-            context.push(
-              '/project/${project.id}',
-              extra: project,
-            );
+            context.push('/project/${project.id}', extra: project);
           },
         );
       },
@@ -540,7 +583,9 @@ class _SortOption extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+      trailing: isSelected
+          ? const Icon(Icons.check_rounded, color: AppColors.primary)
+          : null,
       onTap: onTap,
     );
   }
@@ -549,14 +594,15 @@ class _SortOption extends StatelessWidget {
 // Loading Grid
 class _LoadingGrid extends StatelessWidget {
   final double bottomPadding;
-  
+
   const _LoadingGrid({this.bottomPadding = 0});
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
     const crossAxisCount = 2;
-    const horizontalPadding = AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
+    const horizontalPadding =
+        AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
     final cellWidth = (screenWidth - horizontalPadding) / crossAxisCount;
     const imageHeight = 120.0;
     const minContentHeight = 90.0;
@@ -580,7 +626,9 @@ class _LoadingGrid extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16), // Matching Explore card radius
+            borderRadius: BorderRadius.circular(
+              16,
+            ), // Matching Explore card radius
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),

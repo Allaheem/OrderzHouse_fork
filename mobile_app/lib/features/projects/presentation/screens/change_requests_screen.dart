@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,7 +23,8 @@ class ChangeRequestsScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ChangeRequestsScreen> createState() => _ChangeRequestsScreenState();
+  ConsumerState<ChangeRequestsScreen> createState() =>
+      _ChangeRequestsScreenState();
 }
 
 class _ChangeRequestsScreenState extends ConsumerState<ChangeRequestsScreen> {
@@ -45,11 +47,14 @@ class _ChangeRequestsScreenState extends ConsumerState<ChangeRequestsScreen> {
         final userId = ref.read(authStateProvider).user?.id;
         if (userId != null) {
           final now = DateTime.now();
-          await ChangeRequestsLastSeen.setLastSeen(userId, widget.projectId, now);
-          ref.read(projectsRepositoryProvider).markChangeRequestsRead(
-                widget.projectId,
-                lastSeenAt: now,
-              );
+          await ChangeRequestsLastSeen.setLastSeen(
+            userId,
+            widget.projectId,
+            now,
+          );
+          ref
+              .read(projectsRepositoryProvider)
+              .markChangeRequestsRead(widget.projectId, lastSeenAt: now);
           ref.invalidate(changeRequestsLastSeenProvider(widget.projectId));
           ref.invalidate(changeRequestsUnreadCountProvider(widget.projectId));
           ref.invalidate(changeRequestsProvider(widget.projectId));
@@ -57,8 +62,12 @@ class _ChangeRequestsScreenState extends ConsumerState<ChangeRequestsScreen> {
       });
     }
 
-    final changeRequestsAsync = ref.watch(changeRequestsProvider(widget.projectId));
-    final lastSeenAsync = ref.watch(changeRequestsLastSeenProvider(widget.projectId));
+    final changeRequestsAsync = ref.watch(
+      changeRequestsProvider(widget.projectId),
+    );
+    final lastSeenAsync = ref.watch(
+      changeRequestsLastSeenProvider(widget.projectId),
+    );
     final lastSeenAt = lastSeenAsync.valueOrNull;
 
     return Scaffold(
@@ -130,28 +139,37 @@ class _ChangeRequestsScreenState extends ConsumerState<ChangeRequestsScreen> {
             child: changeRequestsAsync.when(
               loading: () => const Center(
                 child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.accentOrange,
+                  ),
                 ),
               ),
               error: (error, stackTrace) => ErrorState(
                 message: error.toString().replaceAll('Exception: ', ''),
-                onRetry: () => ref.invalidate(changeRequestsProvider(widget.projectId)),
+                onRetry: () =>
+                    ref.invalidate(changeRequestsProvider(widget.projectId)),
               ),
               data: (changeRequests) {
                 if (changeRequests.isEmpty) {
                   return const EmptyState(
                     icon: Icons.edit_note_rounded,
                     title: 'No change requests yet',
-                    message: 'No change requests have been sent for this project.',
+                    message:
+                        'No change requests have been sent for this project.',
                   );
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   itemCount: changeRequests.length,
                   itemBuilder: (context, index) {
                     final request = changeRequests[index];
-                    final isUnread = lastSeenAt == null || request.createdAt.isAfter(lastSeenAt);
+                    final isUnread =
+                        lastSeenAt == null ||
+                        request.createdAt.isAfter(lastSeenAt);
                     return _buildChangeRequestCard(request, isUnread: isUnread);
                   },
                 );
@@ -163,7 +181,10 @@ class _ChangeRequestsScreenState extends ConsumerState<ChangeRequestsScreen> {
     );
   }
 
-  Widget _buildChangeRequestCard(ChangeRequest request, {required bool isUnread}) {
+  Widget _buildChangeRequestCard(
+    ChangeRequest request, {
+    required bool isUnread,
+  }) {
     final showNewChip = request.isResolved != true && isUnread;
     final showResolvedChip = request.isResolved == true;
     return Container(
@@ -195,7 +216,10 @@ class _ChangeRequestsScreenState extends ConsumerState<ChangeRequestsScreen> {
                     // Status badge: "New" only when unread; "Resolved" when resolved
                     if (showNewChip || showResolvedChip) ...[
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: showResolvedChip
                               ? AppColors.success.withValues(alpha: 0.1)

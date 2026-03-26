@@ -1,3 +1,4 @@
+// ??? ????????
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -12,7 +13,8 @@ part of 'plan.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 Plan _$PlanFromJson(Map<String, dynamic> json) {
   return _Plan.fromJson(json);
@@ -29,8 +31,7 @@ mixin _$Plan {
   @JsonKey(fromJson: _durationFromJson)
   int get duration => throw _privateConstructorUsedError; // Duration in days
   @JsonKey(name: 'plan_type')
-  String get planType =>
-      throw _privateConstructorUsedError; // 'monthly', 'yearly', 'popular'
+  String get planType => throw _privateConstructorUsedError; // 'monthly', 'yearly', 'popular'
   @JsonKey(fromJson: _featuresFromJson)
   List<String> get features => throw _privateConstructorUsedError;
 
@@ -44,14 +45,15 @@ abstract class $PlanCopyWith<$Res> {
   factory $PlanCopyWith(Plan value, $Res Function(Plan) then) =
       _$PlanCopyWithImpl<$Res, Plan>;
   @useResult
-  $Res call(
-      {int id,
-      String name,
-      @JsonKey(fromJson: _descriptionFromJson) String? description,
-      @JsonKey(fromJson: _priceFromJson) num price,
-      @JsonKey(fromJson: _durationFromJson) int duration,
-      @JsonKey(name: 'plan_type') String planType,
-      @JsonKey(fromJson: _featuresFromJson) List<String> features});
+  $Res call({
+    int id,
+    String name,
+    @JsonKey(fromJson: _descriptionFromJson) String? description,
+    @JsonKey(fromJson: _priceFromJson) num price,
+    @JsonKey(fromJson: _durationFromJson) int duration,
+    @JsonKey(name: 'plan_type') String planType,
+    @JsonKey(fromJson: _featuresFromJson) List<String> features,
+  });
 }
 
 /// @nodoc
@@ -75,54 +77,59 @@ class _$PlanCopyWithImpl<$Res, $Val extends Plan>
     Object? planType = null,
     Object? features = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: freezed == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String?,
-      price: null == price
-          ? _value.price
-          : price // ignore: cast_nullable_to_non_nullable
-              as num,
-      duration: null == duration
-          ? _value.duration
-          : duration // ignore: cast_nullable_to_non_nullable
-              as int,
-      planType: null == planType
-          ? _value.planType
-          : planType // ignore: cast_nullable_to_non_nullable
-              as String,
-      features: null == features
-          ? _value.features
-          : features // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as int,
+            name: null == name
+                ? _value.name
+                : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            description: freezed == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            price: null == price
+                ? _value.price
+                : price // ignore: cast_nullable_to_non_nullable
+                      as num,
+            duration: null == duration
+                ? _value.duration
+                : duration // ignore: cast_nullable_to_non_nullable
+                      as int,
+            planType: null == planType
+                ? _value.planType
+                : planType // ignore: cast_nullable_to_non_nullable
+                      as String,
+            features: null == features
+                ? _value.features
+                : features // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$PlanImplCopyWith<$Res> implements $PlanCopyWith<$Res> {
   factory _$$PlanImplCopyWith(
-          _$PlanImpl value, $Res Function(_$PlanImpl) then) =
-      __$$PlanImplCopyWithImpl<$Res>;
+    _$PlanImpl value,
+    $Res Function(_$PlanImpl) then,
+  ) = __$$PlanImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {int id,
-      String name,
-      @JsonKey(fromJson: _descriptionFromJson) String? description,
-      @JsonKey(fromJson: _priceFromJson) num price,
-      @JsonKey(fromJson: _durationFromJson) int duration,
-      @JsonKey(name: 'plan_type') String planType,
-      @JsonKey(fromJson: _featuresFromJson) List<String> features});
+  $Res call({
+    int id,
+    String name,
+    @JsonKey(fromJson: _descriptionFromJson) String? description,
+    @JsonKey(fromJson: _priceFromJson) num price,
+    @JsonKey(fromJson: _durationFromJson) int duration,
+    @JsonKey(name: 'plan_type') String planType,
+    @JsonKey(fromJson: _featuresFromJson) List<String> features,
+  });
 }
 
 /// @nodoc
@@ -130,7 +137,7 @@ class __$$PlanImplCopyWithImpl<$Res>
     extends _$PlanCopyWithImpl<$Res, _$PlanImpl>
     implements _$$PlanImplCopyWith<$Res> {
   __$$PlanImplCopyWithImpl(_$PlanImpl _value, $Res Function(_$PlanImpl) _then)
-      : super(_value, _then);
+    : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -143,53 +150,55 @@ class __$$PlanImplCopyWithImpl<$Res>
     Object? planType = null,
     Object? features = null,
   }) {
-    return _then(_$PlanImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as int,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: freezed == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String?,
-      price: null == price
-          ? _value.price
-          : price // ignore: cast_nullable_to_non_nullable
-              as num,
-      duration: null == duration
-          ? _value.duration
-          : duration // ignore: cast_nullable_to_non_nullable
-              as int,
-      planType: null == planType
-          ? _value.planType
-          : planType // ignore: cast_nullable_to_non_nullable
-              as String,
-      features: null == features
-          ? _value._features
-          : features // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-    ));
+    return _then(
+      _$PlanImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as int,
+        name: null == name
+            ? _value.name
+            : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        description: freezed == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        price: null == price
+            ? _value.price
+            : price // ignore: cast_nullable_to_non_nullable
+                  as num,
+        duration: null == duration
+            ? _value.duration
+            : duration // ignore: cast_nullable_to_non_nullable
+                  as int,
+        planType: null == planType
+            ? _value.planType
+            : planType // ignore: cast_nullable_to_non_nullable
+                  as String,
+        features: null == features
+            ? _value._features
+            : features // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$PlanImpl extends _Plan {
-  const _$PlanImpl(
-      {required this.id,
-      required this.name,
-      @JsonKey(fromJson: _descriptionFromJson) this.description,
-      @JsonKey(fromJson: _priceFromJson) required this.price,
-      @JsonKey(fromJson: _durationFromJson) required this.duration,
-      @JsonKey(name: 'plan_type') required this.planType,
-      @JsonKey(fromJson: _featuresFromJson)
-      final List<String> features = const []})
-      : _features = features,
-        super._();
+  const _$PlanImpl({
+    required this.id,
+    required this.name,
+    @JsonKey(fromJson: _descriptionFromJson) this.description,
+    @JsonKey(fromJson: _priceFromJson) required this.price,
+    @JsonKey(fromJson: _durationFromJson) required this.duration,
+    @JsonKey(name: 'plan_type') required this.planType,
+    @JsonKey(fromJson: _featuresFromJson)
+    final List<String> features = const [],
+  }) : _features = features,
+       super._();
 
   factory _$PlanImpl.fromJson(Map<String, dynamic> json) =>
       _$$PlanImplFromJson(json);
@@ -207,13 +216,13 @@ class _$PlanImpl extends _Plan {
   @override
   @JsonKey(fromJson: _durationFromJson)
   final int duration;
-// Duration in days
+  // Duration in days
   @override
   @JsonKey(name: 'plan_type')
   final String planType;
-// 'monthly', 'yearly', 'popular'
+  // 'monthly', 'yearly', 'popular'
   final List<String> _features;
-// 'monthly', 'yearly', 'popular'
+  // 'monthly', 'yearly', 'popular'
   @override
   @JsonKey(fromJson: _featuresFromJson)
   List<String> get features {
@@ -246,8 +255,16 @@ class _$PlanImpl extends _Plan {
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, name, description, price,
-      duration, planType, const DeepCollectionEquality().hash(_features));
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    name,
+    description,
+    price,
+    duration,
+    planType,
+    const DeepCollectionEquality().hash(_features),
+  );
 
   @JsonKey(ignore: true)
   @override
@@ -257,22 +274,20 @@ class _$PlanImpl extends _Plan {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$PlanImplToJson(
-      this,
-    );
+    return _$$PlanImplToJson(this);
   }
 }
 
 abstract class _Plan extends Plan {
-  const factory _Plan(
-          {required final int id,
-          required final String name,
-          @JsonKey(fromJson: _descriptionFromJson) final String? description,
-          @JsonKey(fromJson: _priceFromJson) required final num price,
-          @JsonKey(fromJson: _durationFromJson) required final int duration,
-          @JsonKey(name: 'plan_type') required final String planType,
-          @JsonKey(fromJson: _featuresFromJson) final List<String> features}) =
-      _$PlanImpl;
+  const factory _Plan({
+    required final int id,
+    required final String name,
+    @JsonKey(fromJson: _descriptionFromJson) final String? description,
+    @JsonKey(fromJson: _priceFromJson) required final num price,
+    @JsonKey(fromJson: _durationFromJson) required final int duration,
+    @JsonKey(name: 'plan_type') required final String planType,
+    @JsonKey(fromJson: _featuresFromJson) final List<String> features,
+  }) = _$PlanImpl;
   const _Plan._() : super._();
 
   factory _Plan.fromJson(Map<String, dynamic> json) = _$PlanImpl.fromJson;

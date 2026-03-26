@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../cache/cache_service.dart';
 import '../../core/config/app_config.dart';
@@ -55,7 +56,7 @@ class CachedDataNotifier<T> extends StateNotifier<CachedDataState<T>> {
     try {
       // 1. Try to load from cache first (instant)
       final cached = CacheService.getCached<T>(cacheKey, fromJson);
-      
+
       if (cached != null) {
         // Show cached data immediately
         state = CachedDataState<T>(
@@ -67,11 +68,11 @@ class CachedDataNotifier<T> extends StateNotifier<CachedDataState<T>> {
         // No cache, show loading
         state = state.copyWith(isLoading: true);
       }
-      
+
       // 2. Fetch fresh data in background
       try {
         final freshData = await fetchFn();
-        
+
         // Save to cache
         await CacheService.setCached(
           cacheKey,
@@ -79,7 +80,7 @@ class CachedDataNotifier<T> extends StateNotifier<CachedDataState<T>> {
           DateTime.now().millisecondsSinceEpoch,
           toJson,
         );
-        
+
         // Update with fresh data
         state = CachedDataState<T>(
           data: freshData,
@@ -90,7 +91,9 @@ class CachedDataNotifier<T> extends StateNotifier<CachedDataState<T>> {
         // If fetch fails, keep cached data if available
         if (cached != null) {
           if (AppConfig.isDevelopment) {
-            print('⚠️ [CachedData] Fetch failed for $cacheKey, keeping cached data');
+            print(
+              '⚠️ [CachedData] Fetch failed for $cacheKey, keeping cached data',
+            );
           }
           state = CachedDataState<T>(
             data: cached,
@@ -147,7 +150,8 @@ class CachedDataNotifier<T> extends StateNotifier<CachedDataState<T>> {
 }
 
 /// StateNotifier for cached list data
-class CachedListDataNotifier<T> extends StateNotifier<CachedDataState<List<T>>> {
+class CachedListDataNotifier<T>
+    extends StateNotifier<CachedDataState<List<T>>> {
   final String cacheKey;
   final Future<List<T>> Function() fetchFn;
   final T Function(Map<String, dynamic>) fromJson;
@@ -166,7 +170,7 @@ class CachedListDataNotifier<T> extends StateNotifier<CachedDataState<List<T>>> 
     try {
       // 1. Try to load from cache first (instant)
       final cached = await CacheService.getList<T>(cacheKey, fromJson);
-      
+
       if (cached != null && cached.isNotEmpty) {
         // Show cached data immediately
         state = CachedDataState<List<T>>(
@@ -178,14 +182,14 @@ class CachedListDataNotifier<T> extends StateNotifier<CachedDataState<List<T>>> 
         // No cache, show loading
         state = state.copyWith(isLoading: true);
       }
-      
+
       // 2. Fetch fresh data in background
       try {
         final freshData = await fetchFn();
-        
+
         // Save to cache
         await CacheService.setList(cacheKey, freshData, toJson);
-        
+
         // Update with fresh data
         state = CachedDataState<List<T>>(
           data: freshData,
@@ -196,7 +200,9 @@ class CachedListDataNotifier<T> extends StateNotifier<CachedDataState<List<T>>> 
         // If fetch fails, keep cached data if available
         if (cached != null && cached.isNotEmpty) {
           if (AppConfig.isDevelopment) {
-            print('⚠️ [CachedListData] Fetch failed for $cacheKey, keeping cached data');
+            print(
+              '⚠️ [CachedListData] Fetch failed for $cacheKey, keeping cached data',
+            );
           }
           state = CachedDataState<List<T>>(
             data: cached,

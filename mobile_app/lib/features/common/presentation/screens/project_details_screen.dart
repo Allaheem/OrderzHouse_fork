@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/models/project.dart';
@@ -14,11 +14,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/widgets/gradient_button.dart';
-import '../../../../core/storage/secure_store.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../projects/data/repositories/projects_repository.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
-import '../../../offers/data/repositories/offers_repository.dart';
+import '../../../offers/presentation/providers/offers_provider.dart';
 import '../../../freelancer/presentation/widgets/change_requests_bottom_sheet.dart';
 import '../../../freelancer/presentation/widgets/deliver_modal.dart';
 import '../../../client/presentation/widgets/review_delivery_bottom_sheet.dart';
@@ -28,19 +26,10 @@ import '../../../messages/presentation/providers/messages_provider.dart';
 import '../../../projects/presentation/providers/change_requests_provider.dart';
 import '../../../../l10n/app_localizations.dart';
 
-// Providers
-final offersRepositoryProvider = Provider<OffersRepository>((ref) {
-  return OffersRepository();
-});
-
-final projectsRepositoryProvider = Provider<ProjectsRepository>((ref) {
-  return ProjectsRepository(ref: ref);
-});
-
 class ProjectDetailsScreen extends ConsumerStatefulWidget {
   final Project? project;
   final int? projectId; // For fetching when project is not provided
-  
+
   /// Deep-link parameters for notification navigation
   final bool openApplicants;
   final bool openReceiveModal;
@@ -53,50 +42,53 @@ class ProjectDetailsScreen extends ConsumerStatefulWidget {
     this.openReceiveModal = false,
     this.showDeliveries = false,
     super.key,
-  }) : assert(project != null || projectId != null, 'Either project or projectId must be provided');
+  }) : assert(
+         project != null || projectId != null,
+         'Either project or projectId must be provided',
+       );
 
   @override
-  ConsumerState<ProjectDetailsScreen> createState() => _ProjectDetailsScreenState();
+  ConsumerState<ProjectDetailsScreen> createState() =>
+      _ProjectDetailsScreenState();
 }
 
 class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
   Project? _currentProject;
-  
+
   bool _hasApplied = false;
   bool _isLoading = false;
   bool _isCheckingApplied = true;
-  
+
   // Store raw project data for additional fields
   Map<String, dynamic>? _projectData;
-  
+
   // Assignment data
   Map<String, dynamic>? _assignment;
   bool _isLoadingAssignment = true;
-  
+
   // Local state for pending deliveries (freelancer)
   bool _pendingLocal = false;
-  
+
   // Store offers and applications data (client)
   List<Map<String, dynamic>> _offers = [];
   List<Map<String, dynamic>> _applications = [];
-  Map<String, int>? _offersStats; // pending/accepted/rejected counts
-  
+
   // Deliveries data
   List<Map<String, dynamic>> _deliveries = [];
   bool _isLoadingDeliveries = false;
 
   // Flag to track if deep-link actions have been handled
   bool _deepLinkHandled = false;
-  
+
   // Flag to track if project has been initialized (prevents double initialization)
   bool _projectInitialized = false;
-  
+
   Project? get _project => _currentProject ?? widget.project;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // If project is provided, use it immediately
     if (widget.project != null) {
       _currentProject = widget.project;
@@ -104,40 +96,44 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     }
     // If only projectId is provided, we'll fetch in build method using provider
   }
-  
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Note: Project initialization is now handled in the build method
     // when the project loads from the provider. This ensures reactive updates.
   }
-  
+
   void _initializeWithProject() {
     final project = _project;
     if (project == null) return;
-    
+
     // Prevent double initialization
     if (_projectInitialized) {
       if (AppConfig.isDevelopment) {
-        debugPrint('⚠️ [ProjectDetails] _initializeWithProject() called but already initialized, skipping');
+        debugPrint(
+          '⚠️ [ProjectDetails] _initializeWithProject() called but already initialized, skipping',
+        );
       }
       return;
     }
     _projectInitialized = true;
-    
+
     if (AppConfig.isDevelopment) {
-      debugPrint('✅ [ProjectDetails] _initializeWithProject() called for project ${project.id}');
+      debugPrint(
+        '✅ [ProjectDetails] _initializeWithProject() called for project ${project.id}',
+      );
     }
-    
+
     // Get user role reactively to determine what to fetch
     final authState = ref.read(authStateProvider);
     final userRoleId = authState.user?.roleId;
     final isFreelancerRole = userRoleId == 3;
-    
+
     _checkIfApplied();
     _fetchRawProjectData();
-    
+
     // Only fetch assignment for freelancers (clients don't need it)
     if (isFreelancerRole) {
       _fetchAssignment(); // This will call _fetchDeliveriesIfNeeded() after assignment loads
@@ -152,24 +148,26 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         _isLoadingDeliveries = false;
       }
     }
-    
+
     // Handle deep-link parameters after first frame
-    if (widget.openApplicants || widget.openReceiveModal || widget.showDeliveries) {
+    if (widget.openApplicants ||
+        widget.openReceiveModal ||
+        widget.showDeliveries) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _handleDeepLinkNavigation();
       });
     }
   }
-  
+
   /// Handle deep-link navigation from notifications
   void _handleDeepLinkNavigation() {
     if (_deepLinkHandled) return;
     _deepLinkHandled = true;
-    
+
     // Delay to ensure data is loaded
     Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
-      
+
       if (widget.openApplicants) {
         _openApplicantsSheetDeepLink();
       } else if (widget.openReceiveModal) {
@@ -179,14 +177,11 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       }
     });
   }
-  
+
   /// Open applicants bottom sheet (for clients) - deep-link version
   void _openApplicantsSheetDeepLink() {
     if (!mounted) return;
-    
-    // Track submitting state
-    const bool isSubmitting = false;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -198,49 +193,56 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         return StatefulBuilder(
           builder: (context, setSheetState) => ApplicationsBottomSheet(
             project: project,
-          applications: _applications,
-          isLoading: _isLoading,
-          isSubmitting: isSubmitting,
-          onClose: () => Navigator.pop(context),
-          onAction: (assignmentId, projectId, action) async {
-            setSheetState(() => isSubmitting = true);
-            try {
-              final repository = ref.read(projectsRepositoryProvider);
-              await repository.acceptRejectApplication(assignmentId, projectId, action);
-              if (mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  SnackBar(content: Text('Application ${action == 'accept' ? 'accepted' : 'rejected'}')),
+            applications: _applications,
+            isLoading: _isLoading,
+            isSubmitting: isSubmitting,
+            onClose: () => Navigator.pop(context),
+            onAction: (assignmentId, projectId, action) async {
+              setSheetState(() => isSubmitting = true);
+              try {
+                final repository = ref.read(projectsRepositoryProvider);
+                await repository.acceptRejectApplication(
+                  assignmentId,
+                  projectId,
+                  action,
                 );
-                _fetchRawProjectData();
+                if (!mounted || !sheetContext.mounted) return;
+                Navigator.pop(sheetContext);
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Application ${action == 'accept' ? 'accepted' : 'rejected'}',
+                    ),
+                  ),
+                );
+                await _fetchRawProjectData();
                 ref.invalidate(myProjectsProvider);
+              } catch (e) {
+                setSheetState(() => isSubmitting = false);
+                if (mounted) {
+                  ScaffoldMessenger.of(
+                    this.context,
+                  ).showSnackBar(SnackBar(content: Text('Failed: $e')));
+                }
               }
-            } catch (e) {
-              setSheetState(() => isSubmitting = false);
-              if (mounted) {
-                ScaffoldMessenger.of(this.context).showSnackBar(
-                  SnackBar(content: Text('Failed: $e')),
-                );
-              }
-            }
-          },
-        ),
-      );
+            },
+          ),
+        );
       },
     );
   }
-  
+
   /// Open receive modal (for clients to review deliveries) - deep-link version
   void _openReceiveModalDeepLink() {
     if (!mounted) return;
-    
+
     if (_deliveries.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No deliveries to review yet')),
       );
       return;
     }
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -256,27 +258,25 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           onApprove: (projectId) async {
             final repository = ref.read(projectsRepositoryProvider);
             await repository.approveDelivery(projectId);
-            if (mounted) {
-              Navigator.pop(sheetContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Delivery approved!')),
-              );
-              _fetchRawProjectData();
-              _fetchDeliveriesIfNeeded();
-              // Invalidate providers
-              ref.invalidate(myProjectsProvider);
-            }
+            if (!mounted || !sheetContext.mounted) return;
+            Navigator.pop(sheetContext);
+            ScaffoldMessenger.of(
+              sheetContext,
+            ).showSnackBar(const SnackBar(content: Text('Delivery approved!')));
+            await _fetchRawProjectData();
+            await _fetchDeliveriesIfNeeded();
+            // Invalidate providers
+            ref.invalidate(myProjectsProvider);
           },
           onRequestChanges: (projectId, message) async {
             final repository = ref.read(projectsRepositoryProvider);
             await repository.requestChanges(projectId, message);
-            if (mounted) {
-              Navigator.pop(sheetContext);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Changes requested')),
-              );
-              _fetchDeliveriesIfNeeded();
-            }
+            if (!mounted || !sheetContext.mounted) return;
+            Navigator.pop(sheetContext);
+            ScaffoldMessenger.of(
+              sheetContext,
+            ).showSnackBar(const SnackBar(content: Text('Changes requested')));
+            await _fetchDeliveriesIfNeeded();
           },
           onRefresh: () {
             _fetchDeliveriesIfNeeded();
@@ -285,16 +285,20 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       },
     );
   }
-  
+
   /// Open deliveries sheet (for freelancers to see change requests) - deep-link version
   void _openDeliveriesSheetDeepLink() {
     if (!mounted) return;
-    
+
     // Build change requests from deliveries that have changes_requested status
     final changeRequests = _deliveries
-        .where((d) => (d['status'] ?? '').toString().toLowerCase() == 'changes_requested')
+        .where(
+          (d) =>
+              (d['status'] ?? '').toString().toLowerCase() ==
+              'changes_requested',
+        )
         .toList();
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -305,44 +309,50 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Fetch deliveries if user is owner or assigned freelancer
   Future<void> _fetchDeliveriesIfNeeded() async {
     final project = _project;
     if (project == null) return;
-    
+
     // Check ownership and assignment
     final authState = ref.read(authStateProvider);
     final currentUserId = authState.user?.id;
-    final isOwnerCheck = currentUserId != null && project.userId == currentUserId;
-    
+    final isOwnerCheck =
+        currentUserId != null && project.userId == currentUserId;
+
     // Check if assigned (need to check assignment data)
     bool isAssignedCheck = false;
     if (_assignment != null && currentUserId != null) {
       final assignmentFreelancerId = _assignment!['freelancer_id'] as int?;
-      final assignmentStatus = (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '').toString().toLowerCase();
-      isAssignedCheck = assignmentFreelancerId == currentUserId && ['active', 'assigned', 'accepted'].contains(assignmentStatus);
+      final assignmentStatus =
+          (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '')
+              .toString()
+              .toLowerCase();
+      isAssignedCheck =
+          assignmentFreelancerId == currentUserId &&
+          ['active', 'assigned', 'accepted'].contains(assignmentStatus);
     }
-    
+
     if (!isOwnerCheck && !isAssignedCheck) {
       return;
     }
-    
+
     // Prevent multiple simultaneous calls
     if (_isLoadingDeliveries) {
       return;
     }
-    
+
     setState(() {
       _isLoadingDeliveries = true;
     });
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final project = _project;
       if (project == null) return;
       final response = await repository.getProjectDeliveries(project.id);
-      
+
       if (mounted && response.success && response.data != null) {
         setState(() {
           _deliveries = response.data!;
@@ -361,42 +371,34 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       }
     }
   }
-  
-  // Normalize status key (completion_status takes precedence, fallback to status)
-  String get _statusKey {
-    final project = _project;
-    final completionStatus = (_projectData?['completion_status'] ?? '').toString().toLowerCase();
-    final status = (_projectData?['status'] ?? project?.status ?? '').toString().toLowerCase();
-    return completionStatus.isNotEmpty ? completionStatus : status;
-  }
-  
+
   // Fetch assignment details (ONLY for freelancers)
   Future<void> _fetchAssignment() async {
     final project = _currentProject;
     if (project == null) return;
-    
+
     // Double-check: only fetch for freelancers
     if (!_isFreelancerRole) {
       setState(() {
         _assignment = null;
         _isLoadingAssignment = false;
       });
-      _fetchDeliveriesIfNeeded();
+      await _fetchDeliveriesIfNeeded();
       return;
     }
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.getMyAssignment(project.id);
-      
+
       if (mounted) {
         setState(() {
           _assignment = response.data;
           _isLoadingAssignment = false;
         });
-        
+
         // Fetch deliveries after assignment is loaded
-        _fetchDeliveriesIfNeeded();
+        await _fetchDeliveriesIfNeeded();
       }
     } catch (e) {
       if (mounted) {
@@ -404,105 +406,55 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           _assignment = null;
           _isLoadingAssignment = false;
         });
-        
+
         // Still try to fetch deliveries (might be owner)
-        _fetchDeliveriesIfNeeded();
+        await _fetchDeliveriesIfNeeded();
       }
     }
   }
-  
+
   // Compute visibility booleans
-  bool get _isOwner {
-    final project = _currentProject;
-    if (project == null) return false;
-    final authState = ref.read(authStateProvider);
-    final currentUserId = authState.user?.id;
-    return currentUserId != null && project.userId == currentUserId;
-  }
-  
   bool get _isFreelancerRole {
     final authState = ref.read(authStateProvider);
     return authState.user?.roleId == 3; // FREELANCER_ROLE_ID
   }
-  
-  bool get _isClientRole {
-    final authState = ref.read(authStateProvider);
-    return authState.user?.roleId == 2; // CLIENT_ROLE_ID
-  }
-  
+
   bool get _isAdminRole {
     final authState = ref.read(authStateProvider);
     return authState.user?.roleId == 1; // ADMIN_ROLE_ID
   }
-  
+
   bool get _isAssignedToMe {
     if (_assignment == null) return false;
     final authState = ref.read(authStateProvider);
     final currentUserId = authState.user?.id;
     if (currentUserId == null) return false;
-    
+
     final assignmentFreelancerId = _assignment!['freelancer_id'] as int?;
-    final assignmentStatus = (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '').toString().toLowerCase();
-    
+    final assignmentStatus =
+        (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '')
+            .toString()
+            .toLowerCase();
+
     final isMyAssignment = assignmentFreelancerId == currentUserId;
-    final isActiveStatus = ['active', 'assigned', 'accepted'].contains(assignmentStatus);
-    
+    final isActiveStatus = [
+      'active',
+      'assigned',
+      'accepted',
+    ].contains(assignmentStatus);
+
     return isMyAssignment && isActiveStatus;
   }
-  
-  bool get _isAssignedToSomeone {
-    if (_assignment == null) return false;
-    final assignmentStatus = (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '').toString().toLowerCase();
-    return ['active', 'assigned', 'accepted'].contains(assignmentStatus);
-  }
-  
-  // Should show freelancer actions section
-  bool get _shouldShowFreelancerActions {
-    return _isFreelancerRole && !_isOwner && _isAssignedToMe;
-  }
-  
-  // Should show client actions section (Receive + Applicants buttons)
-  bool get _shouldShowClientActions {
-    return _isOwner && _isClientRole;
-  }
-  
-  // Should show client action bar (Receive + Applicants)
-  bool get _shouldShowClientActionBar {
-    return _isOwner && _isClientRole;
-  }
-  
-  // Check if project is completed
-  bool get _isProjectCompleted {
-    final project = _project;
-    if (project == null) return false;
-    final status = project.status.toLowerCase();
-    final completionStatus = _statusKey.toLowerCase();
-    return status == 'completed' || completionStatus == 'completed';
-  }
-  
-  // Should show sticky Apply/Send Offer CTA
-  bool get _shouldShowStickyCTA {
-    if (!_isFreelancerRole || _isOwner || _isAssignedToMe || _isAssignedToSomeone) {
-      return false;
-    }
-    
-    final project = _project;
-    if (project == null) return false;
-    final projectStatus = project.status.toLowerCase();
-    final isOpen = ['open', 'active', 'pending', 'in_progress', 'bidding'].contains(projectStatus);
-    
-    return isOpen;
-  }
-  
+
   // Fetch raw project data for additional fields
   Future<void> _fetchRawProjectData() async {
     final project = _project;
     if (project == null) return;
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.getMyProjectsRaw();
-      
+
       if (response.success && response.data != null) {
         final projectData = response.data!.firstWhere(
           (p) => (p['id'] as int?) == project.id,
@@ -518,32 +470,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       // Silently fail
     }
   }
-  
-  // Check if project has notifications (freelancer/owner)
-  bool _hasNotifications() {
-    final changeRequestMessage = _projectData?['change_request_message'] as String? ?? '';
-    final unresolvedCount = _projectData?['change_requests_unresolved_count'] as int? ?? 0;
-    return changeRequestMessage.trim().isNotEmpty || unresolvedCount > 0;
-  }
-  
-  // Should show client review actions (Approve + Request Change)
-  bool get _shouldShowClientReviewActions {
-    if (!_isOwner) return false;
-    return _statusKey == 'pending_review' || _deliveries.isNotEmpty;
-  }
-  
-  // Should show freelancer deliver button
-  bool get _shouldShowFreelancerDeliver {
-    if (!_isAssignedToMe) return false;
-    return ['in_progress', 'not_started'].contains(_statusKey);
-  }
-  
-  // Should show freelancer waiting status
-  bool get _shouldShowFreelancerWaiting {
-    if (!_isAssignedToMe) return false;
-    return _statusKey == 'pending_review' || (_pendingLocal && _statusKey != 'completed');
-  }
-  
+
   // Fetch offers for a project (client)
   Future<void> _fetchOffers() async {
     final project = _project;
@@ -551,28 +478,10 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.getProjectOffers(project.id);
-      
+
       if (response.success && response.data != null) {
         setState(() {
           _offers = response.data!;
-          // Calculate stats
-          int pending = 0, accepted = 0, rejected = 0;
-          for (var offer in response.data!) {
-            final status = (offer['status'] ?? 'pending').toString().toLowerCase();
-            if (status == 'pending' || status == 'pending_client_approval') {
-              pending++;
-            } else if (status == 'accepted' || status == 'approved') {
-              accepted++;
-            } else if (status == 'rejected' || status == 'declined') {
-              rejected++;
-            }
-          }
-          _offersStats = {
-            'pending': pending,
-            'accepted': accepted,
-            'rejected': rejected,
-            'total': response.data!.length,
-          };
         });
       }
     } catch (e) {
@@ -587,7 +496,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       final project = _project;
       if (project == null) return;
       final response = await repository.getProjectApplications(project.id);
-      
+
       if (response.success && response.data != null) {
         setState(() {
           _applications = response.data!;
@@ -660,38 +569,40 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         proposal: proposal,
       );
 
-      if (mounted) {
-        if (response.success) {
-          setState(() {
-            _hasApplied = true;
-            _isLoading = false;
-          });
-          
-          // Refresh assignment after sending offer
-          _fetchAssignment();
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      if (response.success) {
+        setState(() {
+          _hasApplied = true;
+          _isLoading = false;
+        });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message ?? 'Offer sent successfully'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        } else {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message ?? 'Failed to send offer'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
+        // Refresh assignment after sending offer
+        await _fetchAssignment();
+        if (!mounted) return;
+
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(response.message ?? 'Offer sent successfully'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        setState(() => _isLoading = false);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(response.message ?? 'Failed to send offer'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
+        final messenger = ScaffoldMessenger.of(context);
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Failed to send offer: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -716,38 +627,42 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         message: null,
       );
 
-      if (mounted) {
-        if (response.success) {
-          setState(() {
-            _hasApplied = true;
-            _isLoading = false;
-          });
-          
-          // Refresh assignment after applying
-          _fetchAssignment();
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      if (response.success) {
+        setState(() {
+          _hasApplied = true;
+          _isLoading = false;
+        });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message ?? 'Application submitted successfully'),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 2),
+        // Refresh assignment after applying
+        await _fetchAssignment();
+        if (!mounted) return;
+
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              response.message ?? 'Application submitted successfully',
             ),
-          );
-        } else {
-          setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(response.message ?? 'Failed to apply to project'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
-        }
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        setState(() => _isLoading = false);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(response.message ?? 'Failed to apply to project'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
+        final messenger = ScaffoldMessenger.of(context);
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Failed to apply: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -804,7 +719,9 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: bidAmountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
                 ],
@@ -845,8 +762,11 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                     ? null
                     : () {
                         if (formKey.currentState!.validate()) {
-                          final bidAmount = double.parse(bidAmountController.text);
-                          final proposal = proposalController.text.trim().isEmpty
+                          final bidAmount = double.parse(
+                            bidAmountController.text,
+                          );
+                          final proposal =
+                              proposalController.text.trim().isEmpty
                               ? null
                               : proposalController.text.trim();
                           Navigator.pop(context);
@@ -877,9 +797,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
             final l10n = AppLocalizations.of(context)!;
             return Scaffold(
               backgroundColor: Colors.white,
-              appBar: AppBar(
-                title: Text(l10n.projectNotFound),
-              ),
+              appBar: AppBar(title: Text(l10n.projectNotFound)),
               body: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -944,7 +862,9 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -962,9 +882,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           final l10n = AppLocalizations.of(context)!;
           return Scaffold(
             backgroundColor: Colors.white,
-            appBar: AppBar(
-              title: Text(l10n.error),
-            ),
+            appBar: AppBar(title: Text(l10n.error)),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -1006,7 +924,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         },
       );
     }
-    
+
     // Project is available, render normally
     return _buildProjectContent(context, _project!);
   }
@@ -1110,37 +1028,39 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   Widget _buildProjectContent(BuildContext context, Project project) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final statusColor = _getStatusColor(project.status);
-    
+
     // Build image URL
     final imageUrl = project.coverPic != null && project.coverPic!.isNotEmpty
         ? (project.coverPic!.startsWith('http')
-            ? project.coverPic!
-            : '${AppConfig.baseUrl}${project.coverPic}')
+              ? project.coverPic!
+              : '${AppConfig.baseUrl}${project.coverPic}')
         : null;
 
     // Get duration text
     String durationText = 'N/A';
     if (project.durationDays != null) {
-      durationText = '${project.durationDays} ${project.durationDays == 1 ? 'day' : 'days'}';
+      durationText =
+          '${project.durationDays} ${project.durationDays == 1 ? 'day' : 'days'}';
     } else if (project.durationHours != null) {
-      durationText = '${project.durationHours} ${project.durationHours == 1 ? 'hour' : 'hours'}';
+      durationText =
+          '${project.durationHours} ${project.durationHours == 1 ? 'hour' : 'hours'}';
     }
 
     // Check if current user is freelancer (role_id == 3)
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
     final isFreelancer = user?.roleId == 3;
-    
+
     // Determine button label and action based on project type
     final projectTypeLower = project.projectType.toLowerCase();
     final isBidding = projectTypeLower == 'bidding';
     final isFixed = projectTypeLower == 'fixed';
     final isHourly = projectTypeLower == 'hourly';
-    
+
     // Determine button label (null if project type is unknown)
     String? buttonLabel;
     if (_hasApplied) {
@@ -1150,7 +1070,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     } else if (isFixed || isHourly) {
       buttonLabel = AppLocalizations.of(context)!.apply;
     }
-    
+
     // Show button only for freelancers, and only if project type is known (bidding/fixed/hourly)
     final hasValidProjectType = isBidding || isFixed || isHourly;
     // Note: Actual visibility is controlled by _shouldShowStickyCTA which checks assignment
@@ -1186,7 +1106,10 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         // Back button in circle
@@ -1274,19 +1197,27 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          AppColors.primary.withValues(alpha: 0.8),
-                                          AppColors.primary.withValues(alpha: 0.6),
+                                          AppColors.primary.withValues(
+                                            alpha: 0.8,
+                                          ),
+                                          AppColors.primary.withValues(
+                                            alpha: 0.6,
+                                          ),
                                         ],
                                       ),
                                     ),
                                     child: const Center(
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     ),
                                   ),
-                                  errorWidget: (context, url, error) => _buildImagePlaceholder(),
+                                  errorWidget: (context, url, error) =>
+                                      _buildImagePlaceholder(),
                                 )
                               : _buildImagePlaceholder(),
                         ),
@@ -1522,25 +1453,33 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
 
                 // Add bottom padding to prevent content from being hidden under bottom bar
                 SizedBox(
-                  height: MediaQuery.of(context).padding.bottom + 80, // Space for bottom bar
+                  height:
+                      MediaQuery.of(context).padding.bottom +
+                      80, // Space for bottom bar
                 ),
               ],
             ),
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(context, isFreelancer, isBidding, shouldShowButton, buttonLabel),
+      bottomNavigationBar: _buildBottomBar(
+        context,
+        isFreelancer,
+        isBidding,
+        shouldShowButton,
+        buttonLabel,
+      ),
     );
   }
-  
-  // Build Actions Section (role-based, with assignment check) - DEPRECATED: Actions moved to bottom bar
-  Widget _buildActionsSection(BuildContext context, bool isFreelancer, bool isBidding) {
-    // This method is no longer used - actions are in bottom bar
-    return const SizedBox.shrink();
-  }
-  
+
   // Build bottom bar (Actions or Apply/Send Offer CTA). Always visible; disabled + spinner while loading (no flicker).
-  Widget _buildBottomBar(BuildContext context, bool isFreelancer, bool isBidding, bool shouldShowButton, String? buttonLabel) {
+  Widget _buildBottomBar(
+    BuildContext context,
+    bool isFreelancer,
+    bool isBidding,
+    bool shouldShowButton,
+    String? buttonLabel,
+  ) {
     final project = _project;
     final authState = ref.watch(authStateProvider);
     final currentUser = authState.user;
@@ -1548,10 +1487,14 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     final userRoleId = currentUser?.roleId;
     final isClientRole = userRoleId == 2;
     final isFreelancerRole = userRoleId == 3;
-    final isOwner = project != null && currentUserId != null && project.userId == currentUserId;
+    final isOwner =
+        project != null &&
+        currentUserId != null &&
+        project.userId == currentUserId;
 
     // Single flag: show same bar disabled + small spinner until data ready
-    final isLoadingActions = (project == null) ||
+    final isLoadingActions =
+        (project == null) ||
         (currentUserId == null || userRoleId == null) ||
         (isFreelancerRole && _isLoadingAssignment) ||
         (isClientRole && isOwner && _isLoadingDeliveries);
@@ -1560,28 +1503,49 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     if (project == null || currentUserId == null || userRoleId == null) {
       return _buildSkeletonBar(context, loading: true);
     }
-    
+
     // Compute assignment status (only for freelancers)
     bool isAssignedToMe = false;
     bool isAssignedToSomeone = false;
     if (isFreelancerRole && _assignment != null) {
       final assignmentFreelancerId = _assignment!['freelancer_id'] as int?;
-      final assignmentStatus = (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '').toString().toLowerCase();
-      isAssignedToMe = assignmentFreelancerId == currentUserId && ['active', 'assigned', 'accepted'].contains(assignmentStatus);
-      isAssignedToSomeone = ['active', 'assigned', 'accepted'].contains(assignmentStatus);
+      final assignmentStatus =
+          (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '')
+              .toString()
+              .toLowerCase();
+      isAssignedToMe =
+          assignmentFreelancerId == currentUserId &&
+          ['active', 'assigned', 'accepted'].contains(assignmentStatus);
+      isAssignedToSomeone = [
+        'active',
+        'assigned',
+        'accepted',
+      ].contains(assignmentStatus);
     }
-    
+
     // Compute project status
     final projectStatus = project.status.toLowerCase();
-    final completionStatus = (_projectData?['completion_status'] ?? project.status ?? '').toString().toLowerCase();
-    final statusKey = completionStatus.isNotEmpty ? completionStatus : projectStatus;
-    final isProjectCompleted = projectStatus == 'completed' || completionStatus == 'completed';
-    
+    final completionStatus =
+        (_projectData?['completion_status'] ?? project.status ?? '')
+            .toString()
+            .toLowerCase();
+    final statusKey = completionStatus.isNotEmpty
+        ? completionStatus
+        : projectStatus;
+    final isProjectCompleted =
+        projectStatus == 'completed' || completionStatus == 'completed';
+
     // Debug logs
     if (AppConfig.isDevelopment) {
       debugPrint('🔍 [ProjectDetails] Bottom Bar Visibility (REACTIVE):');
       debugPrint('  currentUserId: $currentUserId');
-      debugPrint('  userRoleId: $userRoleId (${isClientRole ? "CLIENT" : isFreelancerRole ? "FREELANCER" : "OTHER"})');
+      debugPrint(
+        '  userRoleId: $userRoleId (${isClientRole
+            ? "CLIENT"
+            : isFreelancerRole
+            ? "FREELANCER"
+            : "OTHER"})',
+      );
       debugPrint('  project.userId: ${project.userId}');
       debugPrint('  project.status: $projectStatus');
       debugPrint('  isOwner: $isOwner');
@@ -1597,26 +1561,43 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       debugPrint('  isLoadingActions: $isLoadingActions');
       debugPrint('  _projectInitialized: $_projectInitialized');
     }
-    
+
     // Show Client Action Bar (Receive + Applicants) for client-owned projects
     if (isClientRole && isOwner) {
       if (AppConfig.isDevelopment) {
         debugPrint('✅ [ProjectDetails] Showing Client Action Bar');
       }
-      return _buildClientActionBar(context, isProjectCompleted, loading: isLoadingActions);
+      return _buildClientActionBar(
+        context,
+        isProjectCompleted,
+        loading: isLoadingActions,
+      );
     }
-    
+
     // Show Freelancer Actions (Deliver or Waiting status) if assigned
     if (isFreelancerRole && !isOwner && isAssignedToMe) {
       if (AppConfig.isDevelopment) {
         debugPrint('✅ [ProjectDetails] Showing Freelancer Actions');
       }
-      return _buildFreelancerActionsBottomBar(context, statusKey, loading: isLoadingActions);
+      return _buildFreelancerActionsBottomBar(
+        context,
+        statusKey,
+        loading: isLoadingActions,
+      );
     }
-    
+
     // Show Apply/Send Offer CTA if applicable (not owner, not assigned)
-    if (isFreelancerRole && !isOwner && !isAssignedToMe && !isAssignedToSomeone) {
-      final isOpen = ['open', 'active', 'pending', 'in_progress', 'bidding'].contains(projectStatus);
+    if (isFreelancerRole &&
+        !isOwner &&
+        !isAssignedToMe &&
+        !isAssignedToSomeone) {
+      final isOpen = [
+        'open',
+        'active',
+        'pending',
+        'in_progress',
+        'bidding',
+      ].contains(projectStatus);
       if (isOpen) {
         if (AppConfig.isDevelopment) {
           debugPrint('✅ [ProjectDetails] Showing Apply/Send Offer CTA');
@@ -1635,9 +1616,11 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         );
       }
     }
-    
+
     if (AppConfig.isDevelopment) {
-      debugPrint('❌ [ProjectDetails] No bottom bar shown (empty bar to avoid layout jump)');
+      debugPrint(
+        '❌ [ProjectDetails] No bottom bar shown (empty bar to avoid layout jump)',
+      );
     }
     return _buildSkeletonBar(context, loading: false);
   }
@@ -1696,9 +1679,13 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build Client Action Bar (Receive + Applicants OR Files + Request Changes)
-  Widget _buildClientActionBar(BuildContext context, bool isProjectCompleted, {bool loading = false}) {
+  Widget _buildClientActionBar(
+    BuildContext context,
+    bool isProjectCompleted, {
+    bool loading = false,
+  }) {
     return SafeArea(
       top: false,
       bottom: true,
@@ -1720,16 +1707,21 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build Active Actions Row (Offers for bidding / Applicants for fixed-hourly + Receive) - for in-progress projects
   Widget _buildActiveActionsRow(BuildContext context, {bool loading = false}) {
-    final isBidding = (_project?.projectType ?? '').toString().toLowerCase() == 'bidding';
+    final isBidding =
+        (_project?.projectType ?? '').toString().toLowerCase() == 'bidding';
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: loading ? null : () => isBidding ? _openOffers(context) : _openApplications(context),
+            onPressed: loading
+                ? null
+                : () => isBidding
+                      ? _openOffers(context)
+                      : _openApplications(context),
             icon: const Icon(Icons.people_outline_rounded, size: 20),
             label: Text(isBidding ? l10n.offers : l10n.applicants),
             style: OutlinedButton.styleFrom(
@@ -1758,9 +1750,12 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ],
     );
   }
-  
+
   // Build Completed Actions Row (Request Changes + Files) - for completed projects
-  Widget _buildCompletedActionsRow(BuildContext context, {bool loading = false}) {
+  Widget _buildCompletedActionsRow(
+    BuildContext context, {
+    bool loading = false,
+  }) {
     return Row(
       children: [
         Expanded(
@@ -1794,68 +1789,24 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ],
     );
   }
-  
-  // Build Client Review Bottom Bar (Approve + Request Change) - DEPRECATED: Now shown in Receive panel
-  Widget _buildClientReviewBottomBar(BuildContext context) {
-    return SafeArea(
-      top: false,
-      bottom: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Request Change button (left, outlined)
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _openRequestChangesModal(context),
-                icon: const Icon(Icons.edit_rounded, size: 20),
-                label: Text(AppLocalizations.of(context)!.requestChanges),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF111827),
-                  side: const BorderSide(color: Color(0xFFE5E7EB)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Approve button (right, filled)
-            Expanded(
-              child: PrimaryGradientButton(
-                onPressed: () => _handleApproveDelivery(context),
-                label: AppLocalizations.of(context)!.approve,
-                icon: Icons.check_circle_rounded,
-                height: 48,
-                borderRadius: 12,
-                width: double.infinity,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-  
+
   // Build Freelancer Actions Bottom Bar (Deliver or Waiting status)
-  Widget _buildFreelancerActionsBottomBar(BuildContext context, String statusKey, {bool loading = false}) {
+  Widget _buildFreelancerActionsBottomBar(
+    BuildContext context,
+    String statusKey, {
+    bool loading = false,
+  }) {
     final project = _project;
     if (project == null) return _buildSkeletonBar(context, loading: true);
-    
-    final shouldShowDeliver = ['in_progress', 'not_started'].contains(statusKey);
-    final shouldShowWaiting = statusKey == 'pending_review' || (_pendingLocal && statusKey != 'completed');
-    
+
+    final shouldShowDeliver = [
+      'in_progress',
+      'not_started',
+    ].contains(statusKey);
+    final shouldShowWaiting =
+        statusKey == 'pending_review' ||
+        (_pendingLocal && statusKey != 'completed');
+
     return SafeArea(
       top: false,
       bottom: true,
@@ -1882,152 +1833,76 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 isLoading: loading,
               )
             : shouldShowWaiting
-                ? Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFFF59E0B).withOpacity(0.3),
-                        width: 1,
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.hourglass_empty_rounded,
+                      color: Color(0xFFF59E0B),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Waiting for client review',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: const Color(0xFFF59E0B),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.hourglass_empty_rounded,
-                          color: Color(0xFFF59E0B),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Waiting for client review',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: const Color(0xFFF59E0B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
+                  ],
+                ),
+              )
+            : statusKey == 'completed'
+            ? Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Color(0xFF10B981),
+                      size: 20,
                     ),
-                  )
-                : statusKey == 'completed'
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: const Color(0xFF10B981).withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              color: Color(0xFF10B981),
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Approved ✅',
-                              style: AppTextStyles.labelMedium.copyWith(
-                                color: const Color(0xFF10B981),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Approved ✅',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: const Color(0xFF10B981),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
-  
-  // Open change requests (freelancer)
-  Future<void> _openChangeRequests(BuildContext context) async {
-    final project = _project;
-    if (project == null) return;
-    final repository = ref.read(projectsRepositoryProvider);
-    List<Map<String, dynamic>> requests = [];
-    bool isLoading = true;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final proj = _project;
-        if (proj == null) return const SizedBox.shrink();
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            if (isLoading && requests.isEmpty) {
-              repository.getProjectChangeRequests(proj.id).then((response) {
-              if (response.success && response.data != null) {
-                setModalState(() {
-                  // Convert ChangeRequest objects to maps for the bottom sheet
-                  requests = response.data!.map((cr) => <String, dynamic>{
-                    'id': cr.id,
-                    'message': cr.message,
-                    'created_at': cr.createdAt.toIso8601String(),
-                    'is_resolved': cr.isResolved,
-                  }).toList();
-                  isLoading = false;
-                });
-              } else {
-                final changeRequestMessage = _projectData?['change_request_message'] as String?;
-                final changeRequestAt = _projectData?['change_request_at'];
-                if (changeRequestMessage != null && changeRequestMessage.isNotEmpty) {
-                  setModalState(() {
-                    requests = [
-                      {
-                        'id': 'local',
-                        'message': changeRequestMessage,
-                        'created_at': changeRequestAt,
-                      }
-                    ];
-                    isLoading = false;
-                  });
-                } else {
-                  setModalState(() {
-                    isLoading = false;
-                  });
-                }
-              }
-            }).catchError((e) {
-              final changeRequestMessage = _projectData?['change_request_message'] as String?;
-              final changeRequestAt = _projectData?['change_request_at'];
-              if (changeRequestMessage != null && changeRequestMessage.isNotEmpty) {
-                setModalState(() {
-                  requests = [
-                    {
-                      'id': 'local',
-                      'message': changeRequestMessage,
-                      'created_at': changeRequestAt,
-                    }
-                  ];
-                  isLoading = false;
-                });
-              } else {
-                setModalState(() {
-                  isLoading = false;
-                });
-              }
-            });
-            }
-
-            return ChangeRequestsBottomSheet(
-              requests: requests,
-              isLoading: isLoading,
-            );
-          },
-        );
-      },
-    );
-  }
-  
   // Open deliver modal (freelancer)
   Future<void> _openDeliverModal(BuildContext context) async {
     await showDialog(
@@ -2040,7 +1915,10 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           onClose: () => Navigator.pop(context),
           onSubmit: (proj, filePaths) async {
             final repository = ref.read(projectsRepositoryProvider);
-            final response = await repository.deliverProject(proj.id, filePaths);
+            final response = await repository.deliverProject(
+              proj.id,
+              filePaths,
+            );
 
             if (!response.success) {
               throw Exception(response.message ?? 'Failed to deliver project');
@@ -2078,23 +1956,23 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       },
     );
   }
-  
+
   // Handle Approve Delivery (client)
   Future<void> _handleApproveDelivery(BuildContext context) async {
     if (_isLoading) return;
     final project = _project;
     if (project == null) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.approveDelivery(project.id);
-      
+
       if (!response.success) {
         throw Exception(response.message ?? 'Failed to approve delivery');
       }
-      
+
       // Update local state immediately
       setState(() {
         _projectData = {
@@ -2104,23 +1982,23 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         };
         _isLoading = false;
       });
-      
+
       // Refresh deliveries
       await _fetchDeliveriesIfNeeded();
-      
+
       // Refresh projects list
       ref.invalidate(myProjectsProvider);
       await ref.read(myProjectsProvider.future);
-      
+
       // Refresh raw project data
       await _fetchRawProjectData();
-      
+
       if (context.mounted) {
         // Close the receive sheet if it's open
         if (Navigator.canPop(context)) {
           Navigator.pop(context);
         }
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -2129,14 +2007,14 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
             duration: Duration(seconds: 3),
           ),
         );
-        
+
         // Force rebuild to show new buttons
         setState(() {});
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: Text('Failed to approve: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -2145,12 +2023,12 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       }
     }
   }
-  
+
   // Open Request Changes Modal (client)
   Future<void> _openRequestChangesModal(BuildContext context) async {
     final messageController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2217,7 +2095,10 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                       : () async {
                           if (formKey.currentState!.validate()) {
                             Navigator.pop(context);
-                            await _handleRequestChanges(context, messageController.text.trim());
+                            await _handleRequestChanges(
+                              context,
+                              messageController.text.trim(),
+                            );
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -2234,7 +2115,9 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(
@@ -2253,26 +2136,29 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Handle Request Changes (client)
-  Future<void> _handleRequestChanges(BuildContext context, String message) async {
+  Future<void> _handleRequestChanges(
+    BuildContext context,
+    String message,
+  ) async {
     if (_isLoading) return;
     final project = _project;
     if (project == null) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.requestProjectChanges(
         projectId: project.id,
         message: message,
       );
-      
+
       if (!response.success) {
         throw Exception(response.message ?? 'Failed to send change request');
       }
-      
+
       // Update local state
       setState(() {
         _projectData = {
@@ -2282,19 +2168,18 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         };
         _isLoading = false;
       });
-      
+
       // Invalidate providers to refresh data
       ref.invalidate(changeRequestsProvider(project.id));
       ref.invalidate(projectByIdProvider(project.id));
-      _fetchDeliveriesIfNeeded();
-      
+
       // Refresh deliveries
       await _fetchDeliveriesIfNeeded();
-      
+
       // Refresh projects list (so badges update)
       ref.invalidate(myProjectsProvider);
       await ref.read(myProjectsProvider.future);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -2306,7 +2191,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(this.context).showSnackBar(
           SnackBar(
             content: Text('Failed to send request: ${e.toString()}'),
             backgroundColor: Colors.red,
@@ -2315,14 +2200,15 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       }
     }
   }
-  
+
   // Open Files View (client) - read-only view of delivered files for completed projects
   Future<void> _openFilesView(BuildContext context) async {
     // Fetch deliveries first if not already loaded
     if (_deliveries.isEmpty) {
       await _fetchDeliveriesIfNeeded();
     }
-    
+    if (!context.mounted) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2333,7 +2219,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       builder: (context) => _buildFilesSheet(context),
     );
   }
-  
+
   // Build Files Sheet UI (read-only, no actions)
   Widget _buildFilesSheet(BuildContext context) {
     final project = _project;
@@ -2351,10 +2237,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               border: Border(
-                bottom: BorderSide(
-                  color: AppColors.border,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: AppColors.border, width: 1),
               ),
             ),
             child: Row(
@@ -2378,7 +2261,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               ],
             ),
           ),
-          
+
           // Content
           Expanded(
             child: _deliveries.isEmpty
@@ -2414,14 +2297,14 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build Delivery File Card
   Widget _buildDeliveryFileCard(Map<String, dynamic> delivery, int index) {
     final files = delivery['files'] as List<dynamic>? ?? [];
     final note = delivery['note'] as String? ?? '';
     final createdAt = delivery['created_at'];
     final status = delivery['status'] as String? ?? 'submitted';
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
@@ -2470,10 +2353,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              note,
-              style: AppTextStyles.bodyMedium,
-            ),
+            Text(note, style: AppTextStyles.bodyMedium),
             const SizedBox(height: 12),
           ],
           if (files.isNotEmpty) ...[
@@ -2498,14 +2378,15 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Open Receive Panel (client) - new UI for viewing/approving deliveries
   Future<void> _openReceivePanel(BuildContext context) async {
     // Fetch deliveries first if not already loaded
     if (_deliveries.isEmpty) {
       await _fetchDeliveriesIfNeeded();
     }
-    
+    if (!context.mounted) return;
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2516,13 +2397,13 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       builder: (context) => _buildReceiveSheet(context),
     );
   }
-  
+
   // Build Receive Sheet UI
   Widget _buildReceiveSheet(BuildContext context) {
     final project = _project;
     if (project == null) return const SizedBox.shrink();
     final latestDelivery = _deliveries.isNotEmpty ? _deliveries.first : null;
-    
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -2536,10 +2417,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
               border: Border(
-                bottom: BorderSide(
-                  color: AppColors.border,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: AppColors.border, width: 1),
               ),
             ),
             child: Row(
@@ -2563,7 +2441,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               ],
             ),
           ),
-          
+
           // Content
           Expanded(
             child: SingleChildScrollView(
@@ -2573,14 +2451,14 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 children: [
                   // Latest Delivery Card
                   _buildLatestDeliveryCard(latestDelivery),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Actions Card
                   _buildActionsCard(latestDelivery),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // History Card
                   _buildHistoryCard(),
                 ],
@@ -2591,7 +2469,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build Latest Delivery Card
   Widget _buildLatestDeliveryCard(Map<String, dynamic>? latestDelivery) {
     return Container(
@@ -2620,7 +2498,10 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.accentOrange,
                   side: const BorderSide(color: AppColors.border),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   minimumSize: const Size(0, 32),
                 ),
               ),
@@ -2640,13 +2521,13 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build Delivery Content
   Widget _buildDeliveryContent(Map<String, dynamic> delivery) {
     final files = delivery['files'] as List<dynamic>? ?? [];
     final note = delivery['note'] as String? ?? '';
     final createdAt = delivery['created_at'];
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2659,10 +2540,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            note,
-            style: AppTextStyles.bodyMedium,
-          ),
+          Text(note, style: AppTextStyles.bodyMedium),
           const SizedBox(height: 12),
         ],
         if (files.isNotEmpty) ...[
@@ -2686,19 +2564,24 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ],
     );
   }
-  
+
   // Build File Item
   Widget _buildFileItem(dynamic file) {
-    final fileName = file is Map ? (file['filename'] ?? file['name'] ?? 'File') : file.toString();
-    final fileUrl = file is Map ? (file['url'] ?? file['file_url'] ?? file['path']) : null;
+    final fileName = file is Map
+        ? (file['filename'] ?? file['name'] ?? 'File')
+        : file.toString();
+    final fileUrl = file is Map
+        ? (file['url'] ?? file['file_url'] ?? file['path'])
+        : null;
     final fileSize = file is Map ? (file['size'] ?? file['size_bytes']) : null;
-    
+
     // Check if URL is valid
-    final hasValidUrl = fileUrl != null && 
-                       fileUrl.toString().isNotEmpty && 
-                       fileUrl.toString() != 'null' && 
-                       fileUrl.toString() != 'N/A';
-    
+    final hasValidUrl =
+        fileUrl != null &&
+        fileUrl.toString().isNotEmpty &&
+        fileUrl.toString() != 'null' &&
+        fileUrl.toString() != 'N/A';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -2740,33 +2623,39 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
             icon: Icon(
               Icons.download_rounded,
               size: 20,
-              color: hasValidUrl ? AppColors.accentOrange : AppColors.textTertiary,
+              color: hasValidUrl
+                  ? AppColors.accentOrange
+                  : AppColors.textTertiary,
             ),
-            onPressed: hasValidUrl ? () => _downloadFile(fileUrl.toString(), fileName) : null,
+            onPressed: hasValidUrl
+                ? () => _downloadFile(fileUrl.toString(), fileName)
+                : null,
             tooltip: hasValidUrl ? 'Download' : 'File not available',
           ),
         ],
       ),
     );
   }
-  
+
   // Helper: Format file size
   String _formatFileSize(dynamic size) {
     try {
       final bytes = size is int ? size : int.tryParse(size.toString()) ?? 0;
       if (bytes < 1024) return '$bytes B';
       if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-      if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+      if (bytes < 1024 * 1024 * 1024) {
+        return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+      }
       return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
     } catch (e) {
       return '';
     }
   }
-  
+
   // Build Actions Card
   Widget _buildActionsCard(Map<String, dynamic>? latestDelivery) {
     final hasDelivery = latestDelivery != null;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -2790,14 +2679,23 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 child: SizedBox(
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: hasDelivery ? () {
-                      Navigator.pop(context);
-                      _openRequestChangesModal(context);
-                    } : null,
+                    onPressed: hasDelivery
+                        ? () {
+                            Navigator.pop(context);
+                            _openRequestChangesModal(context);
+                          }
+                        : null,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
-                      side: BorderSide(color: hasDelivery ? AppColors.border : AppColors.borderLight),
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                      side: BorderSide(
+                        color: hasDelivery
+                            ? AppColors.border
+                            : AppColors.borderLight,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -2811,10 +2709,12 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 child: SizedBox(
                   height: 48,
                   child: PrimaryGradientButton(
-                    onPressed: hasDelivery ? () async {
-                      Navigator.pop(context);
-                      await _handleApproveDelivery(context);
-                    } : null,
+                    onPressed: hasDelivery
+                        ? () async {
+                            Navigator.pop(context);
+                            await _handleApproveDelivery(context);
+                          }
+                        : null,
                     label: AppLocalizations.of(context)!.approve,
                     isEnabled: hasDelivery,
                     height: 48,
@@ -2829,11 +2729,11 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build History Card
   Widget _buildHistoryCard() {
     final history = _deliveries.skip(1).toList();
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -2864,13 +2764,13 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Build History Item (with downloadable files)
   Widget _buildHistoryItem(Map<String, dynamic> delivery) {
     final status = delivery['status'] as String? ?? 'submitted';
     final createdAt = delivery['created_at'];
     final files = delivery['files'] as List<dynamic>? ?? [];
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -2927,7 +2827,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Helper: Download file with authorization (no permissions needed)
   Future<void> _downloadFile(String url, String fileName) async {
     // Validate URL
@@ -2940,7 +2840,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       );
       return;
     }
-    
+
     try {
       // Show downloading snackbar
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2950,38 +2850,22 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
-      
+
       // Get app documents directory (no permissions needed on any platform)
       final directory = await getApplicationDocumentsDirectory();
-      
+
       // Create OrderzHouse folder inside app documents
       final orderzHouseDir = Directory('${directory.path}/OrderzHouse');
-      if (!await orderzHouseDir.exists()) {
-        await orderzHouseDir.create(recursive: true);
+      if (!orderzHouseDir.existsSync()) {
+        orderzHouseDir.createSync(recursive: true);
       }
-      
+
       final savePath = '${orderzHouseDir.path}/$fileName';
-      
-      // Get auth token from secure storage
-      final token = await SecureStore.readAccessToken();
-      
-      // Create Dio instance with auth headers
-      final dio = Dio();
-      final options = Options(
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-          'Accept': '*/*',
-        },
-        responseType: ResponseType.bytes,
-        followRedirects: true,
-        validateStatus: (status) => status != null && status < 500,
-      );
-      
-      // Download file
-      await dio.download(
-        url,
-        savePath,
-        options: options,
+
+      final repository = ref.read(projectsRepositoryProvider);
+      final downloadResult = await repository.downloadFile(
+        url: url,
+        savePath: savePath,
         onReceiveProgress: (received, total) {
           if (total != -1) {
             final progress = (received / total * 100).toStringAsFixed(0);
@@ -2989,16 +2873,19 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           }
         },
       );
-      
+      if (!downloadResult.success) {
+        throw Exception(downloadResult.message ?? 'File download failed');
+      }
+
       // Verify file exists
       final file = File(savePath);
-      if (!await file.exists()) {
+      if (!file.existsSync()) {
         throw Exception('File download failed');
       }
-      
+
       // Print saved path to console
       debugPrint('✅ File saved to: $savePath');
-      
+
       if (mounted) {
         // Show success message with full path
         ScaffoldMessenger.of(context).showSnackBar(
@@ -3017,10 +2904,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Saved: $savePath',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.white70,
-                  ),
+                  style: const TextStyle(fontSize: 11, color: Colors.white70),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -3060,7 +2944,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       }
     }
   }
-  
+
   // Helper: Format delivery date
   String _formatDeliveryDate(dynamic date) {
     if (date == null) return 'Just now';
@@ -3074,15 +2958,17 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           dateTime = DateTime.parse(date);
         } catch (_) {
           // Try ISO format with timezone
-          dateTime = DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").parse(date, true).toLocal();
+          dateTime = DateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+          ).parse(date, true).toLocal();
         }
       } else {
         return 'Just now';
       }
-      
+
       final now = DateTime.now();
       final difference = now.difference(dateTime);
-      
+
       if (difference.inSeconds < 60) {
         return 'Just now';
       } else if (difference.inMinutes < 60) {
@@ -3102,7 +2988,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       return 'Recently';
     }
   }
-  
+
   // Helper: Get history icon
   IconData _getHistoryIcon(String status) {
     switch (status.toLowerCase()) {
@@ -3116,7 +3002,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         return Icons.upload_rounded;
     }
   }
-  
+
   // Helper: Get history color
   Color _getHistoryColor(String status) {
     switch (status.toLowerCase()) {
@@ -3130,7 +3016,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         return AppColors.accentOrange;
     }
   }
-  
+
   // Helper: Get history title
   String _getHistoryTitle(String status) {
     switch (status.toLowerCase()) {
@@ -3144,119 +3030,20 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         return 'Delivery submitted';
     }
   }
-  
-  // Open review delivery (client) - DEPRECATED: Use _openReceivePanel instead
-  Future<void> _openReviewDelivery(BuildContext context) async {
-    final project = _project;
-    if (project == null) return;
-    final repository = ref.read(projectsRepositoryProvider);
-    List<Map<String, dynamic>> deliveries = [];
-    bool isLoading = true;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final proj = _project;
-        if (proj == null) return const SizedBox.shrink();
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            if (isLoading && deliveries.isEmpty) {
-              repository.getProjectDeliveries(proj.id).then((response) {
-                setModalState(() {
-                  if (response.success && response.data != null) {
-                    deliveries = response.data!;
-                  }
-                  isLoading = false;
-                });
-              }).catchError((e) {
-                setModalState(() {
-                  isLoading = false;
-                });
-              });
-            }
-
-            return ReviewDeliveryBottomSheet(
-              project: proj,
-              deliveries: deliveries,
-              isLoading: isLoading,
-              onClose: () => Navigator.pop(context),
-              onApprove: (projectId) async {
-                final repository = ref.read(projectsRepositoryProvider);
-                final response = await repository.approveDelivery(projectId);
-                if (!response.success) {
-                  throw Exception(response.message ?? 'Failed to approve delivery');
-                }
-                setState(() {
-                  _projectData = {
-                    ...?_projectData,
-                    'completion_status': 'completed',
-                    'status': 'completed',
-                  };
-                });
-                
-                // Refresh deliveries
-                await _fetchDeliveriesIfNeeded();
-                
-                ref.invalidate(myProjectsProvider);
-                await ref.read(myProjectsProvider.future);
-              },
-              onRequestChanges: (projectId, message) async {
-                final repository = ref.read(projectsRepositoryProvider);
-                final response = await repository.requestChanges(projectId, message);
-                if (!response.success) {
-                  throw Exception(response.message ?? 'Failed to send change request');
-                }
-                setState(() {
-                  _projectData = {
-                    ...?_projectData,
-                    'status': 'in_progress',
-                    'completion_status': 'in_progress',
-                  };
-                });
-                
-                // Refresh deliveries
-                await _fetchDeliveriesIfNeeded();
-                
-                ref.invalidate(myProjectsProvider);
-                await ref.read(myProjectsProvider.future);
-              },
-              onRefresh: () {
-                setModalState(() {
-                  isLoading = true;
-                  deliveries = [];
-                });
-                repository.getProjectDeliveries(proj.id).then((response) {
-                  setModalState(() {
-                    if (response.success && response.data != null) {
-                      deliveries = response.data!;
-                    }
-                    isLoading = false;
-                  });
-                }).catchError((e) {
-                  setModalState(() {
-                    isLoading = false;
-                  });
-                });
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-  
   // Open offers (client)
   Future<void> _openOffers(BuildContext context) async {
     if (_offers.isEmpty) {
       await _fetchOffers();
     }
+    if (!context.mounted) return;
 
     bool isSubmitting = false;
-    final offersNotifier = ValueNotifier<List<Map<String, dynamic>>>(List.from(_offers));
+    final offersNotifier = ValueNotifier<List<Map<String, dynamic>>>(
+      List.from(_offers),
+    );
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -3274,18 +3061,27 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               setModalState(() => isSubmitting = true);
               try {
                 final repository = ref.read(projectsRepositoryProvider);
-                final response = await repository.approveRejectOffer(offerId, action);
+                final response = await repository.approveRejectOffer(
+                  offerId,
+                  action,
+                );
                 if (!response.success) {
-                  throw Exception(response.message ?? 'Failed to process offer');
+                  throw Exception(
+                    response.message ?? 'Failed to process offer',
+                  );
                 }
                 final data = response.data;
-                final pendingAdminApproval = data?['pendingAdminApproval'] == true;
+                final pendingAdminApproval =
+                    data?['pendingAdminApproval'] == true;
                 final pid = data?['projectId'];
-                final projectId = pid is int ? pid : (pid is num ? pid.toInt() : null);
+                final projectId = pid is int
+                    ? pid
+                    : (pid is num ? pid.toInt() : null);
 
                 final newStatus = action == 'accept' ? 'accepted' : 'rejected';
                 final updatedOffers = _offers.map((offer) {
-                  final oid = offer['id'] ?? offer['offer_id'] ?? offer['offerId'];
+                  final oid =
+                      offer['id'] ?? offer['offer_id'] ?? offer['offerId'];
                   if (oid != null && oid.toString() == offerId.toString()) {
                     return {
                       ...offer,
@@ -3297,35 +3093,27 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 }).toList();
                 setState(() {
                   _offers = updatedOffers;
-                  int pending = 0, accepted = 0, rejected = 0;
-                  for (var offer in updatedOffers) {
-                    final status = (offer['status'] ?? offer['offer_status'] ?? 'pending').toString().toLowerCase();
-                    if (status == 'pending' || status == 'pending_client_approval') {
-                      pending++;
-                    } else if (status == 'accepted' || status == 'approved') {
-                      accepted++;
-                    } else if (status == 'rejected' || status == 'declined') {
-                      rejected++;
-                    }
-                  }
-                  _offersStats = {
-                    'pending': pending,
-                    'accepted': accepted,
-                    'rejected': rejected,
-                    'total': updatedOffers.length,
-                  };
                 });
                 offersNotifier.value = updatedOffers;
                 if (mounted) setModalState(() => isSubmitting = false);
                 ref.invalidate(myProjectsProvider);
                 await ref.read(myProjectsProvider.future);
 
-                if (action == 'accept' && pendingAdminApproval && projectId != null && context.mounted) {
+                if (action == 'accept' &&
+                    pendingAdminApproval &&
+                    projectId != null &&
+                    context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Offer accepted. Choose payment method on the next screen.')),
+                    const SnackBar(
+                      content: Text(
+                        'Offer accepted. Choose payment method on the next screen.',
+                      ),
+                    ),
                   );
-                  if (context.mounted) context.go('/project-success/$projectId');
+                  if (context.mounted) {
+                    context.go('/project-success/$projectId');
+                  }
                 }
               } catch (e) {
                 setModalState(() => isSubmitting = false);
@@ -3337,16 +3125,17 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
     );
   }
-  
+
   // Open applications (client)
   Future<void> _openApplications(BuildContext context) async {
     if (_applications.isEmpty) {
       await _fetchApplications();
     }
+    if (!context.mounted) return;
 
     bool isSubmitting = false;
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -3364,16 +3153,28 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               setModalState(() => isSubmitting = true);
               try {
                 final repository = ref.read(projectsRepositoryProvider);
-                final response = await repository.acceptRejectApplication(assignmentId, projectId, action);
+                final response = await repository.acceptRejectApplication(
+                  assignmentId,
+                  projectId,
+                  action,
+                );
                 if (!response.success) {
-                  throw Exception(response.message ?? 'Failed to process application');
+                  throw Exception(
+                    response.message ?? 'Failed to process application',
+                  );
                 }
                 setModalState(() {
                   isSubmitting = false;
                   final updatedApplications = _applications.map((app) {
-                    final appId = app['assignment_id'] ?? app['assignmentId'] ?? app['id'];
+                    final appId =
+                        app['assignment_id'] ??
+                        app['assignmentId'] ??
+                        app['id'];
                     if (appId == assignmentId) {
-                      return {...app, 'status': action == 'accept' ? 'active' : 'rejected'};
+                      return {
+                        ...app,
+                        'status': action == 'accept' ? 'active' : 'rejected',
+                      };
                     } else if (action == 'accept') {
                       return {...app, 'status': 'not_chosen'};
                     }
@@ -3412,11 +3213,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         ),
       ),
       child: const Center(
-        child: Icon(
-          Icons.work_outline_rounded,
-          color: Colors.white,
-          size: 64,
-        ),
+        child: Icon(Icons.work_outline_rounded, color: Colors.white, size: 64),
       ),
     );
   }
@@ -3447,11 +3244,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            icon,
-            color: AppColors.primary,
-            size: 24,
-          ),
+          Icon(icon, color: AppColors.primary, size: 24),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -3505,7 +3298,8 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     int projectId, {
     bool loading = false,
   }) {
-    final isDisabled = loading || _hasApplied || _isLoading || _isCheckingApplied;
+    final isDisabled =
+        loading || _hasApplied || _isLoading || _isCheckingApplied;
     final showSpinner = loading || _isLoading;
 
     return Container(

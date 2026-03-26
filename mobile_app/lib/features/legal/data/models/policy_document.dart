@@ -1,3 +1,4 @@
+// ??? ????????
 /// Policy document loaded from assets (privacy_en.json / privacy_ar.json).
 class PolicyDocument {
   final String heroTitle;
@@ -26,17 +27,22 @@ class PolicyDocument {
     return PolicyDocument(
       heroTitle: json['heroTitle'] as String? ?? '',
       heroSubtitle: json['heroSubtitle'] as String? ?? '',
-      quickTiles: (json['quickTiles'] as List<dynamic>?)
+      quickTiles:
+          (json['quickTiles'] as List<dynamic>?)
               ?.map((e) => PolicyQuickTile.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       dataLifecycleTitle: json['dataLifecycleTitle'] as String? ?? '',
       dataLifecycleSubtitle: json['dataLifecycleSubtitle'] as String? ?? '',
-      lifecycle: (json['lifecycle'] as List<dynamic>?)
-              ?.map((e) => PolicyLifecycleStep.fromJson(e as Map<String, dynamic>))
+      lifecycle:
+          (json['lifecycle'] as List<dynamic>?)
+              ?.map(
+                (e) => PolicyLifecycleStep.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
-      sections: (json['sections'] as List<dynamic>?)
+      sections:
+          (json['sections'] as List<dynamic>?)
               ?.map((e) => PolicySection.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],

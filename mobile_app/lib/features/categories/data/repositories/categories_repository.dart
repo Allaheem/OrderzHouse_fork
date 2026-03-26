@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../../../../core/models/category.dart';
 import '../../../../core/models/api_response.dart';
@@ -5,7 +6,9 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/config/app_config.dart';
 
 class CategoriesRepository {
-  final Dio _dio = DioClient.instance;
+  CategoriesRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
+
+  final Dio _dio;
 
   /// Fetch explore categories (public categories for projects)
   /// Endpoint: GET /category (same as web frontend)
@@ -23,16 +26,22 @@ class CategoriesRepository {
         // ignore: avoid_print
         print('✅ RESPONSE[${response.statusCode}] => PATH: /category');
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
+        );
         // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars');
+        print(
+          '✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars',
+        );
       }
 
       return _parseCategoriesResponse(response);
     } on DioException catch (e) {
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /category');
+        print(
+          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /category',
+        );
         // ignore: avoid_print
         print('❌ ERROR => Type: ${e.type}');
         // ignore: avoid_print
@@ -54,9 +63,10 @@ class CategoriesRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ??
-            _getErrorMessage(e),
-        error: e.response?.data as Map<String, dynamic>?,
+        message: _extractErrorMessage(e.response?.data) ?? _getErrorMessage(e),
+        error: e.response?.data is Map<String, dynamic>
+            ? e.response?.data as Map<String, dynamic>
+            : null,
       );
     } catch (e) {
       if (AppConfig.isDevelopment) {
@@ -74,7 +84,8 @@ class CategoriesRepository {
 
   /// Parse categories from response (handles both response formats)
   ApiResponse<List<Category>> _parseCategoriesResponse(Response response) {
-    final data = response.data as Map<String, dynamic>;
+    final raw = response.data;
+    final data = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
 
     // Handle response format: { success: true, data: [...] } (from /category)
     List<dynamic>? categoriesList;
@@ -123,7 +134,9 @@ class CategoriesRepository {
 
     if (AppConfig.isDevelopment) {
       // ignore: avoid_print
-      print('✅ Parsed ${categories.length}/${categoriesList.length} categories successfully');
+      print(
+        '✅ Parsed ${categories.length}/${categoriesList.length} categories successfully',
+      );
       // ignore: avoid_print
       print('📊 Categories final count: ${categories.length}');
     }
@@ -164,7 +177,9 @@ class CategoriesRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch sub-categories',
+        message:
+            _extractErrorMessage(e.response?.data) ??
+            'Failed to fetch sub-categories',
       );
     } catch (e) {
       return ApiResponse(
@@ -187,7 +202,8 @@ class CategoriesRepository {
       final data = response.data as Map<String, dynamic>;
 
       List<dynamic>? subSubCategoriesList;
-      if (data['subSubCategories'] != null && data['subSubCategories'] is List) {
+      if (data['subSubCategories'] != null &&
+          data['subSubCategories'] is List) {
         subSubCategoriesList = data['subSubCategories'] as List<dynamic>;
       } else if (data['data'] != null && data['data'] is List) {
         subSubCategoriesList = data['data'] as List<dynamic>;
@@ -206,7 +222,9 @@ class CategoriesRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch sub-sub-categories',
+        message:
+            _extractErrorMessage(e.response?.data) ??
+            'Failed to fetch sub-sub-categories',
       );
     } catch (e) {
       return ApiResponse(
@@ -219,15 +237,17 @@ class CategoriesRepository {
 
   /// Fetch sub-sub-categories by category ID (all sub-sub-categories under a category)
   /// Endpoint: GET /category/:categoryId/sub-sub-categories
-  Future<ApiResponse<List<Map<String, dynamic>>>> fetchSubSubCategoriesByCategoryId(
-    int categoryId,
-  ) async {
+  Future<ApiResponse<List<Map<String, dynamic>>>>
+  fetchSubSubCategoriesByCategoryId(int categoryId) async {
     try {
-      final response = await _dio.get('/category/$categoryId/sub-sub-categories');
+      final response = await _dio.get(
+        '/category/$categoryId/sub-sub-categories',
+      );
       final data = response.data as Map<String, dynamic>;
 
       List<dynamic>? subSubCategoriesList;
-      if (data['subSubCategories'] != null && data['subSubCategories'] is List) {
+      if (data['subSubCategories'] != null &&
+          data['subSubCategories'] is List) {
         subSubCategoriesList = data['subSubCategories'] as List<dynamic>;
       } else if (data['data'] != null && data['data'] is List) {
         subSubCategoriesList = data['data'] as List<dynamic>;
@@ -246,7 +266,9 @@ class CategoriesRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 'Failed to fetch sub-sub-categories',
+        message:
+            _extractErrorMessage(e.response?.data) ??
+            'Failed to fetch sub-sub-categories',
       );
     } catch (e) {
       return ApiResponse(
@@ -277,5 +299,15 @@ class CategoriesRepository {
       default:
         return 'Failed to fetch categories.';
     }
+  }
+
+  String? _extractErrorMessage(Object? data) {
+    if (data is Map<String, dynamic>) {
+      final message = data['message'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message;
+      }
+    }
+    return null;
   }
 }

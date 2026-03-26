@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,10 +11,7 @@ import '../../providers/project_wizard_provider.dart';
 class ProjectDetailsStepView extends ConsumerStatefulWidget {
   final VoidCallback onNext;
 
-  const ProjectDetailsStepView({
-    super.key,
-    required this.onNext,
-  });
+  const ProjectDetailsStepView({super.key, required this.onNext});
 
   @override
   ConsumerState<ProjectDetailsStepView> createState() =>
@@ -50,7 +48,8 @@ class _ProjectDetailsStepViewState
     final draftAfter = ref.read(projectWizardProvider);
     _titleController.text = draftAfter.title ?? '';
     _descriptionController.text = draftAfter.description ?? '';
-    if (draftAfter.budget != null) _budgetController.text = draftAfter.budget.toString();
+    if (draftAfter.budget != null)
+      _budgetController.text = draftAfter.budget.toString();
     if (draftAfter.hourlyRate != null) {
       _hourlyRateController.text = draftAfter.hourlyRate.toString();
     }
@@ -83,10 +82,12 @@ class _ProjectDetailsStepViewState
     setState(() {
       _loadingSubSubCategories = true;
     });
-    
+
     try {
       final repository = CategoriesRepository();
-      final response = await repository.fetchSubSubCategoriesByCategoryId(categoryId);
+      final response = await repository.fetchSubSubCategoriesByCategoryId(
+        categoryId,
+      );
       if (response.success && response.data != null) {
         setState(() {
           _subSubCategories = response.data;
@@ -105,7 +106,7 @@ class _ProjectDetailsStepViewState
     setState(() {
       _loadingSubSubCategories = true;
     });
-    
+
     try {
       final repository = CategoriesRepository();
       final response = await repository.fetchSubSubCategories(subCategoryId);
@@ -138,10 +139,14 @@ class _ProjectDetailsStepViewState
   }
 
   // Helper to get localized error message
-  String? _getLocalizedError(AppLocalizations l10n, Map<String, String> errors, String key) {
+  String? _getLocalizedError(
+    AppLocalizations l10n,
+    Map<String, String> errors,
+    String key,
+  ) {
     final error = errors[key];
     if (error == null) return null;
-    
+
     // Map error messages to localized versions
     switch (error) {
       case 'Title is required':
@@ -258,11 +263,9 @@ class _ProjectDetailsStepViewState
                   }).toList(),
                   onChanged: (value) {
                     if (value != null) {
-                      ref.read(projectWizardProvider.notifier).updateCategory(
-                            value,
-                            null,
-                            null,
-                          );
+                      ref
+                          .read(projectWizardProvider.notifier)
+                          .updateCategory(value, null, null);
                       _loadSubCategories(value);
                     }
                   },
@@ -297,9 +300,14 @@ class _ProjectDetailsStepViewState
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          errorText: _getLocalizedError(l10n, errors, 'subSubCategoryId'),
+                          errorText: _getLocalizedError(
+                            l10n,
+                            errors,
+                            'subSubCategoryId',
+                          ),
                         ),
-                        items: _subSubCategories?.map((ssc) {
+                        items:
+                            _subSubCategories?.map((ssc) {
                               return DropdownMenuItem(
                                 value: ssc['id'] as int,
                                 child: Text(ssc['name'] as String),
@@ -308,7 +316,9 @@ class _ProjectDetailsStepViewState
                             [],
                         onChanged: (value) {
                           if (value != null) {
-                            ref.read(projectWizardProvider.notifier).updateCategory(
+                            ref
+                                .read(projectWizardProvider.notifier)
+                                .updateCategory(
                                   draft.categoryId,
                                   draft.subCategoryId,
                                   value,
@@ -334,7 +344,9 @@ class _ProjectDetailsStepViewState
               ),
               const SizedBox(height: AppSpacing.sm),
               DropdownButtonFormField<String>(
-                initialValue: (draft.projectType == 'hourly') ? 'fixed' : draft.projectType,
+                initialValue: (draft.projectType == 'hourly')
+                    ? 'fixed'
+                    : draft.projectType,
                 decoration: InputDecoration(
                   hintText: l10n.selectProjectTypeHint,
                   border: OutlineInputBorder(
@@ -343,11 +355,19 @@ class _ProjectDetailsStepViewState
                   errorText: _getLocalizedError(l10n, errors, 'projectType'),
                 ),
                 items: [
-                  DropdownMenuItem(value: 'fixed', child: Text(l10n.projectTypeFixed)),
-                  DropdownMenuItem(value: 'bidding', child: Text(l10n.projectTypeBidding)),
+                  DropdownMenuItem(
+                    value: 'fixed',
+                    child: Text(l10n.projectTypeFixed),
+                  ),
+                  DropdownMenuItem(
+                    value: 'bidding',
+                    child: Text(l10n.projectTypeBidding),
+                  ),
                 ],
                 onChanged: (value) {
-                  ref.read(projectWizardProvider.notifier).updateProjectType(value);
+                  ref
+                      .read(projectWizardProvider.notifier)
+                      .updateProjectType(value);
                 },
               ),
             ],
@@ -360,7 +380,9 @@ class _ProjectDetailsStepViewState
             TextFormField(
               controller: _budgetController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
               decoration: InputDecoration(
                 labelText: l10n.budgetJodLabel,
                 border: OutlineInputBorder(
@@ -377,7 +399,9 @@ class _ProjectDetailsStepViewState
             TextFormField(
               controller: _hourlyRateController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+              ],
               decoration: InputDecoration(
                 labelText: l10n.hourlyRateJodLabel,
                 border: OutlineInputBorder(
@@ -397,7 +421,11 @@ class _ProjectDetailsStepViewState
                   child: TextFormField(
                     controller: _budgetMinController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
+                    ],
                     decoration: InputDecoration(
                       labelText: l10n.minBudgetJodLabel,
                       border: OutlineInputBorder(
@@ -407,10 +435,9 @@ class _ProjectDetailsStepViewState
                     ),
                     onChanged: (value) {
                       final min = double.tryParse(value);
-                      ref.read(projectWizardProvider.notifier).updateBiddingBudget(
-                            min,
-                            draft.budgetMax,
-                          );
+                      ref
+                          .read(projectWizardProvider.notifier)
+                          .updateBiddingBudget(min, draft.budgetMax);
                     },
                   ),
                 ),
@@ -419,7 +446,11 @@ class _ProjectDetailsStepViewState
                   child: TextFormField(
                     controller: _budgetMaxController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
+                    ],
                     decoration: InputDecoration(
                       labelText: l10n.maxBudgetJodLabel,
                       border: OutlineInputBorder(
@@ -429,10 +460,9 @@ class _ProjectDetailsStepViewState
                     ),
                     onChanged: (value) {
                       final max = double.tryParse(value);
-                      ref.read(projectWizardProvider.notifier).updateBiddingBudget(
-                            draft.budgetMin,
-                            max,
-                          );
+                      ref
+                          .read(projectWizardProvider.notifier)
+                          .updateBiddingBudget(draft.budgetMin, max);
                     },
                   ),
                 ),
@@ -464,11 +494,19 @@ class _ProjectDetailsStepViewState
                   errorText: _getLocalizedError(l10n, errors, 'durationType'),
                 ),
                 items: [
-                  DropdownMenuItem(value: 'days', child: Text(l10n.durationTypeDays)),
-                  DropdownMenuItem(value: 'hours', child: Text(l10n.durationTypeHours)),
+                  DropdownMenuItem(
+                    value: 'days',
+                    child: Text(l10n.durationTypeDays),
+                  ),
+                  DropdownMenuItem(
+                    value: 'hours',
+                    child: Text(l10n.durationTypeHours),
+                  ),
                 ],
                 onChanged: (value) {
-                  ref.read(projectWizardProvider.notifier).updateDuration(
+                  ref
+                      .read(projectWizardProvider.notifier)
+                      .updateDuration(
                         value,
                         value == 'days' ? draft.durationDays : null,
                         value == 'hours' ? draft.durationHours : null,
@@ -495,11 +533,9 @@ class _ProjectDetailsStepViewState
               ),
               onChanged: (value) {
                 final days = int.tryParse(value);
-                ref.read(projectWizardProvider.notifier).updateDuration(
-                      'days',
-                      days,
-                      null,
-                    );
+                ref
+                    .read(projectWizardProvider.notifier)
+                    .updateDuration('days', days, null);
               },
             ),
           ] else if (draft.durationType == 'hours') ...[
@@ -516,11 +552,9 @@ class _ProjectDetailsStepViewState
               ),
               onChanged: (value) {
                 final hours = int.tryParse(value);
-                ref.read(projectWizardProvider.notifier).updateDuration(
-                      'hours',
-                      null,
-                      hours,
-                    );
+                ref
+                    .read(projectWizardProvider.notifier)
+                    .updateDuration('hours', null, hours);
               },
             ),
           ],
@@ -543,7 +577,9 @@ class _ProjectDetailsStepViewState
                   .map((s) => s.trim())
                   .where((s) => s.isNotEmpty)
                   .toList();
-              ref.read(projectWizardProvider.notifier).updatePreferredSkills(skills);
+              ref
+                  .read(projectWizardProvider.notifier)
+                  .updatePreferredSkills(skills);
             },
           ),
         ],

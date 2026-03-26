@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,10 +17,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 class HomeHeader extends ConsumerWidget {
   final String roleRoute; // "/freelancer" or "/client"
 
-  const HomeHeader({
-    super.key,
-    required this.roleRoute,
-  });
+  const HomeHeader({super.key, required this.roleRoute});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,7 +67,8 @@ class HomeHeader extends ConsumerWidget {
                         ],
                       ),
                       child: ClipOval(
-                        child: profilePicUrl != null &&
+                        child:
+                            profilePicUrl != null &&
                                 profilePicUrl.isNotEmpty &&
                                 AppConfig.baseUrl.isNotEmpty
                             ? CachedNetworkImage(
@@ -175,4 +174,3 @@ class HomeHeader extends ConsumerWidget {
     );
   }
 }
-

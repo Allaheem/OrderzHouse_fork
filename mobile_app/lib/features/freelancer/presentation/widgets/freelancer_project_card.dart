@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/models/project.dart';
@@ -9,7 +10,8 @@ import '../../../../core/theme/app_colors.dart';
 /// Clean list view - actions moved to Project Details
 class FreelancerProjectCard extends StatelessWidget {
   final Project project;
-  final Map<String, dynamic>? projectData; // Raw JSON data for additional fields
+  final Map<String, dynamic>?
+  projectData; // Raw JSON data for additional fields
   final VoidCallback onTap;
 
   const FreelancerProjectCard({
@@ -22,10 +24,12 @@ class FreelancerProjectCard extends StatelessWidget {
   /// Check if project has unresolved change requests
   bool _hasUnresolvedChangeRequests() {
     if (projectData == null) return false;
-    
-    final changeRequestMessage = projectData!['change_request_message'] as String? ?? '';
-    final unresolvedCount = projectData!['change_requests_unresolved_count'] as int? ?? 0;
-    
+
+    final changeRequestMessage =
+        projectData!['change_request_message'] as String? ?? '';
+    final unresolvedCount =
+        projectData!['change_requests_unresolved_count'] as int? ?? 0;
+
     return changeRequestMessage.trim().isNotEmpty || unresolvedCount > 0;
   }
 
@@ -64,7 +68,8 @@ class FreelancerProjectCard extends StatelessWidget {
                       topLeft: Radius.circular(cardRadius),
                       topRight: Radius.circular(cardRadius),
                     ),
-                    child: project.coverPic != null &&
+                    child:
+                        project.coverPic != null &&
                             project.coverPic!.isNotEmpty &&
                             AppConfig.baseUrl.isNotEmpty
                         ? CachedNetworkImage(
@@ -81,7 +86,9 @@ class FreelancerProjectCard extends StatelessWidget {
                               child: const Center(
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ),
@@ -172,9 +179,9 @@ class FreelancerProjectCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 6),
-                  
+
                   // Description (1-2 lines)
                   Text(
                     project.description,
@@ -188,10 +195,13 @@ class FreelancerProjectCard extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 6),
-                  
+
                   // Status badge (simple display only)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE5E7EB).withOpacity(0.5),
                       borderRadius: BorderRadius.circular(6),

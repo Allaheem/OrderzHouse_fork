@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
@@ -11,26 +12,32 @@ class MessagesRepository {
   /// Response: { success: true, messages: [...] }
   Future<ApiResponse<List<Message>>> getProjectMessages(int projectId) async {
     try {
-      print('🔍 [MessagesRepository] Fetching messages for projectId: $projectId');
-      final response = await _dio.get(
-        '/chat/project/$projectId/messages',
+      print(
+        '🔍 [MessagesRepository] Fetching messages for projectId: $projectId',
       );
+      final response = await _dio.get('/chat/project/$projectId/messages');
 
       print('📡 [MessagesRepository] Response status: ${response.statusCode}');
       print('📦 [MessagesRepository] Response data: ${response.data}');
 
       final data = response.data as Map<String, dynamic>;
-      
+
       // Backend returns { success: true, messages: [...] }
       List<dynamic>? messagesList;
       if (data['messages'] != null && data['messages'] is List) {
         messagesList = data['messages'] as List<dynamic>;
-        print('✅ [MessagesRepository] Found ${messagesList.length} messages in "messages" field');
+        print(
+          '✅ [MessagesRepository] Found ${messagesList.length} messages in "messages" field',
+        );
       } else if (data['data'] != null && data['data'] is List) {
         messagesList = data['data'] as List<dynamic>;
-        print('✅ [MessagesRepository] Found ${messagesList.length} messages in "data" field');
+        print(
+          '✅ [MessagesRepository] Found ${messagesList.length} messages in "data" field',
+        );
       } else {
-        print('⚠️ [MessagesRepository] No messages list found in response. Keys: ${data.keys.toList()}');
+        print(
+          '⚠️ [MessagesRepository] No messages list found in response. Keys: ${data.keys.toList()}',
+        );
       }
 
       if (messagesList == null || messagesList.isEmpty) {
@@ -42,7 +49,9 @@ class MessagesRepository {
         );
       }
 
-      print('🔄 [MessagesRepository] Parsing ${messagesList.length} messages...');
+      print(
+        '🔄 [MessagesRepository] Parsing ${messagesList.length} messages...',
+      );
       final messages = <Message>[];
       for (var i = 0; i < messagesList.length; i++) {
         try {
@@ -50,14 +59,18 @@ class MessagesRepository {
           print('📝 [MessagesRepository] Message $i: $json');
           final message = Message.fromJson(json);
           messages.add(message);
-          print('✅ [MessagesRepository] Parsed message $i: id=${message.id}, senderId=${message.senderId}, content="${message.content.substring(0, message.content.length > 50 ? 50 : message.content.length)}..."');
+          print(
+            '✅ [MessagesRepository] Parsed message $i: id=${message.id}, senderId=${message.senderId}, content="${message.content.substring(0, message.content.length > 50 ? 50 : message.content.length)}..."',
+          );
         } catch (e, stackTrace) {
           print('❌ [MessagesRepository] Error parsing message $i: $e');
           print('Stack trace: $stackTrace');
         }
       }
 
-      print('✅ [MessagesRepository] Successfully parsed ${messages.length}/${messagesList.length} messages');
+      print(
+        '✅ [MessagesRepository] Successfully parsed ${messages.length}/${messagesList.length} messages',
+      );
       return ApiResponse(
         success: true,
         data: messages,
@@ -69,8 +82,9 @@ class MessagesRepository {
       return ApiResponse(
         success: false,
         data: [],
-        message: e.response?.data?['message'] as String? ?? 
-                'Failed to fetch messages',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to fetch messages',
       );
     } catch (e, stackTrace) {
       print('❌ [MessagesRepository] Exception: $e');
@@ -103,7 +117,7 @@ class MessagesRepository {
       );
 
       final data = response.data as Map<String, dynamic>;
-      
+
       Message? message;
       if (data['message'] != null) {
         message = Message.fromJson(data['message'] as Map<String, dynamic>);
@@ -128,8 +142,8 @@ class MessagesRepository {
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 
-                'Failed to send message',
+        message:
+            e.response?.data?['message'] as String? ?? 'Failed to send message',
       );
     } catch (e) {
       return ApiResponse(
@@ -156,7 +170,9 @@ class MessagesRepository {
       return ApiResponse(
         success: false,
         data: 0,
-        message: e.response?.data?['message'] as String? ?? 'Failed to get unread count',
+        message:
+            e.response?.data?['message'] as String? ??
+            'Failed to get unread count',
       );
     } catch (e) {
       return ApiResponse(
@@ -180,7 +196,8 @@ class MessagesRepository {
       return ApiResponse(
         success: false,
         data: null,
-        message: e.response?.data?['message'] as String? ?? 'Failed to mark as read',
+        message:
+            e.response?.data?['message'] as String? ?? 'Failed to mark as read',
       );
     } catch (e) {
       return ApiResponse(

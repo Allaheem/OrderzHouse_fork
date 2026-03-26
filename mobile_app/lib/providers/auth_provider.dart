@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
@@ -29,7 +30,9 @@ class AuthProvider with ChangeNotifier {
         try {
           final response = await _apiClient.getUserData();
           if (response.statusCode == 200) {
-            _user = User.fromJson(response.data['user'] as Map<String, dynamic>);
+            _user = User.fromJson(
+              response.data['user'] as Map<String, dynamic>,
+            );
             await StorageService.saveUser(_user!);
           } else {
             await StorageService.clearAll();
@@ -59,7 +62,7 @@ class AuthProvider with ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        
+
         if (data['token'] != null) {
           // Direct login (no OTP/2FA)
           await StorageService.saveToken(data['token'] as String);
@@ -96,10 +99,7 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiClient.verifyOtp({
-        'email': email,
-        'otp': otp,
-      });
+      final response = await _apiClient.verifyOtp({'email': email, 'otp': otp});
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
@@ -191,7 +191,8 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        _error = response.data['message'] as String? ?? 'Email verification failed';
+        _error =
+            response.data['message'] as String? ?? 'Email verification failed';
         _isLoading = false;
         notifyListeners();
         return false;

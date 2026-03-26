@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -131,7 +132,10 @@ class _ProfileFieldTileState extends State<ProfileFieldTile> {
                         errorBorder: InputBorder.none,
                         focusedErrorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 0,
+                        ),
                         isDense: true,
                         hintText: '',
                       ),
@@ -155,11 +159,7 @@ class _ProfileFieldTileState extends State<ProfileFieldTile> {
             // Icon (no background, larger size, grey color)
             Padding(
               padding: const EdgeInsets.only(top: 2),
-              child: Icon(
-                widget.icon,
-                color: AppColors.iconGray,
-                size: 24,
-              ),
+              child: Icon(widget.icon, color: AppColors.iconGray, size: 24),
             ),
           ],
         ),

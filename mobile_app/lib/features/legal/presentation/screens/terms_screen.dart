@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,17 +42,21 @@ class TermsScreen extends ConsumerWidget {
           // Last updated • version (from Terms.jsx)
           Text(
             '${l10n.lastUpdated}: ${content.lastUpdated} • ${content.version}',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textTertiary,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           // Callout (from Terms.jsx)
           _CalloutCard(text: content.callout),
           const SizedBox(height: AppSpacing.lg),
           // Sections
-          ...content.sections.map((section) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                child: _SectionCard(section: section),
-              )),
+          ...content.sections.map(
+            (section) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+              child: _SectionCard(section: section),
+            ),
+          ),
         ],
       ),
     );
@@ -135,7 +140,11 @@ class _CalloutCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.info_outline_rounded, size: 20, color: AppColors.accentOrange),
+            child: const Icon(
+              Icons.info_outline_rounded,
+              size: 20,
+              color: AppColors.accentOrange,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

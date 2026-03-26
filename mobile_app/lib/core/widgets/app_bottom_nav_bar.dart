@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,11 +10,7 @@ class NavItem {
   final IconData icon;
   final String route;
 
-  const NavItem({
-    required this.title,
-    required this.icon,
-    required this.route,
-  });
+  const NavItem({required this.title, required this.icon, required this.route});
 }
 
 /// Bottom navigation bar: white background, outline icons, label under each icon.
@@ -48,9 +45,7 @@ class AppBottomNavBar extends StatelessWidget {
       height: totalHeight,
       decoration: BoxDecoration(
         color: barBackground,
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade300, width: 1),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -105,7 +100,9 @@ class _NavItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppBottomNavBar.activeColor : AppBottomNavBar.inactiveColor;
+    final color = isSelected
+        ? AppBottomNavBar.activeColor
+        : AppBottomNavBar.inactiveColor;
 
     return InkWell(
       onTap: onTap,
@@ -117,11 +114,7 @@ class _NavItemWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              item.icon,
-              color: color,
-              size: 26,
-            ),
+            Icon(item.icon, color: color, size: 26),
             const SizedBox(height: 4),
             Text(
               item.title,

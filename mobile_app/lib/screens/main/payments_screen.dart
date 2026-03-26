@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import '../payments/payment_history_screen.dart';
 import '../subscriptions/subscription_screen.dart';
@@ -8,9 +9,7 @@ class PaymentsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Payments'),
-      ),
+      appBar: AppBar(title: const Text('Payments')),
       body: ListView(
         children: [
           ListTile(
@@ -20,9 +19,7 @@ class PaymentsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const PaymentHistoryScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const PaymentHistoryScreen()),
               );
             },
           ),
@@ -33,9 +30,7 @@ class PaymentsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const SubscriptionScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
               );
             },
           ),

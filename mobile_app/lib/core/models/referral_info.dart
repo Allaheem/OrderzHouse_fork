@@ -1,3 +1,4 @@
+// ??? ????????
 /// Model for referral information
 class ReferralInfo {
   final String code;
@@ -6,6 +7,7 @@ class ReferralInfo {
   final int successful;
   final double earned;
   final int weeklyRemaining;
+
   /// Referral reward percentage (e.g., 0.05 = 5% of registration fee)
   final double referrerRewardPercent;
   final String currency;
@@ -20,12 +22,14 @@ class ReferralInfo {
     this.referrerRewardPercent = 0.05, // 5% of registration fee
     this.currency = 'JOD',
   });
-  
+
   /// Get reward percent as display string (e.g., "5%")
-  String get rewardPercentDisplay => '${(referrerRewardPercent * 100).toStringAsFixed(0)}%';
+  String get rewardPercentDisplay =>
+      '${(referrerRewardPercent * 100).toStringAsFixed(0)}%';
 
   /// Check if referral code is valid (not empty or placeholder)
-  bool get hasValidCode => code.isNotEmpty && code != 'N/A' && code != 'Loading...';
+  bool get hasValidCode =>
+      code.isNotEmpty && code != 'N/A' && code != 'Loading...';
 
   /// Create from JSON with null-safe defaults
   /// Handles API response format:
@@ -84,17 +88,30 @@ class ReferralInfo {
 
     // Parse fields according to priority:
     // invited: invitedCount (root) > stats.invited > 0
-    final invited = parseInt(json['invitedCount'] ?? stats['invited'] ?? json['invited'] ?? 0);
-    
+    final invited = parseInt(
+      json['invitedCount'] ?? stats['invited'] ?? json['invited'] ?? 0,
+    );
+
     // successful: successfulCount (root) > stats.completed > stats.successful > 0
-    final successful = parseInt(json['successfulCount'] ?? stats['completed'] ?? stats['successful'] ?? json['completed'] ?? json['successful'] ?? 0);
-    
+    final successful = parseInt(
+      json['successfulCount'] ??
+          stats['completed'] ??
+          stats['successful'] ??
+          json['completed'] ??
+          json['successful'] ??
+          0,
+    );
+
     // earned: earnedAmount (root) > stats.earned > 0.0
-    final earned = parseDouble(json['earnedAmount'] ?? stats['earned'] ?? json['earned'] ?? 0);
-    
+    final earned = parseDouble(
+      json['earnedAmount'] ?? stats['earned'] ?? json['earned'] ?? 0,
+    );
+
     // weeklyRemaining: weeklyRemaining (root) > 0
-    final weeklyRemaining = parseInt(json['weeklyRemaining'] ?? json['weekly_remaining'] ?? 0);
-    
+    final weeklyRemaining = parseInt(
+      json['weeklyRemaining'] ?? json['weekly_remaining'] ?? 0,
+    );
+
     // currency: rules.currency > "JOD" (default)
     final currency = (rules['currency'] ?? json['currency'] ?? 'JOD') as String;
 
@@ -105,7 +122,13 @@ class ReferralInfo {
       successful: successful,
       earned: earned,
       weeklyRemaining: weeklyRemaining,
-      referrerRewardPercent: parseDouble(rules['referrerRewardPercent'] ?? json['referrerRewardPercent'] ?? rules['referrerReward'] ?? json['referrerReward'] ?? 0.05),
+      referrerRewardPercent: parseDouble(
+        rules['referrerRewardPercent'] ??
+            json['referrerRewardPercent'] ??
+            rules['referrerReward'] ??
+            json['referrerReward'] ??
+            0.05,
+      ),
       currency: currency,
     );
   }

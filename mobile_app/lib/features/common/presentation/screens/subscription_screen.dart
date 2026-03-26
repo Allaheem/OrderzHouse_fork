@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +33,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
     final isFreelancer = user?.roleId == 3;
-    
+
     // Guard: Only freelancers can access this screen
     if (!isFreelancer) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -44,7 +45,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               duration: Duration(seconds: 3),
             ),
           );
-          context.go(user?.roleId == 2 ? '/client/profile' : '/freelancer/profile');
+          context.go(
+            user?.roleId == 2 ? '/client/profile' : '/freelancer/profile',
+          );
         }
       });
       // Return empty widget while redirecting
@@ -53,107 +56,106 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     return AppScaffold(
       body: Column(
-          children: [
-            // Custom Header
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    // Back button in circle
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.chevron_left_rounded),
-                        color: const Color(0xFF0B0B0F), // Near-black primary
-                        onPressed: () {
-                          // Safe back navigation
-                          if (context.canPop()) {
-                            context.pop();
+        children: [
+          // Custom Header
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  // Back button in circle
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.chevron_left_rounded),
+                      color: const Color(0xFF0B0B0F), // Near-black primary
+                      onPressed: () {
+                        // Safe back navigation
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          // Fallback: navigate to home/profile based on role
+                          final userRoleId = user?.roleId ?? 0;
+                          if (userRoleId == 2) {
+                            context.go('/client');
+                          } else if (userRoleId == 3) {
+                            context.go('/freelancer');
                           } else {
-                            // Fallback: navigate to home/profile based on role
-                            final userRoleId = user?.roleId ?? 0;
-                            if (userRoleId == 2) {
-                              context.go('/client');
-                            } else if (userRoleId == 3) {
-                              context.go('/freelancer');
-                            } else {
-                              context.go('/client');
-                            }
+                            context.go('/client');
                           }
-                        },
-                      ),
+                        }
+                      },
                     ),
-                    const Spacer(),
-                    // Title
-                    const Text(
-                      'Plans',
-                      style: TextStyle(
-                        color: Color(0xFF0B0B0F), // Near-black primary
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const Spacer(),
-                    const SizedBox(width: 40), // Balance the back button
-                  ],
-                ),
-              ),
-            ),
-
-            // B) Pill Segmented Control (centered, under header)
-            _buildPillSegmentedControl(),
-
-            // C) Section Header Row
-            _buildSectionHeader(),
-
-            // D) Main Content (Big Container with Plans)
-            Expanded(
-              child: plansAsync.when(
-                loading: () => const Center(child: LoadingShimmer()),
-                error: (err, stack) => Center(
-                  child: ErrorState(
-                    message: err.toString(),
-                    onRetry: () => ref.invalidate(plansProvider),
                   ),
-                ),
-                data: (plans) {
-                  if (plans.isEmpty) {
-                    return EmptyState(
-                      icon: Icons.subscriptions_outlined,
-                      title: 'No active subscriptions',
-                      message: 'Subscribe to a plan to access premium features',
-                      action: PrimaryButton(
-                        label: 'View Plans',
-                        onPressed: () {
-                          ref.invalidate(plansProvider);
-                        },
-                      ),
-                    );
-                  }
-
-                  return _buildPlansContent(plans);
-                },
+                  const Spacer(),
+                  // Title
+                  const Text(
+                    'Plans',
+                    style: TextStyle(
+                      color: Color(0xFF0B0B0F), // Near-black primary
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 40), // Balance the back button
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // B) Pill Segmented Control (centered, under header)
+          _buildPillSegmentedControl(),
+
+          // C) Section Header Row
+          _buildSectionHeader(),
+
+          // D) Main Content (Big Container with Plans)
+          Expanded(
+            child: plansAsync.when(
+              loading: () => const Center(child: LoadingShimmer()),
+              error: (err, stack) => Center(
+                child: ErrorState(
+                  message: err.toString(),
+                  onRetry: () => ref.invalidate(plansProvider),
+                ),
+              ),
+              data: (plans) {
+                if (plans.isEmpty) {
+                  return EmptyState(
+                    icon: Icons.subscriptions_outlined,
+                    title: 'No active subscriptions',
+                    message: 'Subscribe to a plan to access premium features',
+                    action: PrimaryButton(
+                      label: 'View Plans',
+                      onPressed: () {
+                        ref.invalidate(plansProvider);
+                      },
+                    ),
+                  );
+                }
+
+                return _buildPlansContent(plans);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
-
 
   // B) Pill Segmented Control (centered, compact)
   Widget _buildPillSegmentedControl() {
@@ -195,10 +197,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? const Color(0xFF0B0B0F) // Near-black primary
@@ -224,7 +223,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                         center: Alignment.topRight,
                         radius: 1.1,
                         colors: [
-                          Colors.white.withOpacity(0.12), // Subtle white highlight
+                          Colors.white.withOpacity(
+                            0.12,
+                          ), // Subtle white highlight
                           Colors.transparent,
                         ],
                         stops: const [0.0, 0.55],
@@ -284,10 +285,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           ),
           // Small rounded chip with icon + number (balance pill)
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 5,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
               color: Colors.white, // White background
               borderRadius: BorderRadius.circular(14),
@@ -356,7 +354,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       if (!isLast) ...[
                         const SizedBox(height: AppSpacing.sm),
                         Divider(
-                          color: const Color(0xFFE6E6E6).withValues(alpha: 0.5), // Light gray divider
+                          color: const Color(
+                            0xFFE6E6E6,
+                          ).withValues(alpha: 0.5), // Light gray divider
                           height: 1,
                           thickness: 1,
                         ),
@@ -396,7 +396,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Future<void> _openCompanySubscribeUrl() async {
     final uri = Uri.parse(AppConfig.companySubscribeUrl);
     try {
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -419,10 +422,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -432,8 +432,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final durationLabel = plan.planType == 'monthly'
         ? '${plan.duration} Month'
         : plan.planType == 'yearly'
-            ? '${plan.duration} Year'
-            : plan.planType;
+        ? '${plan.duration} Year'
+        : plan.planType;
 
     return InkWell(
       onTap: () => _handlePlanSelection(plan),
@@ -458,87 +458,92 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ],
           ),
           child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left Side: Name + Description
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    plan.name,
-                    style: AppTextStyles.titleMedium.copyWith(
-                      color: const Color(0xFF0B0B0F), // Near-black primary
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (plan.description != null && plan.description!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      plan.description!,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: const Color(0xFF8B8F97), // Gray secondary
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(width: AppSpacing.md),
-
-            // Right Side: Price + Badge
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Price
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left Side: Name + Description
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${plan.price}',
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: const Color(0xFF0B0B0F), // Near-black primary (bold)
-                        fontWeight: FontWeight.bold,
+                      plan.name,
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: const Color(0xFF0B0B0F), // Near-black primary
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'JD',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: const Color(0xFF8B8F97), // Gray for currency
+                    if (plan.description != null &&
+                        plan.description!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        plan.description!,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: const Color(0xFF8B8F97), // Gray secondary
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
+                    ],
                   ],
                 ),
+              ),
 
-                const SizedBox(height: 6),
+              const SizedBox(width: AppSpacing.md),
 
-                // Badge (Duration/Plan Type) - accent color with low opacity
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+              // Right Side: Price + Badge
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Price
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${plan.price}',
+                        style: AppTextStyles.headlineSmall.copyWith(
+                          color: const Color(
+                            0xFF0B0B0F,
+                          ), // Near-black primary (bold)
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'JD',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: const Color(0xFF8B8F97), // Gray for currency
+                        ),
+                      ),
+                    ],
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFB923C).withOpacity(0.15), // Accent color with 15% opacity
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    durationLabel,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: const Color(0xFFFB923C), // Accent color for text
-                      fontWeight: FontWeight.w600,
+
+                  const SizedBox(height: 6),
+
+                  // Badge (Duration/Plan Type) - accent color with low opacity
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                        0xFFFB923C,
+                      ).withOpacity(0.15), // Accent color with 15% opacity
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      durationLabel,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: const Color(0xFFFB923C), // Accent color for text
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

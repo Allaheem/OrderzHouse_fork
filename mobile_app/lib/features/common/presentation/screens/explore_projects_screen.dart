@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,18 +32,14 @@ import 'dart:async';
 class ExploreProjectsScreen extends ConsumerStatefulWidget {
   final bool readOnly;
 
-  const ExploreProjectsScreen({
-    super.key,
-    this.readOnly = false,
-  });
+  const ExploreProjectsScreen({super.key, this.readOnly = false});
 
   @override
   ConsumerState<ExploreProjectsScreen> createState() =>
       _ExploreProjectsScreenState();
 }
 
-class _ExploreProjectsScreenState
-    extends ConsumerState<ExploreProjectsScreen> {
+class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
   final _searchController = TextEditingController();
   final _categoryScrollController = ScrollController();
   Timer? _debounceTimer;
@@ -79,7 +76,7 @@ class _ExploreProjectsScreenState
 
   void _showSortDialog(BuildContext context, WidgetRef ref) {
     final String currentSort = ref.read(exploreSortByProvider);
-    
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -116,7 +113,8 @@ class _ExploreProjectsScreenState
                   value: 'price_low_to_high',
                   isSelected: currentSort == 'price_low_to_high',
                   onTap: () {
-                    ref.read(exploreSortByProvider.notifier).state = 'price_low_to_high';
+                    ref.read(exploreSortByProvider.notifier).state =
+                        'price_low_to_high';
                     Navigator.pop(context);
                   },
                 ),
@@ -125,7 +123,8 @@ class _ExploreProjectsScreenState
                   value: 'price_high_to_low',
                   isSelected: currentSort == 'price_high_to_low',
                   onTap: () {
-                    ref.read(exploreSortByProvider.notifier).state = 'price_high_to_low';
+                    ref.read(exploreSortByProvider.notifier).state =
+                        'price_high_to_low';
                     Navigator.pop(context);
                   },
                 ),
@@ -150,80 +149,102 @@ class _ExploreProjectsScreenState
     final selectedCategoryId = ref.watch(selectedExploreCategoryIdProvider);
     final sharedCategoryId = ref.watch(exploreSelectedCategoryIdProvider);
     final String sortBy = ref.watch(exploreSortByProvider);
-    
+
     // Debug: Log current state
     if (AppConfig.isDevelopment) {
       final String sortByValue = ref.read(exploreSortByProvider);
-      debugPrint('🔍 [ExploreScreen] State: categoryId=$selectedCategoryId, searchQuery="$searchQuery", sortBy=$sortBy');
-      debugPrint('🔍 [ExploreScreen] searchQueryProvider value: "${ref.read(searchQueryProvider)}"');
-      debugPrint('🔍 [ExploreScreen] exploreSortByProvider value: "$sortByValue"');
+      debugPrint(
+        '🔍 [ExploreScreen] State: categoryId=$selectedCategoryId, searchQuery="$searchQuery", sortBy=$sortBy',
+      );
+      debugPrint(
+        '🔍 [ExploreScreen] searchQueryProvider value: "${ref.read(searchQueryProvider)}"',
+      );
+      debugPrint(
+        '🔍 [ExploreScreen] exploreSortByProvider value: "$sortByValue"',
+      );
       print('sortBy=${ref.watch(exploreSortByProvider)}');
     }
-    
+
     // Sync shared provider to local provider on first build
     if (!_hasSyncedSharedCategory && sharedCategoryId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           // Set the local provider to match shared state
-          ref.read(selectedExploreCategoryIdProvider.notifier).state = sharedCategoryId;
+          ref.read(selectedExploreCategoryIdProvider.notifier).state =
+              sharedCategoryId;
           // Clear shared state after syncing (so it doesn't persist on next visit)
           ref.read(exploreSelectedCategoryIdProvider.notifier).state = null;
           _hasSyncedSharedCategory = true;
         }
       });
     }
-    
+
     // Debug log
-    debugPrint('Explore selectedCategoryId=$selectedCategoryId, sharedCategoryId=$sharedCategoryId');
-    
+    debugPrint(
+      'Explore selectedCategoryId=$selectedCategoryId, sharedCategoryId=$sharedCategoryId',
+    );
+
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
 
     return AppScaffold(
       body: Column(
-          children: [
-            _buildTopRow(context, user),
-            _buildSearchRow(context),
-            Expanded(
-              child: Column(
-                children: [
-                  _buildCategoryChips(categoriesAsync, selectedCategoryId),
-                  Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () async {
-                        ref.read(exploreRefreshErrorProvider.notifier).state = null;
-                        await ref.read(exploreProjectsStateProvider.notifier).load();
+        children: [
+          _buildTopRow(context, user),
+          _buildSearchRow(context),
+          Expanded(
+            child: Column(
+              children: [
+                _buildCategoryChips(categoriesAsync, selectedCategoryId),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      ref.read(exploreRefreshErrorProvider.notifier).state =
+                          null;
+                      await ref
+                          .read(exploreProjectsStateProvider.notifier)
+                          .load();
+                    },
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        ref.listen(exploreRefreshErrorProvider, (prev, msg) {
+                          if (msg != null && msg != prev && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(msg),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                            ref
+                                    .read(exploreRefreshErrorProvider.notifier)
+                                    .state =
+                                null;
+                          }
+                        });
+                        final lastData = ref.watch(
+                          exploreProjectsLastDataProvider,
+                        );
+                        final projectsAsync = ref.watch(
+                          filteredExploreProjectsProvider,
+                        );
+                        return _ExploreGridContent(
+                          projectsAsync: projectsAsync,
+                          lastData: lastData,
+                          l10n: l10n,
+                          selectedCategoryId: selectedCategoryId,
+                          searchQuery: searchQuery,
+                          onRetry: _refresh,
+                          buildGrid: _buildProjectsGrid,
+                        );
                       },
-                      child: Consumer(
-                        builder: (context, ref, _) {
-                          ref.listen(exploreRefreshErrorProvider, (prev, msg) {
-                            if (msg != null && msg != prev && context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
-                              );
-                              ref.read(exploreRefreshErrorProvider.notifier).state = null;
-                            }
-                          });
-                          final lastData = ref.watch(exploreProjectsLastDataProvider);
-                          final projectsAsync = ref.watch(filteredExploreProjectsProvider);
-                          return _ExploreGridContent(
-                            projectsAsync: projectsAsync,
-                            lastData: lastData,
-                            l10n: l10n,
-                            selectedCategoryId: selectedCategoryId,
-                            searchQuery: searchQuery,
-                            onRetry: _refresh,
-                            buildGrid: _buildProjectsGrid,
-                          );
-                        },
-                      ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
       floatingActionButton: _buildFloatingActionButton(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: _buildBottomNav(context),
@@ -263,7 +284,9 @@ class _ExploreProjectsScreenState
               child: IconButton(
                 icon: context.canPop()
                     ? const Icon(Icons.chevron_left_rounded)
-                    : const Icon(Icons.grid_view_rounded), // Menu/grid icon for main tab
+                    : const Icon(
+                        Icons.grid_view_rounded,
+                      ), // Menu/grid icon for main tab
                 color: const Color(0xFF111827), // Near-black
                 onPressed: () {
                   if (context.canPop()) {
@@ -273,7 +296,7 @@ class _ExploreProjectsScreenState
                 },
               ),
             ),
-          
+
             // Center: Title
             Text(
               l10n.explore,
@@ -282,7 +305,7 @@ class _ExploreProjectsScreenState
                 fontWeight: FontWeight.bold,
               ),
             ),
-          
+
             // Right: Avatar
             GestureDetector(
               onTap: () {
@@ -293,7 +316,8 @@ class _ExploreProjectsScreenState
                   context.go('/freelancer/profile');
                 }
               },
-              child: user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
+              child:
+                  user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
                   ? ClipOval(
                       child: CachedNetworkImage(
                         imageUrl: user.profilePicUrl!.startsWith('http')
@@ -302,7 +326,8 @@ class _ExploreProjectsScreenState
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
+                        errorWidget: (context, url, error) =>
+                            _buildAvatarPlaceholder(),
                       ),
                     )
                   : _buildAvatarPlaceholder(),
@@ -358,8 +383,12 @@ class _ExploreProjectsScreenState
                   _debounceTimer = Timer(const Duration(milliseconds: 350), () {
                     if (mounted) {
                       if (AppConfig.isDevelopment) {
-                        debugPrint('🔍 [ExploreScreen] Search text changed: "$value"');
-                        debugPrint('🔍 [ExploreScreen] Will update searchQueryProvider (notifier will reload)');
+                        debugPrint(
+                          '🔍 [ExploreScreen] Search text changed: "$value"',
+                        );
+                        debugPrint(
+                          '🔍 [ExploreScreen] Will update searchQueryProvider (notifier will reload)',
+                        );
                       }
                       // Update search query provider (provider watches this and will auto-refetch)
                       ref.read(searchQueryProvider.notifier).state = value;
@@ -371,7 +400,9 @@ class _ExploreProjectsScreenState
                   _debounceTimer?.cancel();
                   if (mounted) {
                     if (AppConfig.isDevelopment) {
-                      debugPrint('🔍 [ExploreScreen] Search submitted: "$value"');
+                      debugPrint(
+                        '🔍 [ExploreScreen] Search submitted: "$value"',
+                      );
                     }
                     ref.read(searchQueryProvider.notifier).state = value;
                   }
@@ -395,9 +426,9 @@ class _ExploreProjectsScreenState
               ),
             ),
           ),
-          
+
           const SizedBox(width: AppSpacing.sm),
-          
+
           // Filter Button
           Container(
             width: 48,
@@ -422,9 +453,9 @@ class _ExploreProjectsScreenState
               onPressed: () => _showFilterBottomSheet(context, ref),
             ),
           ),
-          
+
           const SizedBox(width: AppSpacing.sm),
-          
+
           // Sort Button
           Container(
             width: 48,
@@ -470,13 +501,22 @@ class _ExploreProjectsScreenState
           // Use real categories if available, otherwise use placeholders
           final chipLabels = categories.isNotEmpty
               ? [l10n.all, ...categories.map((c) => c.name)]
-              : [l10n.all, 'Design', 'Writing', 'Development', 'Marketing', 'Video'];
+              : [
+                  l10n.all,
+                  'Design',
+                  'Writing',
+                  'Development',
+                  'Marketing',
+                  'Video',
+                ];
 
           // Find the index of the selected category chip
           int? selectedIndex;
           if (selectedCategoryId != null && categories.isNotEmpty) {
             try {
-              final selectedCategory = categories.firstWhere((c) => c.id == selectedCategoryId);
+              final selectedCategory = categories.firstWhere(
+                (c) => c.id == selectedCategoryId,
+              );
               selectedIndex = chipLabels.indexOf(selectedCategory.name);
             } catch (e) {
               selectedIndex = null;
@@ -503,23 +543,30 @@ class _ExploreProjectsScreenState
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             itemCount: chipLabels.length,
-            separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+            separatorBuilder: (context, index) =>
+                const SizedBox(width: AppSpacing.sm),
             itemBuilder: (context, index) {
               final label = chipLabels[index];
               final isSelected = label == l10n.all
                   ? selectedCategoryId == null
                   : categories.isNotEmpty &&
-                      categories.any((c) => c.name == label && c.id == selectedCategoryId);
+                        categories.any(
+                          (c) => c.name == label && c.id == selectedCategoryId,
+                        );
 
               return AppGradientFilterChip(
                 label: label,
                 selected: isSelected,
                 onTap: () {
                   if (label == l10n.all) {
-                    ref.read(selectedExploreCategoryIdProvider.notifier).state = null;
+                    ref.read(selectedExploreCategoryIdProvider.notifier).state =
+                        null;
                   } else if (categories.isNotEmpty) {
-                    final category = categories.firstWhere((c) => c.name == label);
-                    ref.read(selectedExploreCategoryIdProvider.notifier).state = category.id;
+                    final category = categories.firstWhere(
+                      (c) => c.name == label,
+                    );
+                    ref.read(selectedExploreCategoryIdProvider.notifier).state =
+                        category.id;
                   }
                 },
               );
@@ -548,11 +595,19 @@ class _ExploreProjectsScreenState
   }
 
   // 4) Projects Grid (2-column masonry/staggered grid like Pinterest)
-  Widget _buildProjectsGrid(BuildContext context, List<Project> projects, {bool shrinkWrap = false}) {
+  Widget _buildProjectsGrid(
+    BuildContext context,
+    List<Project> projects, {
+    bool shrinkWrap = false,
+  }) {
     return MasonryGridView.count(
       shrinkWrap: shrinkWrap,
-      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : const AlwaysScrollableScrollPhysics(),
-      padding: shrinkWrap ? EdgeInsets.zero : const EdgeInsets.all(AppSpacing.lg),
+      physics: shrinkWrap
+          ? const NeverScrollableScrollPhysics()
+          : const AlwaysScrollableScrollPhysics(),
+      padding: shrinkWrap
+          ? EdgeInsets.zero
+          : const EdgeInsets.all(AppSpacing.lg),
       crossAxisCount: 2,
       mainAxisSpacing: AppSpacing.md,
       crossAxisSpacing: AppSpacing.md,
@@ -562,10 +617,7 @@ class _ExploreProjectsScreenState
         return ExploreProjectCard(
           project: project,
           onTap: () {
-            context.push(
-              '/project/${project.id}',
-              extra: project,
-            );
+            context.push('/project/${project.id}', extra: project);
           },
           onFavorite: () {
             // TODO: Implement favorite functionality
@@ -577,6 +629,7 @@ class _ExploreProjectsScreenState
 
   // 5) Floating Action Button
   // Search Results UI
+  // ignore: unused_element
   Widget _buildSearchResults(
     BuildContext context,
     AsyncValue<SearchResult> searchResultsAsync,
@@ -627,14 +680,25 @@ class _ExploreProjectsScreenState
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: searchResult.categories.length,
-                      separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(width: AppSpacing.sm),
                       itemBuilder: (context, index) {
                         final category = searchResult.categories[index];
                         return GestureDetector(
                           onTap: () {
                             // Set category filter and clear search
-                            ref.read(exploreSelectedCategoryIdProvider.notifier).state = category.id;
-                            ref.read(selectedExploreCategoryIdProvider.notifier).state = category.id;
+                            ref
+                                .read(
+                                  exploreSelectedCategoryIdProvider.notifier,
+                                )
+                                .state = category
+                                .id;
+                            ref
+                                .read(
+                                  selectedExploreCategoryIdProvider.notifier,
+                                )
+                                .state = category
+                                .id;
                             _searchController.clear();
                             ref.read(searchQueryProvider.notifier).state = '';
                           },
@@ -644,7 +708,9 @@ class _ExploreProjectsScreenState
                               vertical: AppSpacing.sm,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF111827), // Near-black for active
+                              color: const Color(
+                                0xFF111827,
+                              ), // Near-black for active
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Center(
@@ -673,7 +739,11 @@ class _ExploreProjectsScreenState
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  _buildProjectsGrid(context, searchResult.projects, shrinkWrap: true),
+                  _buildProjectsGrid(
+                    context,
+                    searchResult.projects,
+                    shrinkWrap: true,
+                  ),
                 ],
                 const SizedBox(height: AppSpacing.xl),
               ],
@@ -694,9 +764,7 @@ class _ExploreProjectsScreenState
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: GradientFab(
-        onPressed: () => context.go('/create-project'),
-      ),
+      child: GradientFab(onPressed: () => context.go('/create-project')),
     );
   }
 
@@ -722,11 +790,31 @@ class _ExploreProjectsScreenState
       return AppBottomNavBar(
         currentIndex: currentIndex,
         items: [
-          NavItem(icon: Icons.home_outlined, title: l10n.home, route: '/client'),
-          NavItem(icon: Icons.work_outline, title: l10n.myProjects, route: '/client/projects'),
-          NavItem(icon: Icons.explore_outlined, title: l10n.explore, route: '/client/explore'),
-          NavItem(icon: Icons.payments_outlined, title: l10n.payments, route: '/client/payments'),
-          NavItem(icon: Icons.person_outline, title: l10n.profile, route: '/client/profile'),
+          NavItem(
+            icon: Icons.home_outlined,
+            title: l10n.home,
+            route: '/client',
+          ),
+          NavItem(
+            icon: Icons.work_outline,
+            title: l10n.myProjects,
+            route: '/client/projects',
+          ),
+          NavItem(
+            icon: Icons.explore_outlined,
+            title: l10n.explore,
+            route: '/client/explore',
+          ),
+          NavItem(
+            icon: Icons.payments_outlined,
+            title: l10n.payments,
+            route: '/client/payments',
+          ),
+          NavItem(
+            icon: Icons.person_outline,
+            title: l10n.profile,
+            route: '/client/profile',
+          ),
         ],
       );
     } else if (location.contains('/freelancer')) {
@@ -746,11 +834,31 @@ class _ExploreProjectsScreenState
       return AppBottomNavBar(
         currentIndex: currentIndex,
         items: [
-          NavItem(icon: Icons.home_outlined, title: l10n.home, route: '/freelancer'),
-          NavItem(icon: Icons.work_outline, title: l10n.myProjects, route: '/freelancer/projects'),
-          NavItem(icon: Icons.explore_outlined, title: l10n.explore, route: '/freelancer/explore'),
-          NavItem(icon: Icons.payments_outlined, title: l10n.payments, route: '/freelancer/payments'),
-          NavItem(icon: Icons.person_outline, title: l10n.profile, route: '/freelancer/profile'),
+          NavItem(
+            icon: Icons.home_outlined,
+            title: l10n.home,
+            route: '/freelancer',
+          ),
+          NavItem(
+            icon: Icons.work_outline,
+            title: l10n.myProjects,
+            route: '/freelancer/projects',
+          ),
+          NavItem(
+            icon: Icons.explore_outlined,
+            title: l10n.explore,
+            route: '/freelancer/explore',
+          ),
+          NavItem(
+            icon: Icons.payments_outlined,
+            title: l10n.payments,
+            route: '/freelancer/payments',
+          ),
+          NavItem(
+            icon: Icons.person_outline,
+            title: l10n.profile,
+            route: '/freelancer/profile',
+          ),
         ],
       );
     }
@@ -758,7 +866,6 @@ class _ExploreProjectsScreenState
     return null;
   }
 }
-
 
 // Sort Option Widget
 class _SortOption extends StatelessWidget {
@@ -828,7 +935,9 @@ class _ExploreGridContent extends StatelessWidget {
               color: Colors.transparent,
               child: LinearProgressIndicator(
                 backgroundColor: Color(0xFFE5E7EB),
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.accentOrange),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.accentOrange,
+                ),
               ),
             ),
           ),
@@ -841,8 +950,12 @@ class _ExploreGridContent extends StatelessWidget {
     }
     // Error with previous data: show grid + error bar with retry
     if (projectsAsync.hasError && lastData != null && lastData!.isNotEmpty) {
-      final errorMessage = projectsAsync.error.toString().replaceAll('Exception: ', '');
-      final is403 = errorMessage.toLowerCase().contains('permission') ||
+      final errorMessage = projectsAsync.error.toString().replaceAll(
+        'Exception: ',
+        '',
+      );
+      final is403 =
+          errorMessage.toLowerCase().contains('permission') ||
           errorMessage.toLowerCase().contains('access denied') ||
           errorMessage.toLowerCase().contains('forbidden');
       return Stack(
@@ -858,7 +971,10 @@ class _ExploreGridContent extends StatelessWidget {
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.sm,
+                  ),
                   child: Row(
                     children: [
                       Expanded(
@@ -866,9 +982,11 @@ class _ExploreGridContent extends StatelessWidget {
                           is403
                               ? 'Permission denied. Verify your account.'
                               : errorMessage.length > 60
-                                  ? '${errorMessage.substring(0, 60)}...'
-                                  : errorMessage,
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                              ? '${errorMessage.substring(0, 60)}...'
+                              : errorMessage,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -888,8 +1006,12 @@ class _ExploreGridContent extends StatelessWidget {
     }
     // Error with no previous data: full error state
     if (projectsAsync.hasError) {
-      final errorMessage = projectsAsync.error.toString().replaceAll('Exception: ', '');
-      final is403 = errorMessage.toLowerCase().contains('permission') ||
+      final errorMessage = projectsAsync.error.toString().replaceAll(
+        'Exception: ',
+        '',
+      );
+      final is403 =
+          errorMessage.toLowerCase().contains('permission') ||
           errorMessage.toLowerCase().contains('access denied') ||
           errorMessage.toLowerCase().contains('forbidden');
       return ErrorState(

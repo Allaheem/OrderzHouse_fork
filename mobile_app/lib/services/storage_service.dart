@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -28,10 +29,7 @@ class StorageService {
   // User Data Storage
   static Future<void> saveUser(User user) async {
     if (_prefs != null) {
-      await _prefs!.setString(
-        AppConstants.userKey,
-        jsonEncode(user.toJson()),
-      );
+      await _prefs!.setString(AppConstants.userKey, jsonEncode(user.toJson()));
     }
   }
 

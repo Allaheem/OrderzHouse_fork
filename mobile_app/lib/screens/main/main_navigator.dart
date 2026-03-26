@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:OrderzHouse/features/auth/presentation/providers/auth_provider.dart';
@@ -39,10 +40,7 @@ class _MainNavigatorState extends ConsumerState<MainNavigator> {
 
     final List<BottomNavigationBarItem> items = isFreelancer
         ? const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
               icon: Icon(Icons.work),
               label: 'My Projects',
@@ -55,16 +53,10 @@ class _MainNavigatorState extends ConsumerState<MainNavigator> {
               icon: Icon(Icons.payment),
               label: 'Payments',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ]
         : const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
               icon: Icon(Icons.work),
               label: 'My Projects',
@@ -77,17 +69,11 @@ class _MainNavigatorState extends ConsumerState<MainNavigator> {
               icon: Icon(Icons.payment),
               label: 'Payments',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {

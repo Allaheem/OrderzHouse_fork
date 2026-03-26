@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../utils/constants.dart';
 import 'storage_service.dart';
@@ -9,9 +10,7 @@ class ApiClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConstants.baseUrl,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
       ),
@@ -69,10 +68,7 @@ class ApiClient {
   }
 
   Future<Response> uploadProfilePic(FormData formData) async {
-    return await _dio.post(
-      '/users/uploadProfilePic',
-      data: formData,
-    );
+    return await _dio.post('/users/uploadProfilePic', data: formData);
   }
 
   // Project Endpoints

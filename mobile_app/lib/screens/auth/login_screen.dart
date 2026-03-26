@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:OrderzHouse/features/auth/presentation/providers/auth_provider.dart';
@@ -46,9 +47,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (authState.error == 'OTP required') {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => VerifyOtpScreen(email: email),
-          ),
+          MaterialPageRoute(builder: (_) => VerifyOtpScreen(email: email)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -63,9 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authStateProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
+      appBar: AppBar(title: const Text('Login')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),

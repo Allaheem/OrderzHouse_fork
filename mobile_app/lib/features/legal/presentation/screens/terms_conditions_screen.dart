@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -158,9 +159,7 @@ class _TermsSectionTile extends StatelessWidget {
         children: [
           if (hasBody)
             Padding(
-              padding: EdgeInsets.only(
-                bottom: hasBullets ? AppSpacing.md : 0,
-              ),
+              padding: EdgeInsets.only(bottom: hasBullets ? AppSpacing.md : 0),
               child: Text(
                 section.body,
                 style: AppTextStyles.bodyMedium.copyWith(

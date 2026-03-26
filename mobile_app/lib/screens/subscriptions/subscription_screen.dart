@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 
 class SubscriptionScreen extends StatelessWidget {
@@ -6,9 +7,7 @@ class SubscriptionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Subscriptions'),
-      ),
+      appBar: AppBar(title: const Text('Subscriptions')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -21,10 +20,7 @@ class SubscriptionScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'No active subscriptions',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
             ElevatedButton(

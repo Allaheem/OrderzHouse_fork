@@ -1,17 +1,19 @@
+// ??? ????????
 import 'package:dio/dio.dart';
 import '../config/app_config.dart';
 
 class HealthCheckService {
   HealthCheckService._();
+  static const Duration _healthTimeout = Duration(seconds: 10);
 
   /// Create a lightweight Dio instance for health checks with short timeout
   static Dio _createHealthCheckDio() {
     return Dio(
       BaseOptions(
         baseUrl: AppConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 3),
-        receiveTimeout: const Duration(seconds: 3),
-        sendTimeout: const Duration(seconds: 3),
+        connectTimeout: _healthTimeout,
+        receiveTimeout: _healthTimeout,
+        sendTimeout: _healthTimeout,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -34,7 +36,9 @@ class HealthCheckService {
         final response = await dio.get(endpoint);
 
         // ignore: avoid_print
-        print('✅ Health check SUCCESS: $baseUrl$endpoint - Status: ${response.statusCode}');
+        print(
+          '✅ Health check SUCCESS: $baseUrl$endpoint - Status: ${response.statusCode}',
+        );
         return HealthCheckResult(
           success: true,
           endpoint: endpoint,
@@ -45,17 +49,22 @@ class HealthCheckService {
         // If we get a response (even error), server is reachable
         if (e.response != null) {
           // ignore: avoid_print
-          print('⚠️ Health check PARTIAL: $baseUrl$endpoint - Status: ${e.response?.statusCode}');
+          print(
+            '⚠️ Health check PARTIAL: $baseUrl$endpoint - Status: ${e.response?.statusCode}',
+          );
           return HealthCheckResult(
             success: true,
             endpoint: endpoint,
             statusCode: e.response?.statusCode,
-            message: 'API is reachable but returned error: ${e.response?.statusCode}',
+            message:
+                'API is reachable but returned error: ${e.response?.statusCode}',
           );
         }
         // Continue to next endpoint if connection failed
         // ignore: avoid_print
-        print('❌ Health check FAILED: $baseUrl$endpoint - ${e.type}: ${e.message}');
+        print(
+          '❌ Health check FAILED: $baseUrl$endpoint - ${e.type}: ${e.message}',
+        );
       } catch (e) {
         // ignore: avoid_print
         print('❌ Health check ERROR: $baseUrl$endpoint - $e');
@@ -69,7 +78,8 @@ class HealthCheckService {
       success: false,
       endpoint: null,
       statusCode: null,
-      message: 'Could not reach API at $baseUrl. Check if server is running and baseUrl is correct.',
+      message:
+          'Could not reach API at $baseUrl. Check if server is running and baseUrl is correct.',
     );
   }
 }

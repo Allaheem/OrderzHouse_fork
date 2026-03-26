@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_text_styles.dart';
@@ -22,7 +23,10 @@ class TransactionTile extends StatelessWidget {
     if (s == 'pending' || s == 'processing' || s == 'in_review') {
       return Colors.orange;
     }
-    if (s == 'failed' || s == 'canceled' || s == 'cancelled' || s == 'refunded') {
+    if (s == 'failed' ||
+        s == 'canceled' ||
+        s == 'cancelled' ||
+        s == 'refunded') {
       return Colors.red;
     }
     return Colors.grey;
@@ -61,10 +65,7 @@ class TransactionTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFE5E7EB),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -143,9 +144,7 @@ class TransactionTile extends StatelessWidget {
                 Text(
                   payment.type!.toUpperCase(),
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: payment.type == 'credit' 
-                        ? Colors.green 
-                        : Colors.red,
+                    color: payment.type == 'credit' ? Colors.green : Colors.red,
                     fontSize: 11,
                   ),
                 ),

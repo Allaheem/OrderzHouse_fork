@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +27,7 @@ class TermsConditionsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
     final termsContent = TermsContent.getContent(locale.languageCode);
-    
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -46,9 +47,9 @@ class TermsConditionsScreen extends ConsumerWidget {
                   children: [
                     // Last Updated
                     Text(
-                      locale.languageCode == 'ar' 
-                        ? 'آخر تحديث: ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
-                        : 'Last updated: ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
+                      locale.languageCode == 'ar'
+                          ? 'آخر تحديث: ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}'
+                          : 'Last updated: ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -59,32 +60,40 @@ class TermsConditionsScreen extends ConsumerWidget {
                     _SectionCard(
                       number: 0,
                       title: termsContent.fundamentalTerms.title,
-                      children: termsContent.fundamentalTerms.terms.map((term) => 
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: _SectionParagraph(term),
-                        ),
-                      ).toList(),
+                      children: termsContent.fundamentalTerms.terms
+                          .map(
+                            (term) => Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.sm,
+                              ),
+                              child: _SectionParagraph(term),
+                            ),
+                          )
+                          .toList(),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
                     // Contract Terms Sections
-                    ...termsContent.sections.map((section) => 
-                      Padding(
+                    ...termsContent.sections.map(
+                      (section) => Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                         child: _SectionCard(
                           number: section.number,
                           title: section.title,
                           children: [
-                            ...section.paragraphs.map((paragraph) => 
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            ...section.paragraphs.map(
+                              (paragraph) => Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.sm,
+                                ),
                                 child: _SectionParagraph(paragraph),
                               ),
                             ),
                             if (section.bulletPoints != null) ...[
                               const SizedBox(height: AppSpacing.sm),
-                              ...section.bulletPoints!.map((point) => _BulletPoint(point)),
+                              ...section.bulletPoints!.map(
+                                (point) => _BulletPoint(point),
+                              ),
                             ],
                           ],
                         ),
@@ -92,7 +101,10 @@ class TermsConditionsScreen extends ConsumerWidget {
                     ),
 
                     // Bottom padding for safe area
-                    SizedBox(height: MediaQuery.of(context).padding.bottom + AppSpacing.lg),
+                    SizedBox(
+                      height:
+                          MediaQuery.of(context).padding.bottom + AppSpacing.lg,
+                    ),
                   ],
                 ),
               ),
@@ -177,12 +189,8 @@ class _SectionCard extends StatelessWidget {
 
 class _SectionParagraph extends StatelessWidget {
   final String text;
-  final bool isBold;
 
-  const _SectionParagraph(
-    this.text, {
-    bool isBold = false,
-  }) : isBold = isBold;
+  const _SectionParagraph(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +198,7 @@ class _SectionParagraph extends StatelessWidget {
       text,
       style: AppTextStyles.bodyMedium.copyWith(
         color: AppColors.textSecondary,
-        fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+        fontWeight: FontWeight.normal,
         height: 1.6,
       ),
     );

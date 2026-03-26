@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,10 +27,12 @@ class FreelancerProjectsScreen extends ConsumerStatefulWidget {
   const FreelancerProjectsScreen({super.key});
 
   @override
-  ConsumerState<FreelancerProjectsScreen> createState() => _FreelancerProjectsScreenState();
+  ConsumerState<FreelancerProjectsScreen> createState() =>
+      _FreelancerProjectsScreenState();
 }
 
-class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScreen> {
+class _FreelancerProjectsScreenState
+    extends ConsumerState<FreelancerProjectsScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
 
@@ -93,7 +96,9 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
               value: 'budget_low_to_high',
               isSelected: currentSort == 'budget_low_to_high',
               onTap: () {
-                ref.read(myProjectsFiltersProvider.notifier).setSort('budget_low_to_high');
+                ref
+                    .read(myProjectsFiltersProvider.notifier)
+                    .setSort('budget_low_to_high');
                 Navigator.pop(context);
               },
             ),
@@ -102,7 +107,9 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
               value: 'budget_high_to_low',
               isSelected: currentSort == 'budget_high_to_low',
               onTap: () {
-                ref.read(myProjectsFiltersProvider.notifier).setSort('budget_high_to_low');
+                ref
+                    .read(myProjectsFiltersProvider.notifier)
+                    .setSort('budget_high_to_low');
                 Navigator.pop(context);
               },
             ),
@@ -118,13 +125,13 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
     if (_isFetchingRawData || _hasFetchedRawData) {
       return;
     }
-    
+
     _isFetchingRawData = true;
-    
+
     try {
       final repository = ref.read(projectsRepositoryProvider);
       final response = await repository.getMyProjectsRaw();
-      
+
       if (response.success && response.data != null && mounted) {
         setState(() {
           // Store raw data by project ID
@@ -147,7 +154,7 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
       }
     }
   }
-  
+
   // Reset raw data fetch flag when refreshing
   void _onRefresh() {
     setState(() {
@@ -180,14 +187,21 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
               child: filteredAsync.when(
                 data: (filteredProjects) {
                   _fetchRawProjectDataForProjects(
-                      projectsAsync.value ?? filteredProjects);
-                  final hasFilters = ref.read(myProjectsSearchQueryProvider).trim().isNotEmpty ||
+                    projectsAsync.value ?? filteredProjects,
+                  );
+                  final hasFilters =
+                      ref
+                          .read(myProjectsSearchQueryProvider)
+                          .trim()
+                          .isNotEmpty ||
                       ref.read(myProjectsStatusProvider) != null;
                   if (filteredProjects.isEmpty) {
                     return EmptyState(
                       icon: Icons.work_outline,
                       title: hasFilters ? l10n.noResultsFound : l10n.noProjects,
-                      message: hasFilters ? l10n.noResultsFound : l10n.noProjectsMessage,
+                      message: hasFilters
+                          ? l10n.noResultsFound
+                          : l10n.noProjectsMessage,
                     );
                   }
                   return _buildProjectsGrid(context, filteredProjects);
@@ -205,11 +219,31 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 1,
         items: [
-          NavItem(icon: Icons.home_outlined, title: l10n.home, route: '/freelancer'),
-          NavItem(icon: Icons.work_outline, title: l10n.myProjects, route: '/freelancer/projects'),
-          NavItem(icon: Icons.explore_outlined, title: l10n.explore, route: '/freelancer/explore'),
-          NavItem(icon: Icons.payments_outlined, title: l10n.payments, route: '/freelancer/payments'),
-          NavItem(icon: Icons.person_outline, title: l10n.profile, route: '/freelancer/profile'),
+          NavItem(
+            icon: Icons.home_outlined,
+            title: l10n.home,
+            route: '/freelancer',
+          ),
+          NavItem(
+            icon: Icons.work_outline,
+            title: l10n.myProjects,
+            route: '/freelancer/projects',
+          ),
+          NavItem(
+            icon: Icons.explore_outlined,
+            title: l10n.explore,
+            route: '/freelancer/explore',
+          ),
+          NavItem(
+            icon: Icons.payments_outlined,
+            title: l10n.payments,
+            route: '/freelancer/payments',
+          ),
+          NavItem(
+            icon: Icons.person_outline,
+            title: l10n.profile,
+            route: '/freelancer/profile',
+          ),
         ],
       ),
     );
@@ -253,7 +287,6 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
               )
             else
               const SizedBox(width: 40), // Spacer if no back button
-            
             // Center: Title
             Text(
               l10n.myProjects,
@@ -262,13 +295,14 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             // Right: Avatar
             GestureDetector(
               onTap: () {
                 context.go('/freelancer/profile');
               },
-              child: user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
+              child:
+                  user?.profilePicUrl != null && user!.profilePicUrl!.isNotEmpty
                   ? ClipOval(
                       child: CachedNetworkImage(
                         imageUrl: user.profilePicUrl!.startsWith('http')
@@ -277,7 +311,8 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
                         width: 40,
                         height: 40,
                         fit: BoxFit.cover,
-                        errorWidget: (context, url, error) => _buildAvatarPlaceholder(),
+                        errorWidget: (context, url, error) =>
+                            _buildAvatarPlaceholder(),
                       ),
                     )
                   : _buildAvatarPlaceholder(),
@@ -337,7 +372,8 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
                 },
                 onSubmitted: (value) {
                   _debounceTimer?.cancel();
-                  ref.read(myProjectsSearchQueryProvider.notifier).state = value;
+                  ref.read(myProjectsSearchQueryProvider.notifier).state =
+                      value;
                 },
                 decoration: InputDecoration(
                   hintText: l10n.searchProjects,
@@ -374,9 +410,15 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.tune_rounded, color: Color(0xFF111827), size: 20),
-              onPressed: () =>
-                  showProjectsFilterBottomSheet(context, ProjectsFilterTarget.myProjects),
+              icon: const Icon(
+                Icons.tune_rounded,
+                color: Color(0xFF111827),
+                size: 20,
+              ),
+              onPressed: () => showProjectsFilterBottomSheet(
+                context,
+                ProjectsFilterTarget.myProjects,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -395,7 +437,11 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
               ],
             ),
             child: IconButton(
-              icon: const Icon(Icons.swap_vert_rounded, color: Color(0xFF111827), size: 20),
+              icon: const Icon(
+                Icons.swap_vert_rounded,
+                color: Color(0xFF111827),
+                size: 20,
+              ),
               onPressed: () => _showSortDialog(context, ref),
             ),
           ),
@@ -420,7 +466,8 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         itemCount: tabs.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (context, index) =>
+            const SizedBox(width: AppSpacing.sm),
         itemBuilder: (context, index) {
           final (label, value) = tabs[index];
           final isSelected = selectedStatus == value;
@@ -453,16 +500,12 @@ class _FreelancerProjectsScreenState extends ConsumerState<FreelancerProjectsScr
           project: project,
           projectData: _projectDataMap[project.id],
           onTap: () {
-            context.push(
-              '/project/${project.id}',
-              extra: project,
-            );
+            context.push('/project/${project.id}', extra: project);
           },
         );
       },
     );
   }
-
 }
 
 class _SortOption extends StatelessWidget {
@@ -488,7 +531,9 @@ class _SortOption extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      trailing: isSelected ? const Icon(Icons.check_rounded, color: AppColors.primary) : null,
+      trailing: isSelected
+          ? const Icon(Icons.check_rounded, color: AppColors.primary)
+          : null,
       onTap: onTap,
     );
   }
@@ -513,7 +558,9 @@ class _LoadingGrid extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16), // Matching Explore card radius
+            borderRadius: BorderRadius.circular(
+              16,
+            ), // Matching Explore card radius
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.08),

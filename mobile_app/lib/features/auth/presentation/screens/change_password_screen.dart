@@ -1,3 +1,4 @@
+// ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +19,8 @@ class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
 
   @override
-  ConsumerState<ChangePasswordScreen> createState() => _ChangePasswordScreenState();
+  ConsumerState<ChangePasswordScreen> createState() =>
+      _ChangePasswordScreenState();
 }
 
 class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
@@ -95,7 +97,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   bool _validateForm(AppLocalizations l10n) {
     _validationErrors.clear();
-    final currentError = _validateCurrentPassword(_currentPasswordController.text, l10n);
+    final currentError = _validateCurrentPassword(
+      _currentPasswordController.text,
+      l10n,
+    );
     if (currentError != null) {
       _validationErrors['currentPassword'] = currentError;
     }
@@ -103,7 +108,10 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     if (newError != null) {
       _validationErrors['newPassword'] = newError;
     }
-    final confirmError = _validateConfirmPassword(_confirmPasswordController.text, l10n);
+    final confirmError = _validateConfirmPassword(
+      _confirmPasswordController.text,
+      l10n,
+    );
     if (confirmError != null) {
       _validationErrors['confirmPassword'] = confirmError;
     }
@@ -187,20 +195,28 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       showDialog(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Text(l10n.warning),
           content: Text(l10n.confirmDeleteAccount),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: Text(l10n.cancel, style: const TextStyle(color: AppColors.textSecondary)),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 _handleBack();
               },
-              child: Text(l10n.confirm, style: const TextStyle(color: AppColors.error)),
+              child: Text(
+                l10n.confirm,
+                style: const TextStyle(color: AppColors.error),
+              ),
             ),
           ],
         ),
@@ -213,7 +229,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -222,10 +238,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           child: Column(
             children: [
               // Header
-              AppHeader(
-                title: l10n.changePassword,
-                onBack: _handleBack,
-              ),
+              AppHeader(title: l10n.changePassword, onBack: _handleBack),
 
               // Content
               Expanded(
@@ -382,7 +395,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     String? errorText,
   }) {
     final isFocused = focusNode.hasFocus;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -406,9 +419,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         obscureText: obscureText,
         onChanged: (_) => onChanged(),
         cursorColor: AppColors.accentOrange,
-        style: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textPrimary,
-        ),
+        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
         focusNode: focusNode,
         decoration: InputDecoration(
           labelText: label,
@@ -422,7 +433,9 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
           ),
           suffixIcon: IconButton(
             icon: Icon(
-              obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              obscureText
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               color: AppColors.iconGray,
               size: 22,
             ),

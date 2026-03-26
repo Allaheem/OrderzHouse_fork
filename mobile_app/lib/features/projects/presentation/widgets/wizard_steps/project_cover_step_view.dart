@@ -1,3 +1,4 @@
+// ??? ????????
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,10 +10,7 @@ import '../../providers/project_wizard_provider.dart';
 class ProjectCoverStepView extends ConsumerWidget {
   final VoidCallback onNext;
 
-  const ProjectCoverStepView({
-    super.key,
-    required this.onNext,
-  });
+  const ProjectCoverStepView({super.key, required this.onNext});
 
   Future<void> _pickImage(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
@@ -24,9 +22,9 @@ class ProjectCoverStepView extends ConsumerWidget {
       );
 
       if (pickedFile != null) {
-        ref.read(projectWizardProvider.notifier).updateCoverPic(
-              File(pickedFile.path),
-            );
+        ref
+            .read(projectWizardProvider.notifier)
+            .updateCoverPic(File(pickedFile.path));
       }
     } catch (e) {
       if (context.mounted) {
@@ -61,10 +59,7 @@ class ProjectCoverStepView extends ConsumerWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.coverImageDescription,
-            style: const TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 14),
           ),
           const SizedBox(height: AppSpacing.xl),
 
@@ -105,9 +100,14 @@ class ProjectCoverStepView extends ConsumerWidget {
                                 shape: BoxShape.circle,
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.close, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
-                                  ref.read(projectWizardProvider.notifier).updateCoverPic(null);
+                                  ref
+                                      .read(projectWizardProvider.notifier)
+                                      .updateCoverPic(null);
                                 },
                               ),
                             ),
