@@ -1,4 +1,7 @@
 node_modules
 /cloud.json
+.env
+.env.*
+!.env.example
 
 

@@ -904,14 +904,27 @@ export const getProjectsByUserRole = async (req, res) => {
 ) AS change_request_at
 
         FROM projects p
-        JOIN project_assignments pa ON pa.project_id = p.id
+        LEFT JOIN project_assignments pa 
+          ON pa.project_id = p.id 
+         AND pa.freelancer_id = $1
         JOIN users u ON p.user_id = u.id
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
         LEFT JOIN sub_sub_categories ssc ON p.sub_sub_category_id = ssc.id
-         WHERE pa.freelancer_id = $1
-      AND p.is_deleted = false
-      AND pa.status = 'active'
+         WHERE p.is_deleted = false
+           AND (
+             (
+               pa.freelancer_id = $1
+               AND pa.status IN ('active', 'pending_acceptance', 'in_progress')
+             )
+             OR EXISTS (
+               SELECT 1
+               FROM offers o
+               WHERE o.project_id = p.id
+                 AND o.freelancer_id = $1
+                 AND o.offer_status = 'accepted'
+             )
+           )
       `;
     } else {
       return res
