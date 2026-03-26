@@ -56,6 +56,16 @@ import validateRequest from "../middleware/validateRequest.js";
 import { createProjectValidator } from "../middleware/validators/projectValidators.js";
 
 const projectsRouter = express.Router();
+const rejectTenderVaultAction = (req, res, next) => {
+  const rawId = String(req.params?.projectId || "");
+  if (rawId.startsWith("TVX-") || rawId.startsWith("TV-")) {
+    return res.status(400).json({
+      success: false,
+      message: "This listing is not currently accepting applications.",
+    });
+  }
+  return next();
+};
 
 /* ======================================================================
    1) CREATE + MY PROJECTS
@@ -108,12 +118,14 @@ projectsRouter.delete(
 projectsRouter.post(
   "/:projectId/assign",
   authentication,
+  rejectTenderVaultAction,
   assignFreelancer
 );
 
 projectsRouter.post(
   "/:projectId/apply",
   authentication,
+  rejectTenderVaultAction,
   requireVerifiedWithSubscription,
   applyForProject
 );
@@ -148,6 +160,7 @@ projectsRouter.post(
 projectsRouter.post(
   "/:projectId/resubmit",
   authentication,
+  rejectTenderVaultAction,
   requireVerifiedWithSubscription,
   upload.array("files"),
   resubmitWorkCompletion
@@ -156,6 +169,7 @@ projectsRouter.post(
 projectsRouter.put(
   "/:projectId/approve",
   authentication,
+  rejectTenderVaultAction,
   approveWorkCompletion
 );
 
@@ -166,6 +180,7 @@ projectsRouter.put(
 projectsRouter.put(
   "/hourly/:projectId",
   authentication,
+  rejectTenderVaultAction,
   completeHourlyProject
 );
 
@@ -176,6 +191,7 @@ projectsRouter.put(
 projectsRouter.post(
   "/:projectId/files",
   authentication,
+  rejectTenderVaultAction,
   upload.array("attachments", 10),
   uploadErrorHandler,
   addProjectFiles
@@ -184,6 +200,7 @@ projectsRouter.post(
 projectsRouter.get(
   "/:projectId/files",
   authentication,
+  rejectTenderVaultAction,
   getProjectFilesByProjectId
 );
 
@@ -194,6 +211,7 @@ projectsRouter.get(
 projectsRouter.get(
   "/:projectId/timeline",
   authentication,
+  rejectTenderVaultAction,
   getProjectTimeline
 );
 
@@ -288,6 +306,7 @@ projectsRouter.get(
 projectsRouter.post(
   "/:projectId/deliver",
   authentication,
+  rejectTenderVaultAction,
   requireVerifiedWithSubscription,
   uploadProjectMedia,
   submitProjectDelivery
@@ -295,6 +314,7 @@ projectsRouter.post(
 projectsRouter.get(
   "/:projectId/deliveries",
   authentication,
+  rejectTenderVaultAction,
   getProjectDeliveries
 );
 
@@ -308,18 +328,21 @@ projectsRouter.post(
 projectsRouter.get(
   "/:projectId/change-requests",
   authentication,
+  rejectTenderVaultAction,
   getProjectChangeRequests
 );
 
 projectsRouter.put(
   "/:projectId/change-requests/mark-read",
   authentication,
+  rejectTenderVaultAction,
   markProjectChangeRequestsAsRead
 );
 
 projectsRouter.post(
   "/:projectId/request-changes",
   authentication,
+  rejectTenderVaultAction,
   requestProjectChanges
 );
 
@@ -329,6 +352,7 @@ projectsRouter.post(
 projectsRouter.post(
   "/:projectId/offline-payment",
   authentication,
+  rejectTenderVaultAction,
   createOfflinePayment
 );
 

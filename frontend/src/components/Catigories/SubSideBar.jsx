@@ -197,7 +197,9 @@ export default function SubSidebar({
 
           if (token && isFreelancer) {
             // Check in parallel (limit to first 30 projects to avoid too many requests)
-            const projectsToCheck = projects.slice(0, 30);
+            const projectsToCheck = projects
+              .filter((project) => project?.is_actionable !== false)
+              .slice(0, 30);
             const checkPromises = projectsToCheck.map(async (project) => {
               try {
                 const hasApplied = await checkIfAssignedApi(project.id, token);

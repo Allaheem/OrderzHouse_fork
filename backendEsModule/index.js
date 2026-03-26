@@ -13,8 +13,7 @@ import "./cron/expireSubscriptions.js";
 import "./cron/autoExpireOldOffers.js";
 import { startDeadlineWatcher } from "./cron/realTimeDeadlineWatcher.js";
 import { cleanupDeactivatedUsers } from "./cron/cleanupDeactivatedUsers.js";
-import { registerTenderVaultRotationJobs } from "./cron/tenderVaultRotation.js";
-import { registerTenderPoolRotationCron } from "./cron/tenderPoolRotationCron.js";
+import { registerTenderVaultExposureRotationCron } from "./cron/tenderVaultExposureRotationCron.js";
 import liveScreenRoutes from "./router/LiveScreen.js";
 
 dotenv.config();
@@ -35,10 +34,8 @@ console.log("Running cleanupDeactivatedUsers cron job...");
   await cleanupDeactivatedUsers();
 });
 
-// Register Tender Vault Rotation System cron jobs
-registerTenderVaultRotationJobs();
-// Tender Pool Rotation (40–70 every 12h, visible in public Projects pool)
-registerTenderPoolRotationCron();
+// Tender Vault exposure rotation (12h window, 12h cadence)
+registerTenderVaultExposureRotationCron();
 
 
 
@@ -70,6 +67,7 @@ import webhookRouter from "./router/Stripe/stripeWebhook.js";
 import searchRouter from "./router/search.js";
 import referralsRouter from "./router/referrals.js";
 import tenderVaultRouter from "./router/tenderVault.js";
+import adminTenderVaultRoutes from "./router/adminTenderVaultRoutes.js";
 
 
 // DB connection
@@ -192,6 +190,8 @@ app.use("/stripe", StripeRouter);
 app.use("/search", searchRouter);
 app.use("/referrals", referralsRouter);
 app.use("/tender-vault", tenderVaultRouter);
+app.use("/api/admin/tender-vault", adminTenderVaultRoutes);
+console.log("[routes] mounted /api/admin/tender-vault");
 
 let server, io;
 

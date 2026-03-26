@@ -200,84 +200,11 @@ export const sendOffer = async (req, res) => {
  * Send offer for a rotating tender (by cycle_id). No project record; award is blocked.
  */
 export const sendOfferForTenderCycle = async (req, res) => {
-  try {
-    const freelancerId = req.token?.userId;
-    const { cycleId } = req.params;
-    const bid_amount = req.body.bid_amount ?? req.body.offer_amount ?? null;
-    const proposal = req.body.proposal ?? "";
-
-    if (!freelancerId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-    if (!cycleId || bid_amount == null) {
-      return res.status(400).json({ success: false, message: "Missing cycleId or bid_amount" });
-    }
-
-    const bid = Number(bid_amount);
-    if (!Number.isFinite(bid) || bid <= 0) {
-      return res.status(400).json({ success: false, message: "Invalid bid amount" });
-    }
-
-    const { canApplyToProjects } = await import("../utils/subscriptionCheck.js");
-    const subscriptionCheck = await canApplyToProjects(freelancerId);
-    if (!subscriptionCheck.canApply) {
-      return res.status(403).json({
-        success: false,
-        message: subscriptionCheck.reason || "You cannot submit offers at this time",
-      });
-    }
-
-    const { rows: cycleRows } = await pool.query(
-      `SELECT tcy.id, tcy.tender_id, tv.title, tv.budget_min, tv.budget_max
-       FROM tender_vault_cycles tcy
-       JOIN tender_vault_projects tv ON tv.id = tcy.tender_id
-       WHERE tcy.id = $1 AND tcy.status = 'active' AND tcy.display_end_time > NOW()
-         AND tv.status = 'published' AND tv.is_deleted = false`,
-      [cycleId]
-    );
-    if (!cycleRows.length) {
-      return res.status(404).json({ success: false, message: "Tender cycle not found or no longer active" });
-    }
-    const cycle = cycleRows[0];
-
-    if (
-      (cycle.budget_min != null && bid < Number(cycle.budget_min)) ||
-      (cycle.budget_max != null && bid > Number(cycle.budget_max))
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: `Bid must be between ${cycle.budget_min} and ${cycle.budget_max}`,
-      });
-    }
-
-    const { rows: existing } = await pool.query(
-      `SELECT id FROM offers WHERE tender_cycle_id = $1 AND freelancer_id = $2 AND offer_status IN ('pending', 'accepted') LIMIT 1`,
-      [cycleId, freelancerId]
-    );
-    if (existing.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "You have already submitted an offer for this tender",
-      });
-    }
-
-    const { rows: insertRows } = await pool.query(
-      `INSERT INTO offers (freelancer_id, project_id, tender_cycle_id, bid_amount, proposal, offer_status)
-       VALUES ($1, NULL, $2, $3, $4, 'pending')
-       RETURNING *`,
-      [freelancerId, cycleId, bid, proposal || ""]
-    );
-    const newOffer = insertRows[0];
-
-    return res.status(201).json({
-      success: true,
-      message: "Offer sent successfully. Note: rotating tenders cannot be awarded.",
-      offer: newOffer,
-    });
-  } catch (err) {
-    console.error("sendOfferForTenderCycle error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
+  return res.status(410).json({
+    success: false,
+    message:
+      "Legacy tender-cycle offers are deprecated. Tender Vault exposures are display-only and non-actionable.",
+  });
 };
 
 /**
@@ -317,24 +244,11 @@ export const completeOfferAcceptance = async (offerId) => {
       [offer.project_id, offerId]
     );
 
-    const { rows: tenderCheck } = await client.query(
-      `SELECT tv.id, tcy.order_id AS temp_project_id
-       FROM tender_vault_projects tv
-       JOIN tender_vault_cycles tcy ON tcy.tender_id = tv.id
-       WHERE tcy.order_id = $1 AND tv.status = 'active' AND tcy.status = 'active'`,
+    await client.query(
+      `UPDATE projects SET status = 'in_progress', completion_status = 'in_progress', updated_at = NOW()
+       WHERE id = $1 AND is_deleted = false AND project_type = 'bidding'`,
       [offer.project_id]
     );
-
-    if (tenderCheck.length > 0) {
-      const { convertTenderToOrder } = await import("../services/tenderVaultRotation.js");
-      await convertTenderToOrder(tenderCheck[0].id, offer.freelancer_id, offer.id);
-    } else {
-      await client.query(
-        `UPDATE projects SET status = 'in_progress', completion_status = 'in_progress', updated_at = NOW()
-         WHERE id = $1 AND is_deleted = false AND project_type = 'bidding'`,
-        [offer.project_id]
-      );
-    }
 
     let assignmentId = null;
     try {
@@ -646,34 +560,16 @@ export const approveOrRejectOffer = async (req, res) => {
         [offer.project_id, offerId]
       );
 
-      // Check if this is a tender vault project (active tender)
-      // Look for temp_project_id in tender_vault_cycles
-      const { rows: tenderCheck } = await client.query(
-        `SELECT tv.id, tcy.order_id AS temp_project_id
-         FROM tender_vault_projects tv
-         JOIN tender_vault_cycles tcy ON tcy.tender_id = tv.id
-         WHERE tcy.order_id = $1 AND tv.status = 'active' AND tcy.status = 'active'`,
+      await client.query(
+        `UPDATE projects
+            SET status = 'in_progress',
+                completion_status = 'in_progress',
+                updated_at = NOW()
+          WHERE id = $1
+            AND is_deleted = false
+            AND project_type = 'bidding'`,
         [offer.project_id]
       );
-
-      if (tenderCheck.length > 0) {
-        // This is an active tender - convert to order
-        const { convertTenderToOrder } = await import("../services/tenderVaultRotation.js");
-        await convertTenderToOrder(tenderCheck[0].id, offer.freelancer_id, offer.id);
-        console.log(`✅ Tender ${tenderCheck[0].id} converted to order ${offer.project_id} after offer acceptance`);
-      } else {
-        // Normal project - update status
-        await client.query(
-          `UPDATE projects
-              SET status = 'in_progress',
-                  completion_status = 'in_progress',
-                  updated_at = NOW()
-            WHERE id = $1
-              AND is_deleted = false
-              AND project_type = 'bidding'`,
-          [offer.project_id]
-        );
-      }
 
       try {
         await client.query(

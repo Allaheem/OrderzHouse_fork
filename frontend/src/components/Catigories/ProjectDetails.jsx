@@ -23,6 +23,7 @@ const THEME_DARK = "#C2410C";
 
 // ✅ أصغر على الموبايل + أكبر على الشاشات
 const COVER_HEIGHT = "h-[210px] sm:h-[260px] lg:h-[360px]";
+const TV_MOCK_OFFERS_KEY = "tv_mock_offers_v1";
 
 function formatDateSafe(value) {
   if (!value) return "—";
@@ -44,6 +45,31 @@ function firstAttachmentCoverUrl(attachments) {
     return a.url || a.path || a.file_url || null;
   }
   return null;
+}
+
+function readTvMockOffers() {
+  try {
+    if (typeof window === "undefined") return {};
+    const raw = localStorage.getItem(TV_MOCK_OFFERS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function hasTvMockOffer(userId, projectId) {
+  if (!userId || !projectId) return false;
+  const map = readTvMockOffers();
+  return !!map[`${userId}:${projectId}`];
+}
+
+function saveTvMockOffer(userId, projectId) {
+  if (!userId || !projectId || typeof window === "undefined") return;
+  const map = readTvMockOffers();
+  map[`${userId}:${projectId}`] = true;
+  localStorage.setItem(TV_MOCK_OFFERS_KEY, JSON.stringify(map));
 }
 
 function MobileSummaryCard({ item }) {
@@ -189,6 +215,11 @@ export default function ProjectDetails({ mode: propMode }) {
 
   const isClient = roleId === 2;
   const isFreelancer = roleId === 3;
+  const isStaff = roleId === 1;
+  const currentUserId =
+    userData?.id ??
+    userData?.userId ??
+    (typeof window !== "undefined" ? localStorage.getItem("userId") : null);
 
   const isPaymentRoute = id === "payment-cancel" || id === "payment-success";
 
@@ -231,6 +262,18 @@ export default function ProjectDetails({ mode: propMode }) {
 
       const projectType = item?.project_type ?? item?.type;
 
+      const isTenderVault =
+        item?.is_rotated_demo === true ||
+        item?.source_type === "tender_vault" ||
+        item?.is_actionable === false ||
+        (typeof id === "string" &&
+          (String(id).startsWith("TVX-") || String(id).startsWith("TV-")));
+
+      if (isTenderVault) {
+        setHasApplied(hasTvMockOffer(currentUserId, id));
+        return;
+      }
+
       if (projectType === "bidding") {
         const r = await checkMyPendingOfferApi(id, authToken);
         setHasApplied(!!r?.hasPendingOffer);
@@ -242,7 +285,7 @@ export default function ProjectDetails({ mode: propMode }) {
       console.error(e);
     }
   })();
-}, [id, isFreelancer, mode, item, reduxToken]);
+}, [id, isFreelancer, mode, item, reduxToken, currentUserId]);
 
   // =============================== Handlers
   const onApplyToProject = () => {
@@ -267,6 +310,18 @@ export default function ProjectDetails({ mode: propMode }) {
     setShowApplyModal(false);
     try {
       setBusy(true);
+
+      if (isRotatedDemo) {
+        if (applyModalType === "offer" && !offerAmount) {
+          toast.error("Please enter an offer amount.");
+          return;
+        }
+        saveTvMockOffer(currentUserId, id);
+        setHasApplied(true);
+        setOfferAmount("");
+        toast.success("Your offer has been sent successfully!");
+        return;
+      }
 
       let response;
       if (applyModalType === "offer") {
@@ -333,13 +388,17 @@ export default function ProjectDetails({ mode: propMode }) {
     item.cover ||
     firstAttachmentCoverUrl(item.attachments);
   const projectType = item?.project_type ?? item?.type;
-  const isRotatedDemo = item?.is_rotated_demo === true || (typeof id === "string" && String(id).startsWith("TV-"));
+  const isRotatedDemo =
+    item?.is_rotated_demo === true ||
+    item?.source_type === "tender_vault" ||
+    item?.is_actionable === false ||
+    (typeof id === "string" && (String(id).startsWith("TVX-") || String(id).startsWith("TV-")));
 
   let canAccept = true;
-  if (isRotatedDemo || (isFreelancer && hasApplied)) canAccept = false;
+  if (isFreelancer && hasApplied) canAccept = false;
 
-  // ✅ acceptLabel - only for freelancers; hide for promotional/demo listings
-  const acceptLabel = isFreelancer && !isRotatedDemo
+  // Keep action layout consistent with real projects for freelancers.
+  const acceptLabel = isFreelancer
     ? hasApplied
       ? "Already Applied"
       : projectType === "bidding"
@@ -399,14 +458,14 @@ export default function ProjectDetails({ mode: propMode }) {
     >
       {title}
     </h1>
-    {isRotatedDemo && (
-      <p className="mt-2 text-sm text-amber-700 font-medium">
-        This listing is promotional and cannot be awarded.
-      </p>
-    )}
   </div>
 
   <div className="flex justify-end">
+    {isRotatedDemo && isStaff && (
+      <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 mr-2">
+        Internal: Tender Vault
+      </span>
+    )}
     {readOnly && (
       <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
         Read-only ({roleLabel})
@@ -519,7 +578,7 @@ export default function ProjectDetails({ mode: propMode }) {
               isClient={isClient}
               isFreelancer={isFreelancer}
               busy={busy}
-              onApplyToProject={isFreelancer && !isRotatedDemo ? onApplyToProject : undefined}
+              onApplyToProject={isFreelancer ? onApplyToProject : undefined}
               acceptLabel={acceptLabel}
               acceptClasses={acceptClasses}
               // لو عندك payment فعلاً داخل ProjectInfoCard اتركها، وإلا احذفها من ProjectInfoCard نفسه

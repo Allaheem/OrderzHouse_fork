@@ -9,6 +9,8 @@ import {
   updateTenderVaultProjectStatus,
   deleteTenderVaultProject,
   getRotationStatus,
+  testRunTenderVaultRotation,
+  testExpireCurrentTenderVaultBatch,
 } from "../controller/tenderVault/tenderVault.js";
 import pool from "../models/db.js";
 
@@ -60,6 +62,8 @@ router.use(async (req, res, next) => {
 
 router.get("/projects", getTenderVaultProjects);
 router.get("/rotation-status", getRotationStatus);
+router.post("/admin/test-run-rotation", testRunTenderVaultRotation);
+router.post("/admin/test-expire-current-batch", testExpireCurrentTenderVaultBatch);
 router.get("/projects/:id", getTenderVaultProject);
 router.post("/projects", createTenderVaultProject);
 router.put("/projects/:id", updateTenderVaultProject);

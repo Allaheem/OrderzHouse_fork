@@ -3,7 +3,6 @@ import { authentication } from "../middleware/authentication.js";
 import requireVerifiedWithSubscription from "../middleware/requireVerifiedWithSubscription.js";
 import {
   sendOffer,
-  sendOfferForTenderCycle,
   getMyOffersForProject,
   getOffersForMyProjects,
   getOffersForProject,
@@ -25,14 +24,6 @@ offersRouter.get(
   authentication,
   requireVerifiedWithSubscription,
   getAllProjectForOffer
-);
-
-// Send an offer for a rotating tender (by cycle_id). Must be before /:projectId/offers.
-offersRouter.post(
-  "/tender-rotation/:cycleId",
-  authentication,
-  requireVerifiedWithSubscription,
-  sendOfferForTenderCycle
 );
 
 // Send an offer for a project

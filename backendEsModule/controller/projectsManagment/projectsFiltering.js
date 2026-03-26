@@ -1,4 +1,8 @@
 import pool from "../../models/db.js";
+import {
+  fetchActiveExposedTenderVaultProjects,
+  fetchExposedTenderByPublicId,
+} from "../../services/tenderVaultExposureService.js";
 
 /**
  * Shared filter based on type/status
@@ -18,189 +22,6 @@ const buildStatusCondition = () => {
     )
   `;
 };
-
-/**
- * Helper: Fetch active rotation cycles joined with tender_vault_projects and map to project shape.
- * Condition: cycle.status = 'active', display_end_time > NOW(), tender.status = 'published', tender.is_deleted = false.
- * Returns rows with source_type = 'tender_rotation', cycle_id, tender_id for bidding/guards.
- * Returns empty array if tables don't exist (graceful degradation).
- */
-async function fetchActiveRotationTenders(filters) {
-  const { categoryId, subCategoryId, subSubCategoryId, search } = filters;
-
-  try {
-    let whereConditions = `tcy.status = 'active' AND tcy.display_end_time > NOW() AND tv.status = 'published' AND tv.is_deleted = false`;
-    const params = [];
-    let paramIndex = 1;
-
-    if (categoryId) {
-      whereConditions += ` AND tv.category_id = $${paramIndex}`;
-      params.push(categoryId);
-      paramIndex++;
-    }
-    if (subCategoryId) {
-      whereConditions += ` AND (tv.metadata->>'sub_category_id')::int = $${paramIndex}`;
-      params.push(subCategoryId);
-      paramIndex++;
-    }
-    if (subSubCategoryId) {
-      whereConditions += ` AND (tv.metadata->>'sub_sub_category_id')::int = $${paramIndex}`;
-      params.push(subSubCategoryId);
-      paramIndex++;
-    }
-    if (search && search.trim()) {
-      whereConditions += ` AND (tv.title ILIKE $${paramIndex} OR tv.description ILIKE $${paramIndex})`;
-      params.push(`%${search.trim()}%`);
-      paramIndex++;
-    }
-
-    const query = `
-      SELECT
-        tcy.id AS cycle_id,
-        tv.id AS tender_id,
-        tv.title,
-        tv.description,
-        tv.category_id,
-        (tv.metadata->>'sub_category_id')::int AS sub_category_id,
-        (tv.metadata->>'sub_sub_category_id')::int AS sub_sub_category_id,
-        tv.budget_min,
-        tv.budget_max,
-        tv.currency,
-        tv.duration_value,
-        tv.duration_unit,
-        tv.country,
-        tv.attachments,
-        tv.metadata,
-        tv.created_at,
-        tv.updated_at,
-        tv.created_by AS user_id,
-        'bidding' AS project_type,
-        'bidding' AS status,
-        'not_started' AS completion_status,
-        false AS is_deleted,
-        NULL AS budget,
-        NULL AS hourly_rate,
-        NULL AS preferred_skills,
-        NULL AS cover_pic,
-        CASE WHEN tv.duration_unit = 'days' THEN tv.duration_value ELSE NULL END AS duration_days,
-        CASE WHEN tv.duration_unit = 'hours' THEN tv.duration_value ELSE NULL END AS duration_hours,
-        COALESCE(tv.duration_unit, 'days') AS duration_type,
-        u.username AS client_username,
-        u.first_name,
-        u.last_name,
-        u.profile_pic_url,
-        c.name AS category_name,
-        sc.name AS sub_category_name,
-        ssc.name AS sub_sub_category_name,
-        'tender_rotation' AS source_type,
-        true AS _is_tender_vault
-      FROM tender_vault_cycles tcy
-      JOIN tender_vault_projects tv ON tv.id = tcy.tender_id
-      JOIN users u ON u.id = tv.created_by
-      LEFT JOIN categories c ON c.id = tv.category_id
-      LEFT JOIN sub_categories sc ON sc.id = (tv.metadata->>'sub_category_id')::int
-      LEFT JOIN sub_sub_categories ssc ON ssc.id = (tv.metadata->>'sub_sub_category_id')::int
-      WHERE ${whereConditions}
-    `;
-
-    const { rows } = await pool.query(query, params);
-    return rows;
-  } catch (err) {
-    if (err.code === "42P01" || err.code === "42703") {
-      console.warn("⚠️  tender_vault_cycles/tender_vault_projects missing. Skipping rotation tenders.");
-      return [];
-    }
-    console.error("Error fetching active rotation tenders:", err);
-    return [];
-  }
-}
-
-/**
- * Fetch pool rotation tenders (rotation_visible_until > NOW(), no cycles).
- * Returns rows with id = client_public_id (string), is_rotated_demo = true.
- */
-async function fetchPoolRotationTenders(filters) {
-  const { categoryId, subCategoryId, subSubCategoryId, search } = filters;
-  try {
-    let whereConditions = `tv.rotation_visible_until IS NOT NULL AND tv.rotation_visible_until > NOW() AND tv.status = 'published' AND tv.is_deleted = false`;
-    const params = [];
-    let paramIndex = 1;
-    if (categoryId) {
-      whereConditions += ` AND tv.category_id = $${paramIndex}`;
-      params.push(categoryId);
-      paramIndex++;
-    }
-    if (subCategoryId) {
-      whereConditions += ` AND (tv.metadata->>'sub_category_id')::int = $${paramIndex}`;
-      params.push(subCategoryId);
-      paramIndex++;
-    }
-    if (subSubCategoryId) {
-      whereConditions += ` AND (tv.metadata->>'sub_sub_category_id')::int = $${paramIndex}`;
-      params.push(subSubCategoryId);
-      paramIndex++;
-    }
-    if (search && search.trim()) {
-      whereConditions += ` AND (tv.title ILIKE $${paramIndex} OR tv.description ILIKE $${paramIndex})`;
-      params.push(`%${search.trim()}%`);
-      paramIndex++;
-    }
-    const query = `
-      SELECT
-        tv.client_public_id AS id,
-        tv.id AS tender_id,
-        tv.title,
-        tv.description,
-        tv.category_id,
-        (tv.metadata->>'sub_category_id')::int AS sub_category_id,
-        (tv.metadata->>'sub_sub_category_id')::int AS sub_sub_category_id,
-        tv.budget_min,
-        tv.budget_max,
-        tv.currency,
-        tv.duration,
-        tv.attachments,
-        tv.metadata,
-        tv.created_at,
-        tv.updated_at,
-        tv.created_by AS user_id,
-        'bidding' AS project_type,
-        'bidding' AS status,
-        'not_started' AS completion_status,
-        false AS is_deleted,
-        NULL AS budget,
-        NULL AS hourly_rate,
-        NULL AS preferred_skills,
-        NULL AS cover_pic,
-        tv.duration AS duration_days,
-        NULL::int AS duration_hours,
-        'days' AS duration_type,
-        u.username AS client_username,
-        u.first_name,
-        u.last_name,
-        u.profile_pic_url,
-        c.name AS category_name,
-        sc.name AS sub_category_name,
-        ssc.name AS sub_sub_category_name,
-        'tender_pool_rotation' AS source_type,
-        true AS _is_tender_vault,
-        true AS is_rotated_demo
-      FROM tender_vault_projects tv
-      JOIN users u ON u.id = tv.created_by
-      LEFT JOIN categories c ON c.id = tv.category_id
-      LEFT JOIN sub_categories sc ON sc.id = (tv.metadata->>'sub_category_id')::int
-      LEFT JOIN sub_sub_categories ssc ON ssc.id = (tv.metadata->>'sub_sub_category_id')::int
-      WHERE ${whereConditions}
-    `;
-    const { rows } = await pool.query(query, params);
-    return rows;
-  } catch (err) {
-    if (err.code === "42P01" || err.code === "42703") {
-      return [];
-    }
-    console.error("Error fetching pool rotation tenders:", err);
-    return [];
-  }
-}
 
 /* ===================================================
     AUTHENTICATED ROUTES (Require Token)
@@ -298,18 +119,12 @@ export const getProjectsByCategory = async (req, res) => {
 
     const { rows: projectRows } = await pool.query(query, params);
 
-    // Fetch published tenders (cycles + pool rotation)
-    const tenderRows = await fetchActiveRotationTenders({
+    // Fetch currently exposed tender vault rows
+    const tenderRows = await fetchActiveExposedTenderVaultProjects({
       categoryId: (category_id && category_id !== "all") ? category_id : null,
       search,
     });
-    const poolRows = await fetchPoolRotationTenders({
-      categoryId: (category_id && category_id !== "all") ? category_id : null,
-      search,
-    });
-    // Mark cycle tenders as demo for UI
-    const tenderRowsWithDemo = tenderRows.map((r) => ({ ...r, is_rotated_demo: true }));
-    const allRows = [...projectRows, ...tenderRowsWithDemo, ...poolRows];
+    const allRows = [...projectRows, ...tenderRows];
     
     // Manual sorting (since UNION ALL doesn't preserve ORDER BY across different sources)
     if (sortBy) {
@@ -424,16 +239,11 @@ export const getProjectsBySubCategory = async (req, res) => {
       params
     );
 
-    const tenderRows = await fetchActiveRotationTenders({
+    const tenderRows = await fetchActiveExposedTenderVaultProjects({
       subCategoryId: sub_category_id,
       search,
     });
-    const poolRows = await fetchPoolRotationTenders({
-      subCategoryId: sub_category_id,
-      search,
-    });
-    const tenderRowsWithDemo = tenderRows.map((r) => ({ ...r, is_rotated_demo: true }));
-    const allRows = [...projectRows, ...tenderRowsWithDemo, ...poolRows];
+    const allRows = [...projectRows, ...tenderRows];
 
     if (sortBy) {
       allRows.sort((a, b) => {
@@ -547,16 +357,11 @@ export const getProjectsBySubSubCategory = async (req, res) => {
       params
     );
 
-    const tenderRows = await fetchActiveRotationTenders({
+    const tenderRows = await fetchActiveExposedTenderVaultProjects({
       subSubCategoryId: sub_sub_category_id,
       search,
     });
-    const poolRows = await fetchPoolRotationTenders({
-      subSubCategoryId: sub_sub_category_id,
-      search,
-    });
-    const tenderRowsWithDemo = tenderRows.map((r) => ({ ...r, is_rotated_demo: true }));
-    const allRows = [...projectRows, ...tenderRowsWithDemo, ...poolRows];
+    const allRows = [...projectRows, ...tenderRows];
     
     if (sortBy) {
       allRows.sort((a, b) => {
@@ -714,16 +519,11 @@ export const getProjectsByCategoryId = async (req, res) => {
     const { rows: projectRows } = await pool.query(query, params);
 
     // Fetch published tenders for the same category (or all if "all" selected)
-    const tenderRows = await fetchActiveRotationTenders({
+    const tenderRows = await fetchActiveExposedTenderVaultProjects({
       categoryId: isAllCategory ? null : categoryId,
       search,
     });
-    const poolRows = await fetchPoolRotationTenders({
-      categoryId: isAllCategory ? null : categoryId,
-      search,
-    });
-    const tenderRowsWithDemo = tenderRows.map((r) => ({ ...r, is_rotated_demo: true }));
-    const allRows = [...projectRows, ...tenderRowsWithDemo, ...poolRows];
+    const allRows = [...projectRows, ...tenderRows];
     if (sortBy) {
       allRows.sort((a, b) => {
         switch (sortBy.toLowerCase()) {
@@ -746,7 +546,7 @@ export const getProjectsByCategoryId = async (req, res) => {
     }
 
     // Log to confirm backend is returning data
-    console.log(`✅ [getProjectsByCategoryId] Returned projects: ${allRows.length} (${projectRows.length} normal + ${tenderRows.length} tenders) for categoryId: ${categoryId}`);
+    console.log(`✅ [getProjectsByCategoryId] Returned projects: ${allRows.length} (${projectRows.length} real + ${tenderRows.length} tender_vault exposures) for categoryId: ${categoryId}`);
 
     return res.json({ success: true, projects: allRows });
   } catch (error) {
@@ -832,16 +632,11 @@ export const getProjectsBySubCategoryId = async (req, res) => {
     const { rows: projectRows } = await pool.query(query, params);
 
     // Fetch published tenders for the same sub-category
-    const tenderRows = await fetchActiveRotationTenders({
+    const tenderRows = await fetchActiveExposedTenderVaultProjects({
       subCategoryId,
       search,
     });
-    const poolRows = await fetchPoolRotationTenders({
-      subCategoryId,
-      search,
-    });
-    const tenderRowsWithDemo = tenderRows.map((r) => ({ ...r, is_rotated_demo: true }));
-    const allRows = [...projectRows, ...tenderRowsWithDemo, ...poolRows];
+    const allRows = [...projectRows, ...tenderRows];
     if (sortBy) {
       allRows.sort((a, b) => {
         switch (sortBy.toLowerCase()) {
@@ -949,16 +744,11 @@ export const getProjectsBySubSubCategoryId = async (req, res) => {
 
     const { rows: projectRows } = await pool.query(query, params);
 
-    const tenderRows = await fetchActiveRotationTenders({
+    const tenderRows = await fetchActiveExposedTenderVaultProjects({
       subSubCategoryId,
       search,
     });
-    const poolRows = await fetchPoolRotationTenders({
-      subSubCategoryId,
-      search,
-    });
-    const tenderRowsWithDemo = tenderRows.map((r) => ({ ...r, is_rotated_demo: true }));
-    const allRows = [...projectRows, ...tenderRowsWithDemo, ...poolRows];
+    const allRows = [...projectRows, ...tenderRows];
 
     // Manual sorting
     if (sortBy) {
@@ -1028,86 +818,10 @@ export const getProjectById = async (req, res) => {
       return res.status(200).json({ success: true, project });
     }
 
-    // If not found, try active rotation cycle by cycle_id (id may be cycle id from listing)
-    let rotationRows = [];
-    try {
-      const { rows } = await pool.query(
-        `SELECT
-           tcy.id AS cycle_id,
-           tv.id AS tender_id,
-           tv.title, tv.description, tv.category_id,
-           (tv.metadata->>'sub_category_id')::int AS sub_category_id,
-           (tv.metadata->>'sub_sub_category_id')::int AS sub_sub_category_id,
-           tv.budget_min, tv.budget_max, tv.currency, tv.duration_value, tv.duration_unit,
-           tv.country, tv.attachments, tv.metadata, tv.created_at, tv.updated_at,
-           tv.created_by AS user_id,
-           'bidding' AS project_type, 'bidding' AS status, 'not_started' AS completion_status,
-           false AS is_deleted, NULL AS budget, NULL AS hourly_rate, NULL AS preferred_skills, NULL AS cover_pic,
-           CASE WHEN tv.duration_unit = 'days' THEN tv.duration_value ELSE NULL END AS duration_days,
-           CASE WHEN tv.duration_unit = 'hours' THEN tv.duration_value ELSE NULL END AS duration_hours,
-           COALESCE(tv.duration_unit, 'days') AS duration_type,
-           u.username AS client_username, u.email AS client_email, u.first_name, u.last_name, u.profile_pic_url,
-           COALESCE(NULLIF(TRIM(u.first_name || ' ' || u.last_name), ''), u.username, 'Anonymous') AS client_fullname,
-           c.name AS category_name, sc.name AS sub_category_name, ssc.name AS sub_sub_category_name,
-           'tender_rotation' AS source_type, true AS _is_tender_vault
-         FROM tender_vault_cycles tcy
-         JOIN tender_vault_projects tv ON tv.id = tcy.tender_id
-         LEFT JOIN users u ON tv.created_by = u.id
-         LEFT JOIN categories c ON tv.category_id = c.id
-         LEFT JOIN sub_categories sc ON sc.id = (tv.metadata->>'sub_category_id')::int
-         LEFT JOIN sub_sub_categories ssc ON ssc.id = (tv.metadata->>'sub_sub_category_id')::int
-         WHERE tcy.id = $1 AND tcy.status = 'active' AND tcy.display_end_time > NOW()
-           AND tv.status = 'published' AND tv.is_deleted = false`,
-        [projectId]
-      );
-      rotationRows = rows;
-    } catch (err) {
-      if (err.code === "42P01" || err.code === "42703") {
-        return res.status(404).json({ success: false, message: "Project not found" });
-      }
-      throw err;
-    }
-
-    if (rotationRows.length > 0) {
-      const proj = rotationRows[0];
-      return res.status(200).json({
-        success: true,
-        project: { ...proj, is_rotated_demo: true },
-      });
-    }
-
-    // Pool rotation: id may be client_public_id (e.g. TV-xxx)
-    const poolId = String(projectId).trim();
-    if (poolId.startsWith("TV-")) {
-      const { rows: poolRows } = await pool.query(
-        `SELECT
-           tv.client_public_id AS id,
-           tv.id AS tender_id,
-           tv.title, tv.description, tv.category_id,
-           (tv.metadata->>'sub_category_id')::int AS sub_category_id,
-           (tv.metadata->>'sub_sub_category_id')::int AS sub_sub_category_id,
-           tv.budget_min, tv.budget_max, tv.currency, tv.duration,
-           tv.attachments, tv.metadata, tv.created_at, tv.updated_at,
-           tv.created_by AS user_id,
-           'bidding' AS project_type, 'bidding' AS status, 'not_started' AS completion_status,
-           false AS is_deleted, NULL AS budget, NULL AS hourly_rate, NULL AS preferred_skills, NULL AS cover_pic,
-           tv.duration AS duration_days, NULL::int AS duration_hours, 'days' AS duration_type,
-           u.username AS client_username, u.email AS client_email, u.first_name, u.last_name, u.profile_pic_url,
-           COALESCE(NULLIF(TRIM(u.first_name || ' ' || u.last_name), ''), u.username, 'Anonymous') AS client_fullname,
-           c.name AS category_name, sc.name AS sub_category_name, ssc.name AS sub_sub_category_name,
-           'tender_pool_rotation' AS source_type, true AS _is_tender_vault, true AS is_rotated_demo
-         FROM tender_vault_projects tv
-         LEFT JOIN users u ON tv.created_by = u.id
-         LEFT JOIN categories c ON tv.category_id = c.id
-         LEFT JOIN sub_categories sc ON sc.id = (tv.metadata->>'sub_category_id')::int
-         LEFT JOIN sub_sub_categories ssc ON ssc.id = (tv.metadata->>'sub_sub_category_id')::int
-         WHERE tv.client_public_id = $1 AND tv.rotation_visible_until > NOW()
-           AND tv.status = 'published' AND tv.is_deleted = false`,
-        [poolId]
-      );
-      if (poolRows.length > 0) {
-        return res.status(200).json({ success: true, project: poolRows[0] });
-      }
+    // Exposed tender-vault item (public id format: TVX-<exposure_id>)
+    const exposedTender = await fetchExposedTenderByPublicId(projectId);
+    if (exposedTender) {
+      return res.status(200).json({ success: true, project: exposedTender });
     }
 
     return res

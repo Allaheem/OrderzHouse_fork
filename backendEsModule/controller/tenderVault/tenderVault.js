@@ -1,5 +1,9 @@
 import pool from "../../models/db.js";
-import { countPublishedTenders } from "../../services/tenderPoolRotation.js";
+import {
+  getTenderVaultRotationDashboardSummary,
+  runTenderVaultExposureRotation,
+  countCurrentlyVisibleExposures,
+} from "../../services/tenderVaultExposureService.js";
 
 /**
  * Get all tender vault projects with filters
@@ -11,6 +15,10 @@ export const getTenderVaultProjects = async (req, res) => {
     const { status, q, page = 1, limit = 20 } = req.query;
 
     let query = `
+      WITH cycle_ref AS (
+        SELECT COALESCE(MAX(cycle_number), 1)::int AS current_cycle
+        FROM tender_vault_rotation_batches
+      )
       SELECT 
         tv.id,
         tv.title,
@@ -23,6 +31,26 @@ export const getTenderVaultProjects = async (req, res) => {
         tv.attachments,
         tv.metadata,
         tv.status,
+        (tv.status = 'published' AND tv.is_deleted = false) AS eligible_for_rotation,
+        EXISTS (
+          SELECT 1
+          FROM tender_vault_exposures tve
+          WHERE tve.tender_vault_project_id = tv.id
+            AND tve.is_active = true
+            AND tve.visible_from <= NOW()
+            AND tve.visible_until > NOW()
+        ) AS currently_visible,
+        EXISTS (
+          SELECT 1
+          FROM tender_vault_exposures tve2
+          JOIN tender_vault_rotation_batches tvb2 ON tvb2.id = tve2.batch_id
+          JOIN cycle_ref cr ON cr.current_cycle = tvb2.cycle_number
+          WHERE tve2.tender_vault_project_id = tv.id
+        ) AS shown_in_current_cycle,
+        COALESCE(tv.exposure_count, 0) AS exposure_count,
+        tv.last_exposed_at,
+        tv.last_exposure_ended_at,
+        tv.last_shown_cycle_number,
         tv.created_at,
         tv.updated_at,
         c.name AS category_name
@@ -169,10 +197,18 @@ export const getTenderVaultProject = async (req, res) => {
         tv.metadata,
         tv.created_at,
         tv.updated_at,
-        tv.usage_count,
-        tv.max_usage,
-        tv.temporary_archived_until,
-        tv.last_displayed_at,
+        COALESCE(tv.exposure_count, 0) AS exposure_count,
+        tv.last_exposed_at,
+        tv.last_exposure_ended_at,
+        tv.last_shown_cycle_number,
+        EXISTS (
+          SELECT 1
+          FROM tender_vault_exposures tve
+          WHERE tve.tender_vault_project_id = tv.id
+            AND tve.is_active = true
+            AND tve.visible_from <= NOW()
+            AND tve.visible_until > NOW()
+        ) AS currently_visible,
         c.name AS category_name,
         u.first_name AS creator_first_name,
         u.last_name AS creator_last_name,
@@ -182,22 +218,10 @@ export const getTenderVaultProject = async (req, res) => {
           NULLIF(TRIM(u.first_name || ' ' || u.last_name), ''),
           u.username,
           'Unknown'
-        ) AS creator_name,
-        tcy.cycle_number,
-        tcy.client_public_id,
-        tcy.status AS cycle_status,
-        tcy.display_start_time,
-        tcy.display_end_time
+        ) AS creator_name
       FROM tender_vault_projects tv
       LEFT JOIN categories c ON c.id = tv.category_id
       LEFT JOIN users u ON u.id = tv.created_by
-      LEFT JOIN LATERAL (
-        SELECT cycle_number, client_public_id, display_start_time, display_end_time, status
-        FROM tender_vault_cycles
-        WHERE tender_id = tv.id AND status = 'active'
-        ORDER BY cycle_number DESC
-        LIMIT 1
-      ) tcy ON true
       WHERE tv.id = $1 AND tv.created_by = $2 AND tv.is_deleted = false`,
       [id, userId]
     );
@@ -634,20 +658,139 @@ export const deleteTenderVaultProject = async (req, res) => {
  */
 export const getRotationStatus = async (req, res) => {
   try {
-    const totalPublishedTenders = await countPublishedTenders();
-    const minimumRequired = 300;
-    const rotationActive = totalPublishedTenders >= minimumRequired;
+    console.log("[tender-vault] rotation-status hit", {
+      userId: req.token?.userId || null,
+      role: req.token?.role || req.token?.roleId || null,
+      url: req.originalUrl,
+    });
+    const summary = await getTenderVaultRotationDashboardSummary();
     return res.json({
       success: true,
-      totalPublishedTenders,
-      minimumRequired,
-      rotationActive,
+      ...summary,
     });
   } catch (err) {
-    console.error("getRotationStatus error:", err);
+    console.error("getRotationStatus error:", err?.stack || err);
     return res.status(500).json({
       success: false,
-      message: "Failed to get rotation status",
+      message: "Failed to compute rotation status",
+      ...(process.env.NODE_ENV !== "production" && err?.message
+        ? { error: err.message }
+        : {}),
     });
+  }
+};
+
+const canUseTestControls = (req) => {
+  const isDev = process.env.NODE_ENV !== "production";
+  const role = Number(req.token?.role || req.token?.roleId || 0);
+  const isAdmin = role === 1;
+  const enabledByEnv = String(process.env.ENABLE_TENDER_VAULT_TEST_ENDPOINTS || "").toLowerCase() === "true";
+  return isDev || isAdmin || enabledByEnv;
+};
+
+export const testRunTenderVaultRotation = async (req, res) => {
+  try {
+    if (!canUseTestControls(req)) {
+      return res.status(403).json({
+        success: false,
+        message: "Tender Vault test controls are disabled.",
+      });
+    }
+
+    const result = await runTenderVaultExposureRotation();
+    const summary = await getTenderVaultRotationDashboardSummary();
+
+    return res.json({
+      success: true,
+      ran: !result.skipped && Number(result.activatedCount || 0) > 0,
+      skipped: !!result.skipped,
+      reason: result.skipped
+        ? (result.eligibleCount < 300
+            ? `Minimum threshold not reached (${result.eligibleCount}/300).`
+            : "No eligible unseen tenders were selected.")
+        : null,
+      batch_id: result.batchId ?? null,
+      selected_count: result.activatedCount ?? 0,
+      cycle_number: result.cycleNumber ?? summary.current_cycle ?? null,
+      visible_from: summary.active_batch_visible_from ?? null,
+      visible_until: summary.active_batch_visible_until ?? null,
+      active_visible_count_now: summary.visible_now_count ?? 0,
+      rotation_result: result,
+    });
+  } catch (err) {
+    console.error("testRunTenderVaultRotation error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to run Tender Vault rotation test.",
+    });
+  }
+};
+
+export const testExpireCurrentTenderVaultBatch = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    if (!canUseTestControls(req)) {
+      return res.status(403).json({
+        success: false,
+        message: "Tender Vault test controls are disabled.",
+      });
+    }
+
+    await client.query("BEGIN");
+
+    const { rows: activeBatchRows } = await client.query(
+      `SELECT id, visible_from, visible_until, selected_count, cycle_number
+       FROM tender_vault_rotation_batches
+       WHERE visible_from <= NOW() AND visible_until > NOW()
+       ORDER BY id DESC
+       LIMIT 1`
+    );
+
+    if (!activeBatchRows.length) {
+      await client.query("COMMIT");
+      const visibleNow = await countCurrentlyVisibleExposures();
+      return res.json({
+        success: true,
+        expired: false,
+        message: "No active batch to expire.",
+        active_visible_count_now: visibleNow,
+      });
+    }
+
+    const batch = activeBatchRows[0];
+    const { rowCount: expiredExposureCount } = await client.query(
+      `UPDATE tender_vault_exposures
+       SET is_active = false, visible_until = NOW()
+       WHERE batch_id = $1 AND is_active = true`,
+      [batch.id]
+    );
+
+    await client.query(
+      `UPDATE tender_vault_rotation_batches
+       SET visible_until = NOW()
+       WHERE id = $1`,
+      [batch.id]
+    );
+
+    await client.query("COMMIT");
+    const visibleNow = await countCurrentlyVisibleExposures();
+
+    return res.json({
+      success: true,
+      expired: true,
+      batch_id: batch.id,
+      cycle_number: batch.cycle_number,
+      expired_exposure_count: expiredExposureCount || 0,
+      active_visible_count_now: visibleNow,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    console.error("testExpireCurrentTenderVaultBatch error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to expire current Tender Vault batch.",
+    });
+  } finally {
+    client.release();
   }
 };

@@ -8,10 +8,11 @@ import {
   FileText,
   Search,
   Plus,
-  Loader2,
   Edit,
   Trash2,
-  X,
+  Info,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import TenderDetailsModal from "./components/TenderDetailsModal.jsx";
 
@@ -57,6 +58,10 @@ export default function TenderVaultManager() {
   const [selectedTender, setSelectedTender] = useState(null);
   const [updating, setUpdating] = useState(false);
   const [rotationStatus, setRotationStatus] = useState(null); // { totalPublishedTenders, minimumRequired, rotationActive }
+  const [showRotationHelp, setShowRotationHelp] = useState(false);
+  const isDevOrAdmin =
+    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.DEV) ||
+    Number(userData?.role_id) === 1;
 
   // Pagination
   const PAGE_SIZE = 10;
@@ -74,16 +79,36 @@ export default function TenderVaultManager() {
     fetchTenders();
   }, [activeTab, searchQuery, page]);
 
+  const fetchRotationStatus = async () => {
+    if (!token) return;
+    try {
+      const res = await API.get("/tender-vault/rotation-status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data?.success) {
+        setRotationStatus(res.data);
+      }
+    } catch (_) {}
+  };
+
   useEffect(() => {
     if (!token) return;
-    API.get("/tender-vault/rotation-status", { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        if (res.data?.success && res.data.totalPublishedTenders != null) {
-          setRotationStatus(res.data);
-        }
-      })
-      .catch(() => {});
+    fetchRotationStatus();
   }, [token]);
+
+  const formatDateTime = (value) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString();
+  };
+
+  const formatDurationFromSeconds = (seconds) => {
+    if (seconds == null || seconds <= 0) return "Expired";
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hrs}h ${mins}m`;
+  };
 
   const fetchTenders = async () => {
     try {
@@ -183,6 +208,64 @@ export default function TenderVaultManager() {
     handleStatusChange(tender, "archived");
   };
 
+  const refreshVaultData = async () => {
+    await Promise.all([fetchTenders(), fetchRotationStatus()]);
+  };
+
+  const runRotationTest = async () => {
+    try {
+      setUpdating(true);
+      const res = await API.post(
+        "/api/admin/tender-vault/test-run-rotation",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = res.data || {};
+      if (data.success) {
+        if (data.skipped) {
+          toast.error(data.message || data.reason || "Rotation skipped.");
+        } else {
+          toast.success(
+            `Rotation test complete. Batch #${data.batch_id || "—"} selected ${data.selected_count || 0}.`
+          );
+        }
+        await refreshVaultData();
+      } else {
+        toast.error(data.message || "Failed to run rotation test.");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to run rotation test.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const expireCurrentBatchTest = async () => {
+    try {
+      setUpdating(true);
+      const res = await API.post(
+        "/api/admin/tender-vault/test-expire-current-batch",
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = res.data || {};
+      if (data.success) {
+        toast.success(
+          data.expired
+            ? `Expired batch #${data.batch_id}.`
+            : data.message || "No active batch."
+        );
+        await refreshVaultData();
+      } else {
+        toast.error(data.message || "Failed to expire current batch.");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to expire current batch.");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const jdInt = (value) => {
     if (value == null || value === "") return null;
     const n = Math.round(Number(value));
@@ -226,13 +309,6 @@ export default function TenderVaultManager() {
   };
 
   // Format duration (single column: integer days)
-  const formatDuration = (tender) => {
-    if (tender.duration != null && tender.duration !== "") {
-      return `${tender.duration} days`;
-    }
-    return "—";
-  };
-
   // Get status badge class
   const getStatusBadgeClass = (status) => {
     if (!status) return "bg-slate-100 text-slate-800";
@@ -266,7 +342,7 @@ export default function TenderVaultManager() {
   // Loading skeleton rows
   const SkeletonRow = () => (
     <tr>
-      {[...Array(7)].map((_, i) => (
+      {[...Array(8)].map((_, i) => (
         <td key={i} className="px-4 py-3">
           <div className="h-4 bg-slate-200 rounded animate-pulse" />
         </td>
@@ -280,18 +356,68 @@ export default function TenderVaultManager() {
         <ProjectsHero
           eyebrow="CLIENT"
           title="Tender Vault"
-          subtitle="Manage your tender vault projects: store, publish, and archive tenders."
+          subtitle="Manage stored, published, and rotating tenders."
         />
 
-        {/* Vault rotation notice: minimum 300 published tenders */}
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          <span className="font-medium">⚠️ Vault rotation activates only after you have at least 300 published tenders.</span>
-          {rotationStatus != null && (
-            <span className="mt-1 block text-amber-700">
-              You currently have {rotationStatus.totalPublishedTenders} published.
-            </span>
-          )}
-        </div>
+        {rotationStatus && (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="text-xs text-slate-500">Stored</div>
+                <div className="text-xl font-bold text-slate-900">{rotationStatus.stored_count ?? 0}</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="text-xs text-slate-500">Published</div>
+                <div className="text-xl font-bold text-slate-900">{rotationStatus.published_count ?? 0}</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="text-xs text-slate-500">Eligible</div>
+                <div className="text-xl font-bold text-slate-900">{rotationStatus.eligible_count ?? 0}</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white p-3">
+                <div className="text-xs text-slate-500">Visible Now</div>
+                <div className="text-xl font-bold text-slate-900">{rotationStatus.visible_now_count ?? 0}</div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex h-2 w-2 rounded-full ${rotationStatus.rotation_active ? "bg-emerald-500" : "bg-amber-500"}`} />
+                  <span className="text-sm font-semibold text-slate-900">
+                    {rotationStatus.rotation_active ? "Rotation Active" : "Rotation Inactive"}
+                  </span>
+                  {!rotationStatus.rotation_active && (
+                    <span className="text-xs text-slate-500">Needs {rotationStatus.minimum_threshold} eligible</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowRotationHelp((v) => !v)}
+                  className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900"
+                >
+                  <Info className="w-4 h-4" />
+                  How it works
+                  {showRotationHelp ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+                <div className="rounded-lg bg-slate-50 px-3 py-2"><span className="text-slate-500">Cycle</span><div className="font-semibold text-slate-900">#{rotationStatus.current_cycle ?? 1}</div></div>
+                <div className="rounded-lg bg-slate-50 px-3 py-2"><span className="text-slate-500">Visible</span><div className="font-semibold text-slate-900">{rotationStatus.visible_now_count ?? 0}</div></div>
+                <div className="rounded-lg bg-slate-50 px-3 py-2"><span className="text-slate-500">Ends in</span><div className="font-semibold text-slate-900">{formatDurationFromSeconds(rotationStatus.active_batch_remaining_seconds)}</div></div>
+                <div className="rounded-lg bg-slate-50 px-3 py-2"><span className="text-slate-500">Progress</span><div className="font-semibold text-slate-900">{rotationStatus.cycle_completion_percent ?? 0}%</div></div>
+                <div className="rounded-lg bg-slate-50 px-3 py-2"><span className="text-slate-500">Next run</span><div className="font-semibold text-slate-900">{formatDateTime(rotationStatus.next_rotation_estimate)}</div></div>
+              </div>
+
+              {showRotationHelp && (
+                <div className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-600 leading-5">
+                  Published tenders join the eligible pool. Every 12h, 50-70 tenders are exposed for 12h. No tender repeats within a cycle until all eligible tenders are shown once.
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* Header: Search + New Tender */}
         <div className="flex flex-wrap items-center gap-3">
@@ -316,6 +442,28 @@ export default function TenderVaultManager() {
             <Plus className="w-4 h-4" />
             New Tender
           </button>
+          {isDevOrAdmin && (
+            <>
+              <button
+                type="button"
+                onClick={runRotationTest}
+                disabled={updating}
+                className="inline-flex items-center gap-2 px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition text-sm"
+                title="Dev/Admin: runs real exposure rotation service"
+              >
+                Run Rotation Test
+              </button>
+              <button
+                type="button"
+                onClick={expireCurrentBatchTest}
+                disabled={updating}
+                className="inline-flex items-center gap-2 px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition text-sm"
+                title="Dev/Admin: force expire active exposure batch"
+              >
+                Expire Current Batch
+              </button>
+            </>
+          )}
         </div>
 
         {/* Status Tabs */}
@@ -355,16 +503,19 @@ export default function TenderVaultManager() {
                     Status
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Budget Range
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Duration
+                    Created At
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Created At
+                    Visible Now
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Shown In Cycle
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Exposure Stats
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Actions
@@ -382,7 +533,7 @@ export default function TenderVaultManager() {
                   </>
                 ) : pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
                       {searchQuery ? (
                         <>
                           No tenders match your search "{searchQuery}" in {activeTab} status.
@@ -423,16 +574,31 @@ export default function TenderVaultManager() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">
-                          {tender.category_name || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
                           {formatBudget(tender)}
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">
-                          {formatDuration(tender)}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
                           {formatDate(tender.created_at)}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className={tender.currently_visible ? "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" : "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700"}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${tender.currently_visible ? "bg-green-600" : "bg-slate-400"}`} />
+                            {tender.currently_visible ? "On" : "Off"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className={tender.shown_in_current_cycle ? "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" : "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700"}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${tender.shown_in_current_cycle ? "bg-purple-600" : "bg-slate-400"}`} />
+                            {tender.shown_in_current_cycle ? "Done" : "Pending"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-xs">
+                          <button
+                            type="button"
+                            className="px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
+                            title={`Total: ${tender.exposure_count ?? 0}\nLast: ${formatDate(tender.last_exposed_at)}\nCycle: ${tender.last_shown_cycle_number ?? "—"}`}
+                          >
+                            View stats
+                          </button>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
