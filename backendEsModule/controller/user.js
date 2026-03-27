@@ -1939,6 +1939,166 @@ const logout = async (req, res) => {
 };
 
 /* =========================================
+   MOBILE: PASSWORD RESET VIA OTP
+   POST /auth/forgot-password, /auth/verify-reset-otp, /auth/reset-password
+   (Must be registered BEFORE authRouter.use(authentication) in router/auth.js)
+========================================= */
+const PASSWORD_RESET_OTP_MINUTES = 15;
+
+const requestPasswordResetOtp = async (req, res) => {
+  try {
+    const email = (req.body.email || "").toLowerCase().trim();
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const { rows } = await pool.query(
+      "SELECT id FROM users WHERE LOWER(email) = $1 AND is_deleted = FALSE",
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "If the email exists, we sent a verification code.",
+      });
+    }
+
+    const otp = generateOtp();
+    const otpHash = hashOtp(otp);
+    const expires = new Date(Date.now() + PASSWORD_RESET_OTP_MINUTES * 60 * 1000);
+
+    await pool.query(
+      `UPDATE users SET otp_code = NULL, otp_code_hash = $1, otp_expires = $2 WHERE id = $3`,
+      [otpHash, expires, rows[0].id]
+    );
+
+    await deliverOtp(
+      email,
+      "email",
+      otp,
+      "Your OrderzHouse password reset code",
+      PASSWORD_RESET_OTP_MINUTES
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent to your email",
+    });
+  } catch (err) {
+    console.error("requestPasswordResetOtp error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP. Please try again later.",
+    });
+  }
+};
+
+const verifyPasswordResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email and OTP are required" });
+    }
+
+    const { rows } = await pool.query("SELECT * FROM users WHERE email=$1 AND is_deleted = FALSE", [
+      email.toLowerCase(),
+    ]);
+    const user = rows[0];
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Invalid or expired code" });
+    }
+
+    if (!user.otp_expires || new Date() > new Date(user.otp_expires)) {
+      return res.status(400).json({ success: false, message: "OTP expired" });
+    }
+
+    let otpValid = false;
+    if (user.otp_code_hash) {
+      otpValid = verifyOtp(otp, user.otp_code_hash);
+    } else if (user.otp_code) {
+      otpValid = user.otp_code === otp;
+    }
+
+    if (!otpValid) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    console.error("verifyPasswordResetOtp error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+const resetPasswordWithOtp = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, OTP, and new password are required",
+      });
+    }
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password must be at least 8 characters and include uppercase, lowercase, and a number",
+      });
+    }
+
+    const { rows } = await pool.query("SELECT * FROM users WHERE email=$1 AND is_deleted = FALSE", [
+      email.toLowerCase(),
+    ]);
+    const user = rows[0];
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Invalid or expired code" });
+    }
+
+    if (!user.otp_expires || new Date() > new Date(user.otp_expires)) {
+      return res.status(400).json({ success: false, message: "OTP expired" });
+    }
+
+    let otpValid = false;
+    if (user.otp_code_hash) {
+      otpValid = verifyOtp(otp, user.otp_code_hash);
+    } else if (user.otp_code) {
+      otpValid = user.otp_code === otp;
+    }
+
+    if (!otpValid) {
+      return res.status(400).json({ success: false, message: "Invalid OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      "UPDATE users SET password = $1, otp_code = NULL, otp_code_hash = NULL, otp_expires = NULL, failed_login_attempts = 0, updated_at = NOW() WHERE id = $2",
+      [hashedPassword, user.id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error("resetPasswordWithOtp error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+/* =========================================
    EXPORTS
 ========================================= */
 export {
@@ -1963,4 +2123,7 @@ export {
   requestSignupOtp,
   verifyAndRegister,
   completeProfile,
+  requestPasswordResetOtp,
+  verifyPasswordResetOtp,
+  resetPasswordWithOtp,
 };

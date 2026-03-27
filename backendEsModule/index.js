@@ -160,6 +160,9 @@ const passwordResetLimiter = rateLimit({
 });
 app.use("/users/forgot-password", passwordResetLimiter);
 app.use("/users/reset-password", passwordResetLimiter);
+app.use("/auth/forgot-password", passwordResetLimiter);
+app.use("/auth/verify-reset-otp", passwordResetLimiter);
+app.use("/auth/reset-password", passwordResetLimiter);
 
 // Routers
 //APPOINTMENTS

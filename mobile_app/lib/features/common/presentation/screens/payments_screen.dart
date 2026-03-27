@@ -23,11 +23,29 @@ final _selectedFilterProvider = StateProvider<String>((ref) => 'all');
 final _paymentHistoryCacheProvider =
     StateProvider.family<Map<String, dynamic>?, String>((ref, type) => null);
 
+/// User id that in-memory payment caches belong to (see [myProjectsMemory] pattern).
+final _paymentHistoryMemoryCacheUserIdProvider = StateProvider<int?>(
+  (ref) => null,
+);
+
+const _paymentHistoryFamilyTypes = ['all', 'plan', 'project', 'wallet'];
+
 // Provider for unified payment history with caching
 final paymentHistoryProvider =
     FutureProvider.family<Map<String, dynamic>, String>((ref, type) async {
       final repository = ref.read(paymentsRepositoryProvider);
+      ref.watch(authEpochProvider);
       final userId = ref.read(authStateProvider).userId;
+
+      final memoryOwner = ref.read(_paymentHistoryMemoryCacheUserIdProvider);
+      if (memoryOwner != userId) {
+        await Future<void>.microtask(() {});
+        for (final t in _paymentHistoryFamilyTypes) {
+          ref.read(_paymentHistoryCacheProvider(t).notifier).state = null;
+        }
+        ref.read(_paymentHistoryMemoryCacheUserIdProvider.notifier).state =
+            userId;
+      }
 
       if (userId == null) {
         return {'balance': 0.0, 'currency': 'JOD', 'transactions': <Payment>[]};

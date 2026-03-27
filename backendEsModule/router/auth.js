@@ -1,6 +1,17 @@
 // router/auth.js
 import express from "express";
 import { authentication } from "../middleware/authentication.js";
+import validateRequest from "../middleware/validateRequest.js";
+import {
+  forgotPasswordValidator,
+  passwordResetVerifyOtpValidator,
+  passwordResetWithOtpValidator,
+} from "../middleware/validators/userValidators.js";
+import {
+  requestPasswordResetOtp,
+  verifyPasswordResetOtp,
+  resetPasswordWithOtp,
+} from "../controller/user.js";
 import {
   generateTwoFactorSecret,
   verifyTwoFactorToken,
@@ -18,6 +29,26 @@ authRouter.post("/google", loginWithGoogle);
 
 // 👇 هذا الراوت مفتوح لأنه جزء من عملية تسجيل الدخول
 authRouter.post("/2fa/verify-login", verifyTwoFactorLogin);
+
+// Mobile app: password reset via OTP (must be before authentication middleware)
+authRouter.post(
+  "/forgot-password",
+  forgotPasswordValidator,
+  validateRequest,
+  requestPasswordResetOtp
+);
+authRouter.post(
+  "/verify-reset-otp",
+  passwordResetVerifyOtpValidator,
+  validateRequest,
+  verifyPasswordResetOtp
+);
+authRouter.post(
+  "/reset-password",
+  passwordResetWithOtpValidator,
+  validateRequest,
+  resetPasswordWithOtp
+);
 
 // 👇 من هون وطالع لازم يكون معك JWT عادي (داخل السيستم)
 authRouter.use(authentication);

@@ -5,11 +5,20 @@ import '../storage/secure_store.dart';
 import '../config/app_config.dart';
 
 class AuthInterceptor extends Interceptor {
+  /// Set on [Options.extra] for public routes (login, forgot password, etc.)
+  /// so we never attach a stale session token to unauthenticated endpoints.
+  static const String extraSkipAuth = 'skipAuth';
+
   @override
   void onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    if (options.extra[extraSkipAuth] == true) {
+      options.headers.remove('Authorization');
+      handler.next(options);
+      return;
+    }
     final token = await SecureStore.readAccessToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';

@@ -9,6 +9,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/models/user.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/dio_interceptors.dart';
 import '../../../../core/storage/secure_store.dart';
 import '../../../../core/config/app_config.dart';
 import '../models/signup_payload.dart';
@@ -802,6 +803,9 @@ class AuthRepository {
       final response = await _dio.post(
         '/auth/forgot-password',
         data: {'email': email},
+        options: Options(
+          extra: {AuthInterceptor.extraSkipAuth: true},
+        ),
       );
 
       return ApiResponse(
@@ -828,6 +832,9 @@ class AuthRepository {
       final response = await _dio.post(
         '/auth/verify-reset-otp',
         data: {'email': email, 'otp': otp},
+        options: Options(
+          extra: {AuthInterceptor.extraSkipAuth: true},
+        ),
       );
 
       // Backend may return a reset token
@@ -859,6 +866,9 @@ class AuthRepository {
       final response = await _dio.post(
         '/auth/reset-password',
         data: {'email': email, 'otp': otp, 'newPassword': newPassword},
+        options: Options(
+          extra: {AuthInterceptor.extraSkipAuth: true},
+        ),
       );
 
       return ApiResponse(

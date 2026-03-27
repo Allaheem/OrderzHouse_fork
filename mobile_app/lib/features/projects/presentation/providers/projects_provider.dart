@@ -64,6 +64,10 @@ final projectByIdProvider = FutureProvider.autoDispose.family<Project?, int>((
 // In-memory cache for my projects (instant access)
 final _myProjectsCacheProvider = StateProvider<List<Project>?>((ref) => null);
 
+/// Which [userId] the in-memory list above belongs to. Cleared on logout / account switch
+/// so we never show another user's projects when the API fails or returns empty.
+final _myProjectsMemoryCacheUserIdProvider = StateProvider<int?>((ref) => null);
+
 // Changed from autoDispose to prevent refetch on rebuilds
 // Now watches userId to automatically refetch when user changes
 // Uses stale-while-revalidate: returns cached data immediately, then fetches fresh
@@ -71,6 +75,14 @@ final myProjectsProvider = FutureProvider<List<Project>>((ref) async {
   final repository = ref.read(projectsRepositoryProvider);
   ref.watch(authEpochProvider);
   final userId = ref.watch(authStateProvider.select((state) => state.userId));
+
+  final memoryOwner = ref.read(_myProjectsMemoryCacheUserIdProvider);
+  if (memoryOwner != userId) {
+    // Must not mutate other providers synchronously while this provider builds.
+    await Future<void>.microtask(() {});
+    ref.read(_myProjectsCacheProvider.notifier).state = null;
+    ref.read(_myProjectsMemoryCacheUserIdProvider.notifier).state = userId;
+  }
 
   void updateInMemoryCache(List<Project> projects) {
     Future.microtask(() {

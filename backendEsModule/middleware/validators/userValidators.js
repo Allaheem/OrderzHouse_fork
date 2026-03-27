@@ -94,3 +94,24 @@ export const resetPasswordValidator = [
     .custom((value, { req }) => value === req.body.password)
     .withMessage("Passwords do not match"),
 ];
+
+/** POST /auth/verify-reset-otp (mobile OTP flow) */
+export const passwordResetVerifyOtpValidator = [
+  body("email")
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail(),
+  body("otp").notEmpty().trim().withMessage("OTP is required"),
+];
+
+/** POST /auth/reset-password (mobile: email + otp + newPassword) */
+export const passwordResetWithOtpValidator = [
+  body("email")
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail(),
+  body("otp").notEmpty().trim().withMessage("OTP is required"),
+  body("newPassword")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters"),
+];
