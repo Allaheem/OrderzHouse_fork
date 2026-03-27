@@ -28,6 +28,8 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    # integration_test/ uses nested pubspec (see integration_test/pubspec.yaml)
+    - "integration_test/**"
   errors:
     invalid_annotation_target: ignore
     todo: ignore

@@ -1,0 +1,22 @@
+# Separate package so `integration_test` does not register Android plugins on the main app
+# (avoids release build: package dev.flutter.plugins.integration_test does not exist).
+# Run: cd integration_test && flutter pub get && flutter test
+
+name: orderzhouse_integration_tests
+publish_to: "none"
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  OrderzHouse:
+    path: ../
+
+dev_dependencies:
+  mocktail: ^1.0.4
