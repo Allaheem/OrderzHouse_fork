@@ -14,6 +14,7 @@ import '../../../../core/cache/cache_service.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../payments/presentation/providers/payments_provider.dart';
 import '../../../referrals/presentation/providers/referrals_provider.dart';
+import '../../../projects/presentation/providers/projects_provider.dart';
 import '../../../../l10n/app_localizations.dart';
 
 // Provider for filter selection (All / Plans / Projects / Wallet)
@@ -355,6 +356,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _buildRecentActivitySection(
                 context,
+                ref,
                 transactions,
                 isClient,
               ),
@@ -867,6 +869,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
   Widget _buildRecentActivitySection(
     BuildContext context,
+    WidgetRef ref,
     List<Payment> transactions,
     bool isClient,
   ) {
@@ -888,10 +891,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             ),
             TextButton(
               onPressed: () {
-                // Navigate to details if exists, otherwise no-op
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(l10n.viewDetails)));
+                ref.invalidate(myProjectsProvider);
+                if (!context.mounted) return;
+                context.go(
+                  isClient ? '/client/projects' : '/freelancer/projects',
+                );
               },
               child: Row(
                 mainAxisSize: MainAxisSize.min,

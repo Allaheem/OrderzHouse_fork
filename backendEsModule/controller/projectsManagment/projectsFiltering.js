@@ -915,7 +915,7 @@ export const getProjectsByUserRole = async (req, res) => {
            AND (
              (
                pa.freelancer_id = $1
-               AND pa.status IN ('active', 'pending_acceptance', 'in_progress')
+               AND COALESCE(pa.status, '') NOT IN ('rejected', 'not_chosen')
              )
              OR EXISTS (
                SELECT 1

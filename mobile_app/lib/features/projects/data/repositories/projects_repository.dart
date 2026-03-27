@@ -157,7 +157,9 @@ class ProjectsRepository implements IProjectsRepository {
       final projects = <Project>[];
       for (var i = 0; i < projectsList.length; i++) {
         try {
-          final json = projectsList[i] as Map<String, dynamic>;
+          final json = _normalizeProjectJson(
+            projectsList[i] as Map<String, dynamic>,
+          );
           final project = Project.fromJson(json);
           projects.add(project);
         } catch (e) {
@@ -547,6 +549,10 @@ class ProjectsRepository implements IProjectsRepository {
         (normalized['status'] as String?)?.trim().isNotEmpty == true
         ? normalized['status']
         : 'open';
+    if ((normalized['title'] as String?)?.trim().isEmpty ?? true) {
+      normalized['title'] = 'Project';
+    }
+    normalized['description'] = (normalized['description'] as String?) ?? '';
     normalized['created_at'] =
         (normalized['created_at'] as String?)?.trim().isNotEmpty == true
         ? normalized['created_at']
