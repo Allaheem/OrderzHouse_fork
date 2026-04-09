@@ -213,8 +213,10 @@ export const sendOfferForTenderCycle = async (req, res) => {
 export const completeOfferAcceptance = async (offerId) => {
   const client = await pool.connect();
   try {
+    // Use o.* only (no explicit tender_cycle_id): older DBs without migration 017
+    // omit that column; o.* still includes it when the column exists.
     const { rows: offerRows } = await client.query(
-      `SELECT o.*, o.tender_cycle_id, p.user_id AS client_id, p.title AS project_title, p.project_type
+      `SELECT o.*, p.user_id AS client_id, p.title AS project_title, p.project_type
        FROM offers o
        LEFT JOIN projects p ON o.project_id = p.id
        WHERE o.id = $1`,
@@ -369,7 +371,7 @@ export const approveOrRejectOffer = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid offer id" });
 
     const { rows: offerRows } = await client.query(
-      `SELECT o.*, o.tender_cycle_id, p.user_id AS client_id, p.title AS project_title, p.project_type
+      `SELECT o.*, p.user_id AS client_id, p.title AS project_title, p.project_type
        FROM offers o
        LEFT JOIN projects p ON o.project_id = p.id
        WHERE o.id = $1`,
@@ -1055,7 +1057,7 @@ export const adminApproveBiddingOffer = async (req, res) => {
 
     // Get project and accepted offer (client = project owner from p.user_id)
     const { rows: projectRows } = await client.query(
-      `SELECT p.*, p.user_id AS client_id, o.id AS offer_id, o.tender_cycle_id, o.freelancer_id, o.bid_amount
+      `SELECT p.*, p.user_id AS client_id, o.id AS offer_id, o.freelancer_id, o.bid_amount
        FROM projects p
        JOIN offers o ON o.project_id = p.id AND o.offer_status = 'accepted'
        WHERE p.id = $1 
@@ -1074,7 +1076,12 @@ export const adminApproveBiddingOffer = async (req, res) => {
     }
 
     const project = projectRows[0];
-    if (project.tender_cycle_id) {
+    const { rows: offerSnap } = await client.query(
+      `SELECT * FROM offers WHERE id = $1`,
+      [project.offer_id]
+    );
+    const tenderCycleId = offerSnap[0]?.tender_cycle_id;
+    if (tenderCycleId) {
       await client.query("ROLLBACK");
       return res.status(400).json({
         success: false,
