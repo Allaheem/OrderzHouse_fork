@@ -118,21 +118,20 @@ class NotificationTargetMapper {
 
     // MESSAGE-RELATED NOTIFICATIONS
     if (notification.isMessageRelated && projectId != null) {
-      // TODO: Navigate to chat when implemented
-      // For now, navigate to project (messages are usually project-related)
       return NotificationTarget(
-        route: '/project/:id',
+        route: '/project/:id/messages',
         pathParams: {'id': projectId.toString()},
       );
     }
 
     // TASK-RELATED NOTIFICATIONS
     if (notification.isTaskRelated && projectId != null) {
-      // TODO: Navigate to task details when implemented
-      // For now, navigate to project
       return NotificationTarget(
         route: '/project/:id',
         pathParams: {'id': projectId.toString()},
+        queryParams: notification.taskId != null
+            ? {'taskId': '${notification.taskId}'}
+            : const {},
       );
     }
 
@@ -147,10 +146,12 @@ class NotificationTargetMapper {
       return const NotificationTarget(route: '/plans');
     }
 
-    // APPOINTMENT-RELATED
+    // APPOINTMENT-RELATED — open project (scheduling is project-scoped in app)
     if (type.contains('appointment') && projectId != null) {
-      // TODO: Navigate to appointment details when implemented
-      return null;
+      return NotificationTarget(
+        route: '/project/:id',
+        pathParams: {'id': projectId.toString()},
+      );
     }
 
     // SYSTEM ANNOUNCEMENT - no navigation

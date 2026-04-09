@@ -22,7 +22,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
-  String _selectedSubjectKey = 'subjectAccount';
+  String _selectedSubjectKey = 'account';
   bool _isSending = false;
 
   @override
@@ -80,26 +80,34 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     setState(() => _isSending = true);
 
     try {
-      // TODO: Implement API call
-      // await ref.read(supportRepositoryProvider).sendTicket(
-      //   subject: _selectedSubjectKey,
-      //   message: _messageController.text,
-      // );
-
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.messageSent),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
+      final subjectLabel = _getSelectedLabel(l10n);
+      final subject = Uri.encodeComponent(
+        '[OrderzHouse] $subjectLabel',
+      );
+      final body = Uri.encodeComponent(_messageController.text.trim());
+      final mailto = Uri.parse(
+        'mailto:info@battechno.com?subject=$subject&body=$body',
       );
 
-      _messageController.clear();
+      if (await canLaunchUrl(mailto)) {
+        await launchUrl(mailto);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.messageSent),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        _messageController.clear();
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.somethingWentWrong),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

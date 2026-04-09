@@ -33,8 +33,23 @@ const isAdmin = async (userId) => {
 };
 
 const getProjectParticipants = async (projectId) => {
-  const { rows } = await pool.query(`SELECT p.user_id, pa.freelancer_id FROM projects p LEFT JOIN project_assignments pa ON pa.project_id = p.id WHERE p.id = $1 AND p.is_deleted = false`, [projectId]);
-  return Array.from(new Set(rows.flatMap(r => [r.user_id, r.freelancer_id]))).filter(Boolean);
+  const { rows } = await pool.query(
+    `SELECT p.user_id, pa.freelancer_id
+     FROM projects p
+     LEFT JOIN project_assignments pa ON pa.project_id = p.id
+     WHERE p.id = $1 AND p.is_deleted = false`,
+    [projectId]
+  );
+  const ids = new Set(rows.flatMap((r) => [r.user_id, r.freelancer_id]).filter(Boolean));
+  const { rows: offerRows } = await pool.query(
+    `SELECT DISTINCT freelancer_id FROM offers
+     WHERE project_id = $1 AND offer_status IN ('pending', 'accepted')`,
+    [projectId]
+  );
+  for (const r of offerRows) {
+    if (r.freelancer_id) ids.add(r.freelancer_id);
+  }
+  return [...ids];
 };
 
 const getTaskParticipants = async (taskId) => {
@@ -44,7 +59,15 @@ const getTaskParticipants = async (taskId) => {
 };
 
 const isChatAllowed = async (projectId, taskId) => {
-  const allowed = ["in_progress", "pending_review", "reviewing"];
+  // Allow chat during bidding / admin gate / active work (client ↔ freelancer flows).
+  const allowedProject = [
+    "active",
+    "bidding",
+    "in_progress",
+    "pending_review",
+    "reviewing",
+    "pending_admin_approval",
+  ];
 
   try {
     if (projectId) {
@@ -52,7 +75,11 @@ const isChatAllowed = async (projectId, taskId) => {
         `SELECT status, completion_status FROM projects WHERE id = $1 AND is_deleted = false`,
         [projectId]
       );
-      return rows.length > 0 && (allowed.includes(rows[0].status) || allowed.includes(rows[0].completion_status));
+      return (
+        rows.length > 0 &&
+        (allowedProject.includes(rows[0].status) ||
+          allowedProject.includes(rows[0].completion_status))
+      );
     }
     
     if (taskId) {
@@ -84,7 +111,22 @@ export const getUserChats = async (req, res) => {
   const userId = req.token?.userId;
   if (!userId) return res.status(401).json({ success: false, message: "Authentication required" });
   try {
-    const projectsQuery = `SELECT p.id, p.title AS name, 'project' AS chat_type FROM projects p LEFT JOIN project_assignments pa ON p.id = pa.project_id WHERE (p.user_id = $1 OR pa.freelancer_id = $1) AND p.is_deleted = false GROUP BY p.id, p.title;`;
+    const projectsQuery = `
+      SELECT p.id, p.title AS name, 'project' AS chat_type
+      FROM projects p
+      LEFT JOIN project_assignments pa ON p.id = pa.project_id AND pa.freelancer_id = $1
+      WHERE p.is_deleted = false
+        AND (
+          p.user_id = $1
+          OR pa.freelancer_id = $1
+          OR EXISTS (
+            SELECT 1 FROM offers o
+            WHERE o.project_id = p.id
+              AND o.freelancer_id = $1
+              AND o.offer_status IN ('pending', 'accepted')
+          )
+        )
+      GROUP BY p.id, p.title`;
     const tasksQuery = `SELECT t.id, t.title AS name, 'task' AS chat_type FROM tasks t WHERE (t.assigned_client_id = $1 OR t.freelancer_id = $1) AND t.is_deleted = false GROUP BY t.id, t.title;`;
     const [projectChats, taskChats] = await Promise.all([pool.query(projectsQuery, [userId]), pool.query(tasksQuery, [userId])]);
     return res.status(200).json({ success: true, chats: [...projectChats.rows, ...taskChats.rows] });

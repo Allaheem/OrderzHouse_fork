@@ -788,6 +788,87 @@ class AuthRepository {
     }
   }
 
+  // ==================== Two-Factor Authentication ====================
+  /// POST /auth/2fa/generate — returns QR data URL + secret (enable flow step 1).
+  Future<ApiResponse<Map<String, dynamic>>> generateTwoFactor() async {
+    try {
+      final response = await _dio.post('/auth/2fa/generate');
+      final raw = response.data;
+      if (raw is! Map<String, dynamic>) {
+        return const ApiResponse(success: false, message: 'Invalid response');
+      }
+      if (raw['success'] != true) {
+        return ApiResponse(
+          success: false,
+          message: raw['message'] as String? ?? 'Failed to generate 2FA',
+        );
+      }
+      return ApiResponse(
+        success: true,
+        data: {
+          'qrCodeUrl': raw['qrCodeUrl'] as String?,
+          'secret': raw['secret'] as String?,
+        },
+      );
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message:
+            _extractErrorMessage(e.response?.data) ?? 'Failed to start 2FA setup',
+      );
+    }
+  }
+
+  /// POST /auth/2fa/verify — body: `{ "token": "<6-digit>" }`
+  Future<ApiResponse<void>> verifyTwoFactor({required String token}) async {
+    try {
+      final response = await _dio.post(
+        '/auth/2fa/verify',
+        data: {'token': token.trim()},
+      );
+      final raw = response.data;
+      if (raw is Map<String, dynamic> && raw['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: raw['message'] as String? ?? '2FA enabled',
+        );
+      }
+      final msg = raw is Map<String, dynamic>
+          ? raw['message'] as String?
+          : null;
+      return ApiResponse(success: false, message: msg ?? 'Verification failed');
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message: _extractErrorMessage(e.response?.data) ?? 'Invalid code',
+      );
+    }
+  }
+
+  /// POST /auth/2fa/disable
+  Future<ApiResponse<void>> disableTwoFactor() async {
+    try {
+      final response = await _dio.post('/auth/2fa/disable');
+      final raw = response.data;
+      if (raw is Map<String, dynamic> && raw['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: raw['message'] as String? ?? '2FA disabled',
+        );
+      }
+      final msg = raw is Map<String, dynamic>
+          ? raw['message'] as String?
+          : null;
+      return ApiResponse(success: false, message: msg ?? 'Failed to disable');
+    } on DioException catch (e) {
+      return ApiResponse(
+        success: false,
+        message:
+            _extractErrorMessage(e.response?.data) ?? 'Failed to disable 2FA',
+      );
+    }
+  }
+
   Future<void> logout() async {
     await GoogleSignIn().signOut();
     await _tokenStore.clearAll();

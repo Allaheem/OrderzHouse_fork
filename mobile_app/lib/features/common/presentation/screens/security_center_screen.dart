@@ -1,4 +1,7 @@
 // ??? ????????
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,10 +11,18 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/gradient_button.dart';
-import 'settings_screen.dart'; // Import for twoFactorEnabledProvider
+import '../../../auth/presentation/providers/auth_provider.dart';
 
-class SecurityCenterScreen extends ConsumerWidget {
+class SecurityCenterScreen extends ConsumerStatefulWidget {
   const SecurityCenterScreen({super.key});
+
+  @override
+  ConsumerState<SecurityCenterScreen> createState() =>
+      _SecurityCenterScreenState();
+}
+
+class _SecurityCenterScreenState extends ConsumerState<SecurityCenterScreen> {
+  bool _busy = false;
 
   void _handleBack(BuildContext context) {
     final router = GoRouter.of(context);
@@ -22,50 +33,193 @@ class SecurityCenterScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _refreshUser() async {
+    await ref.read(authStateProvider.notifier).refreshUser();
+  }
+
+  Future<void> _onDisable2FA(AppLocalizations l10n) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.disableTwoFactor),
+        content: Text(l10n.warning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    setState(() => _busy = true);
+    final repo = ref.read(authRepositoryProvider);
+    final res = await repo.disableTwoFactor();
+    if (!mounted) return;
+    setState(() => _busy = false);
+
+    if (res.success) {
+      await _refreshUser();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res.message ?? l10n.success)),
+        );
+      }
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res.message ?? l10n.error),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Uint8List? _decodeQrPng(String? dataUrl) {
+    if (dataUrl == null || !dataUrl.contains('base64,')) return null;
+    final idx = dataUrl.indexOf('base64,');
+    if (idx < 0) return null;
+    try {
+      return base64Decode(dataUrl.substring(idx + 7));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _onEnable2FA(AppLocalizations l10n) async {
+    setState(() => _busy = true);
+    final repo = ref.read(authRepositoryProvider);
+    final gen = await repo.generateTwoFactor();
+    if (!mounted) return;
+    setState(() => _busy = false);
+
+    if (!gen.success || gen.data == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(gen.message ?? 'Failed'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return;
+    }
+
+    final qrUrl = gen.data!['qrCodeUrl'] as String?;
+    final secret = gen.data!['secret'] as String?;
+    final png = _decodeQrPng(qrUrl);
+    final codeController = TextEditingController();
+
+    final verified = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.enableTwoFactor),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.twoFactorAuthSubtitle,
+                style: AppTextStyles.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              if (png != null)
+                Center(
+                  child: Image.memory(png, width: 200, height: 200),
+                )
+              else
+                Text(
+                  secret ?? '',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: codeController,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: InputDecoration(
+                  labelText: l10n.verifyOtp,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final code = codeController.text.trim();
+              if (code.isEmpty) return;
+              final r = await repo.verifyTwoFactor(token: code);
+              if (!ctx.mounted) return;
+              if (r.success) {
+                Navigator.pop(ctx, true);
+              } else {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(
+                    content: Text(r.message ?? l10n.error),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
+              }
+            },
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+
+    codeController.dispose();
+
+    if (verified == true && mounted) {
+      await _refreshUser();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.success)),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final twoFactorEnabled = ref.watch(twoFactorEnabledProvider);
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final user = ref.watch(authStateProvider).user;
+    final twoFactorOn = user?.isTwoFactorEnabled ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             AppHeader(title: l10n.security, onBack: () => _handleBack(context)),
-
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   children: [
-                    // Two-Factor Authentication Card
                     _TwoFactorCard(
-                      enabled: twoFactorEnabled,
-                      onToggle: () {
-                        ref.read(twoFactorEnabledProvider.notifier).state =
-                            !twoFactorEnabled;
-                        if (!twoFactorEnabled) {
-                          // Show enable 2FA flow
-                          _showEnable2FADialog(context, ref);
-                        } else {
-                          // Show disable 2FA confirmation
-                          _showDisable2FADialog(context, ref);
-                        }
-                      },
+                      enabled: twoFactorOn,
+                      busy: _busy,
+                      onEnable: () => _onEnable2FA(l10n),
+                      onDisable: () => _onDisable2FA(l10n),
                       l10n: l10n,
                     ),
                     const SizedBox(height: AppSpacing.lg),
-
-                    // Change Password Card
                     _ChangePasswordCard(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.comingSoon)),
-                        );
-                      },
+                      onTap: () => context.push('/change-password'),
                       l10n: l10n,
                     ),
                   ],
@@ -77,80 +231,20 @@ class SecurityCenterScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showEnable2FADialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(l10n.enableTwoFactor),
-        content: Text(l10n.twoFactorAuthSubtitle),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              // TODO: Implement 2FA enable flow
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(l10n.comingSoon)));
-            },
-            child: Text(
-              l10n.confirm,
-              style: const TextStyle(color: AppColors.accentOrange),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDisable2FADialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(l10n.disableTwoFactor),
-        content: Text(l10n.warning),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(twoFactorEnabledProvider.notifier).state = false;
-              Navigator.pop(dialogContext);
-              // TODO: Implement 2FA disable API call
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: Text(l10n.confirm),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _TwoFactorCard extends StatelessWidget {
   final bool enabled;
-  final VoidCallback onToggle;
+  final bool busy;
+  final VoidCallback onEnable;
+  final VoidCallback onDisable;
   final AppLocalizations l10n;
 
   const _TwoFactorCard({
     required this.enabled,
-    required this.onToggle,
+    required this.busy,
+    required this.onEnable,
+    required this.onDisable,
     required this.l10n,
   });
 
@@ -237,8 +331,10 @@ class _TwoFactorCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           PrimaryGradientButton(
-            onPressed: onToggle,
-            label: enabled ? l10n.settings : l10n.enableTwoFactor,
+            onPressed: busy
+                ? () {}
+                : (enabled ? onDisable : onEnable),
+            label: enabled ? l10n.disableTwoFactor : l10n.enableTwoFactor,
             height: 48,
             borderRadius: 12,
           ),

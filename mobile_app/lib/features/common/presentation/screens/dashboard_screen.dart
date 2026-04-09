@@ -15,6 +15,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../../core/models/project.dart';
 import '../../../../core/models/category.dart';
+import '../widgets/projects_filter_bottom_sheet.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -37,7 +38,7 @@ class DashboardScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1) TOP BAR
-            _buildTopBar(context),
+            _buildTopBar(context, ref),
 
             const SizedBox(height: AppSpacing.md),
 
@@ -62,7 +63,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 
   // 1) TOP BAR
-  Widget _buildTopBar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
@@ -98,7 +99,12 @@ class DashboardScreen extends ConsumerWidget {
                       size: 24,
                     ),
                     onPressed: () {
-                      // TODO: Navigate to favorites
+                      final path = GoRouterState.of(context).uri.path;
+                      if (path.contains('/freelancer')) {
+                        context.push('/freelancer/explore?saved=1');
+                      } else {
+                        context.push('/client/explore?saved=1');
+                      }
                     },
                   ),
                   Consumer(
@@ -201,7 +207,10 @@ class DashboardScreen extends ConsumerWidget {
                               size: 20,
                             ),
                             onPressed: () {
-                              // TODO: Show filter dialog
+                              showProjectsFilterBottomSheet(
+                                context,
+                                ProjectsFilterTarget.explore,
+                              );
                             },
                           ),
                           border: InputBorder.none,

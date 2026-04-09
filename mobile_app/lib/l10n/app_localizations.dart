@@ -2240,6 +2240,12 @@ abstract class AppLocalizations {
   /// **'Search projects, categories'**
   String get searchProjects;
 
+  /// No description provided for @savedProjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get savedProjects;
+
   /// No description provided for @searchCategories.
   ///
   /// In en, this message translates to:

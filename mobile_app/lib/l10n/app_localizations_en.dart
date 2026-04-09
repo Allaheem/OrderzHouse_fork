@@ -1099,6 +1099,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchProjects => 'Search projects, categories';
 
   @override
+  String get savedProjects => 'Saved';
+
+  @override
   String get searchCategories => 'Search categories';
 
   @override

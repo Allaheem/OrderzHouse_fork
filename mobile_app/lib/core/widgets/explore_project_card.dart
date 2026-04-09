@@ -17,12 +17,14 @@ class ExploreProjectCard extends StatelessWidget {
   final Project project;
   final VoidCallback onTap;
   final VoidCallback? onFavorite;
+  final bool isFavorite;
 
   const ExploreProjectCard({
     super.key,
     required this.project,
     required this.onTap,
     this.onFavorite,
+    this.isFavorite = false,
   });
 
   @override
@@ -135,9 +137,13 @@ class ExploreProjectCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.star_outline_rounded,
-                          color: Color(0xFF111827),
+                        child: Icon(
+                          isFavorite
+                              ? Icons.star_rounded
+                              : Icons.star_outline_rounded,
+                          color: isFavorite
+                              ? const Color(0xFFF59E0B)
+                              : const Color(0xFF111827),
                           size: 16,
                         ),
                       ),

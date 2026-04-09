@@ -1098,6 +1098,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchProjects => 'البحث عن مشاريع، فئات';
 
   @override
+  String get savedProjects => 'المحفوظة';
+
+  @override
   String get searchCategories => 'البحث عن فئات';
 
   @override

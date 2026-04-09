@@ -1,5 +1,6 @@
 // ??? ????????
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/project.dart';
@@ -467,8 +468,11 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
           ),
           const SizedBox(height: 4),
           GestureDetector(
-            onTap: () {
-              // TODO: Open URL in browser
+            onTap: () async {
+              final uri = Uri.tryParse(url);
+              if (uri != null && await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
             },
             child: Text(
               url,
@@ -533,9 +537,12 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
           ),
           if (fileUrl != null)
             IconButton(
-              icon: const Icon(Icons.download_rounded, size: 18),
-              onPressed: () {
-                // TODO: Download file
+              icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+              onPressed: () async {
+                final uri = Uri.tryParse(fileUrl.toString());
+                if (uri != null && await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
               },
               color: const Color(0xFF3B82F6),
             ),

@@ -922,7 +922,7 @@ export const getProjectsByUserRole = async (req, res) => {
                FROM offers o
                WHERE o.project_id = p.id
                  AND o.freelancer_id = $1
-                 AND o.offer_status = 'accepted'
+                 AND o.offer_status IN ('pending', 'accepted')
              )
            )
       `;

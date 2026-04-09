@@ -21,6 +21,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/gradient_fab.dart';
 import '../../../../shared/widgets/app_gradient_filter_chip.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
+import '../../../projects/presentation/providers/favorite_project_ids_provider.dart';
 import '../../../categories/presentation/providers/categories_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../search/presentation/providers/search_provider.dart';
@@ -43,6 +44,7 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
   final _searchController = TextEditingController();
   final _categoryScrollController = ScrollController();
   Timer? _debounceTimer;
+  bool _savedQueryApplied = false;
 
   @override
   void dispose() {
@@ -144,6 +146,17 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (!_savedQueryApplied) {
+      _savedQueryApplied = true;
+      final saved = GoRouterState.of(context).uri.queryParameters['saved'];
+      if (saved == '1') {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(showSavedProjectsOnlyProvider.notifier).state = true;
+          }
+        });
+      }
+    }
     final searchQuery = ref.watch(searchQueryProvider);
     final categoriesAsync = ref.watch(exploreCategoriesProvider);
     final selectedCategoryId = ref.watch(selectedExploreCategoryIdProvider);
@@ -196,6 +209,7 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
             child: Column(
               children: [
                 _buildCategoryChips(categoriesAsync, selectedCategoryId),
+                _buildSavedOnlyChip(l10n),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
@@ -594,12 +608,36 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
     );
   }
 
+  Widget _buildSavedOnlyChip(AppLocalizations l10n) {
+    final savedOnly = ref.watch(showSavedProjectsOnlyProvider);
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        bottom: AppSpacing.sm,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: AppGradientFilterChip(
+          label: l10n.savedProjects,
+          icon: Icons.bookmark_outline_rounded,
+          selected: savedOnly,
+          onTap: () {
+            ref.read(showSavedProjectsOnlyProvider.notifier).state =
+                !savedOnly;
+          },
+        ),
+      ),
+    );
+  }
+
   // 4) Projects Grid (2-column masonry/staggered grid like Pinterest)
   Widget _buildProjectsGrid(
     BuildContext context,
     List<Project> projects, {
     bool shrinkWrap = false,
   }) {
+    final favoriteIds = ref.watch(favoriteProjectIdsProvider);
     return MasonryGridView.count(
       shrinkWrap: shrinkWrap,
       physics: shrinkWrap
@@ -616,11 +654,12 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
         final project = projects[index];
         return ExploreProjectCard(
           project: project,
+          isFavorite: favoriteIds.contains(project.id),
           onTap: () {
             context.push('/project/${project.id}', extra: project);
           },
           onFavorite: () {
-            // TODO: Implement favorite functionality
+            ref.read(favoriteProjectIdsProvider.notifier).toggle(project.id);
           },
         );
       },

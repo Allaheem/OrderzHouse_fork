@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/project.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
+import '../../../projects/presentation/providers/favorite_project_ids_provider.dart';
 
 /// Filter state for Explore (client-side filtering). Matches web SubSideBar logic.
 class ExploreFilterState {
@@ -51,6 +52,9 @@ class ExploreFiltersNotifier extends StateNotifier<ExploreFilterState> {
       state = state.copyWith(durationFilter: value);
   void reset() => state = ExploreFilterState.defaults;
 }
+
+/// When true, Explore grid shows only projects in [favoriteProjectIdsProvider].
+final showSavedProjectsOnlyProvider = StateProvider<bool>((ref) => false);
 
 /// Returns budget value in JOD for filtering (single representative value).
 double _getBudgetForFilter(Project p) {
@@ -143,9 +147,18 @@ final filteredExploreProjectsProvider =
     Provider.autoDispose<AsyncValue<List<Project>>>((ref) {
       final projectsAsync = ref.watch(exploreProjectsStateProvider);
       final filters = ref.watch(exploreFiltersProvider);
+      final favoriteIds = ref.watch(favoriteProjectIdsProvider);
+      final savedOnly = ref.watch(showSavedProjectsOnlyProvider);
 
       return projectsAsync.when(
-        data: (list) => AsyncValue.data(applyExploreFilters(list, filters)),
+        data: (list) {
+          var filtered = applyExploreFilters(list, filters);
+          if (savedOnly) {
+            filtered =
+                filtered.where((p) => favoriteIds.contains(p.id)).toList();
+          }
+          return AsyncValue.data(filtered);
+        },
         loading: () => const AsyncValue.loading(),
         error: (err, st) => AsyncValue.error(err, st),
       );
