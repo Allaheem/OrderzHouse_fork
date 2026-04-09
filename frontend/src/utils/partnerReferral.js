@@ -117,10 +117,10 @@ export function logPartnerVisitIfNeeded(attribution, apiPost) {
     return;
   }
 
-  let baseURL = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+  let baseURL = import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
   if (typeof window !== "undefined") {
     const h = window.location.hostname;
-    if (h === "localhost" || h === "127.0.0.1") baseURL = "http://localhost:5000";
+    if (h === "localhost" || h === "127.0.0.1") baseURL = "http://localhost:5050";
     else if (h === "orderzhouse.com" || h === "www.orderzhouse.com") baseURL = "https://orderzhouse-backend.onrender.com";
   }
   const post =

@@ -32,11 +32,11 @@ flutter pub run build_runner build --delete-conflicting-outputs
 Create a `.env` file in the `mobile_app` directory:
 
 ```env
-BASE_URL=http://10.0.2.2:5000
+BASE_URL=http://10.0.2.2:5050
 ENV=development
 ```
 
-**Note**: For Android emulator, use `http://10.0.2.2:5000` to access `localhost:5000` on your host machine.
+**Note**: For Android emulator, use `http://10.0.2.2:5050` to access `localhost:5050` on your host machine (default backend port avoids macOS AirPlay on 5000).
 
 ### 4. Run the App
 

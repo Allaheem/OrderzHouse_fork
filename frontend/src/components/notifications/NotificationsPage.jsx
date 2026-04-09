@@ -94,7 +94,7 @@ export default function NotificationsPage() {
   // Socket setup for live notifications
   useEffect(() => {
     if (!token) return;
-    const socket = io(API.defaults.baseURL || "http://localhost:5000", {
+    const socket = io(API.defaults.baseURL || "http://localhost:5050", {
       auth: { token },
       transports: ["websocket"],
     });

@@ -1,7 +1,7 @@
 // ??? ????????
 class AppConstants {
   // API Configuration
-  static const String baseUrl = 'http://10.0.2.2:5000';
+  static const String baseUrl = 'http://10.0.2.2:5050';
 
   // Storage Keys
   static const String tokenKey = 'jwt_token';

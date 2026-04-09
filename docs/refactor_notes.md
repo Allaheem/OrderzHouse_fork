@@ -40,7 +40,7 @@
 
 ### 5. Dio usage
 
-- **Base URL:** `lib/core/config/app_config.dart` – `AppConfig.baseUrl` (from env: `APP_API_URL` or `BASE_URL`, default `http://10.0.2.2:5000`).
+- **Base URL:** `lib/core/config/app_config.dart` – `AppConfig.baseUrl` (from env: `APP_API_URL` or `BASE_URL`, default `http://10.0.2.2:5050`).
 - **Client:** `lib/core/network/dio_client.dart` – singleton `DioClient.instance`, creates `Dio(BaseOptions(baseUrl: AppConfig.baseUrl, ...))`.
 - **Interceptors (order):** `AuthInterceptor`, `LoggingInterceptor`, `ErrorInterceptor`, `RetryInterceptor` (in `dio_interceptors.dart`).
 - **Auth:** `AuthInterceptor` reads token via `SecureStorageService.getToken()` and sets `Authorization: Bearer <token>`.

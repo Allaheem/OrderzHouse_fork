@@ -128,7 +128,7 @@ backendEsModule/
 Create a `.env` file in the backend root with the following variables:
 
 ```env
-PORT=5000
+PORT=5050
 NODE_ENV=development
 DATABASE_URL=postgresql://username:password@localhost:5432/orderzhouse
 JWT_SECRET=your-super-secret-jwt-key

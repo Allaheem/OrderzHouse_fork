@@ -3,9 +3,9 @@
  * Run from backendEsModule with env loaded:
  *   node -r dotenv/config scripts/verify-project-checkout.js
  * Requires: STRIPE_SECRET_KEY, CLIENT_URL in .env
- * Optional: set BASE_URL=http://localhost:5000
+ * Optional: set BASE_URL=http://localhost:5050
  */
-const BASE = process.env.BASE_URL || "http://localhost:5000";
+const BASE = process.env.BASE_URL || "http://localhost:5050";
 
 const body = {
   category_id: 2,

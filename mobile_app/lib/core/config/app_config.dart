@@ -34,7 +34,7 @@ class AppConfig {
     // This avoids "empty data" confusion when .env is missing in test builds.
     final env = _readEnvValue('ENV');
     if ((env ?? '').toLowerCase() == 'development') {
-      return 'http://10.0.2.2:5000';
+      return 'http://10.0.2.2:5050';
     }
     return _releaseDefaultApiUrl;
   }

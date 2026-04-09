@@ -11,16 +11,16 @@ const FIRST_REFRESH_DELAY_MS = 3000;
 
 /**
  * API base URL: يختار تلقائياً حسب المكان (محلي أو لايف) بدون تغيير يدوي
- * - من localhost → http://localhost:5000
+ * - من localhost → http://localhost:5050
  * - من orderzhouse.com → https://orderzhouse-backend.onrender.com
  */
 export function getApiBaseURL() {
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:5000";
+    if (host === "localhost" || host === "127.0.0.1") return "http://localhost:5050";
     if (host === "orderzhouse.com" || host === "www.orderzhouse.com") return "https://orderzhouse-backend.onrender.com";
   }
-  return import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+  return import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
 }
 
 const baseURL = getApiBaseURL();

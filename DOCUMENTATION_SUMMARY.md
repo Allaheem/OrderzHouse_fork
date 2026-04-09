@@ -10,7 +10,7 @@ This document summarizes the official documentation from the `docs/` directory, 
 
 ### Base Configuration
 - **Production URL**: `https://orderzhouse-backend.onrender.com`
-- **Development URL**: `http://localhost:5000`
+- **Development URL**: `http://localhost:5050`
 - **Authentication**: JWT via `Authorization: Bearer <token>` header
 
 ### Key API Endpoints (21 main groups)

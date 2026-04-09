@@ -5,7 +5,7 @@ Complete reference of all Express.js API endpoints for Flutter mobile app integr
 ## Base URL
 ```
 Production: https://orderzhouse-backend.onrender.com
-Development: http://localhost:5000
+Development: http://localhost:5050
 ```
 
 ## Authentication

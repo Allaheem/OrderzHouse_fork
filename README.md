@@ -101,7 +101,7 @@ This repository contains the full-stack application divided into:
 
 Create a `.env` file in the `backendEsModule` directory with the following variables:
 ```
-PORT=5000
+PORT=5050
 DATABASE_URL=postgresql://username:password@localhost:5432/orderzhouse
 JWT_SECRET=your-jwt-secret
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
