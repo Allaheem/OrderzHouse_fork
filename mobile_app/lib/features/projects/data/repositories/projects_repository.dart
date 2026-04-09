@@ -999,7 +999,14 @@ class ProjectsRepository implements IProjectsRepository {
         print('📡 REQUEST[GET] => PATH: /assignments/$projectId/my-assignment');
       }
 
-      final response = await _dio.get('/assignments/$projectId/my-assignment');
+      // 404 = no assignment yet (normal before client accepts offer). Do not throw so
+      // interceptors do not log a scary ERROR for the expected case.
+      final response = await _dio.get(
+        '/assignments/$projectId/my-assignment',
+        options: Options(
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
 
       if (AppConfig.isDevelopment) {
         // ignore: avoid_print
@@ -1008,7 +1015,34 @@ class ProjectsRepository implements IProjectsRepository {
         );
       }
 
-      final data = response.data as Map<String, dynamic>;
+      final code = response.statusCode;
+      if (code == 404) {
+        return const ApiResponse(
+          success: true,
+          data: null,
+          message: 'No assignment found',
+        );
+      }
+      if (code != null && code >= 400) {
+        final body = response.data;
+        final msg = body is Map<String, dynamic>
+            ? body['message'] as String?
+            : null;
+        return ApiResponse(
+          success: false,
+          data: null,
+          message: msg ?? 'Failed to fetch assignment',
+        );
+      }
+
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        return const ApiResponse(
+          success: true,
+          data: null,
+          message: 'No assignment found',
+        );
+      }
       final assignment = data['assignment'] as Map<String, dynamic>?;
 
       return ApiResponse(
@@ -1021,15 +1055,6 @@ class ProjectsRepository implements IProjectsRepository {
         // ignore: avoid_print
         print(
           '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /assignments/$projectId/my-assignment',
-        );
-      }
-
-      // If 404, no assignment exists
-      if (e.response?.statusCode == 404) {
-        return const ApiResponse(
-          success: true,
-          data: null,
-          message: 'No assignment found',
         );
       }
 
