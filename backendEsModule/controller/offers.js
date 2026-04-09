@@ -392,7 +392,6 @@ export const approveOrRejectOffer = async (req, res) => {
 
       if (acceptedCheck.length > 0) {
         await client.query("ROLLBACK");
-        client.release();
         return res.status(400).json({
           success: false,
           message: "Only one offer can be accepted per project",
@@ -471,8 +470,7 @@ export const approveOrRejectOffer = async (req, res) => {
         }
         
         await client.query("COMMIT");
-        client.release();
-        
+
       return res.json({
         success: true,
         pendingAdminApproval: true,

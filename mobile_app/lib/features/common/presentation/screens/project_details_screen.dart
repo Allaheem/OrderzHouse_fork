@@ -577,8 +577,8 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           _isLoading = false;
         });
 
-        // Refresh assignment after sending offer
-        await _fetchAssignment();
+        // Assignment exists only after the client accepts; sync pending-offer / applied state instead.
+        await _checkIfApplied();
         if (!mounted) return;
 
         messenger.showSnackBar(
