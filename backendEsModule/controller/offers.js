@@ -253,8 +253,8 @@ export const completeOfferAcceptance = async (offerId) => {
     let assignmentId = null;
     try {
       const { rows: insertRows } = await client.query(
-        `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at)
-         VALUES ($1, $2, 'active', NOW())
+        `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at, assignment_type, user_invited)
+         VALUES ($1, $2, 'active', NOW(), 'by_client', true)
          RETURNING id`,
         [offer.project_id, offer.freelancer_id]
       );
@@ -352,13 +352,21 @@ export const approveOrRejectOffer = async (req, res) => {
   const client = await pool.connect();
   try {
     const clientId = req.token?.userId;
-    const { offerId, action } = req.body;
+    const { action } = req.body;
+    const rawOfferId = req.body.offerId ?? req.body.offer_id;
+    const offerId =
+      rawOfferId != null && rawOfferId !== ""
+        ? Number(rawOfferId)
+        : NaN;
 
     if (!clientId)
       return res.status(401).json({ success: false, message: "Unauthorized" });
 
     if (!["accept", "reject"].includes(action))
       return res.status(400).json({ success: false, message: "Invalid action" });
+
+    if (!Number.isFinite(offerId))
+      return res.status(400).json({ success: false, message: "Invalid offer id" });
 
     const { rows: offerRows } = await client.query(
       `SELECT o.*, o.tender_cycle_id, p.user_id AS client_id, p.title AS project_title, p.project_type
@@ -419,8 +427,8 @@ export const approveOrRejectOffer = async (req, res) => {
         let assignmentId = null;
         try {
           const { rows: insertRows } = await client.query(
-            `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at)
-             VALUES ($1, $2, 'pending_admin_approval', NOW())
+            `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at, assignment_type, user_invited)
+             VALUES ($1, $2, 'pending_admin_approval', NOW(), 'by_client', true)
              RETURNING id`,
             [offer.project_id, offer.freelancer_id]
           );
@@ -571,8 +579,8 @@ export const approveOrRejectOffer = async (req, res) => {
 
       try {
         await client.query(
-          `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at)
-           VALUES ($1, $2, 'active', NOW())`,
+          `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at, assignment_type, user_invited)
+           VALUES ($1, $2, 'active', NOW(), 'by_client', true)`,
           [offer.project_id, offer.freelancer_id]
         );
       } catch (assignErr) {
@@ -588,11 +596,20 @@ export const approveOrRejectOffer = async (req, res) => {
         }
       }
 
+      const escrowAmount = Number(offer.bid_amount);
+      if (!Number.isFinite(escrowAmount) || escrowAmount <= 0) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          success: false,
+          message: "Offer has no valid bid amount for escrow",
+        });
+      }
+
       try {
         await client.query(
           `INSERT INTO escrow (project_id, client_id, freelancer_id, amount, status)
            VALUES ($1, $2, $3, $4, 'held')`,
-          [offer.project_id, offer.client_id, offer.freelancer_id, offer.bid_amount]
+          [offer.project_id, offer.client_id, offer.freelancer_id, escrowAmount]
         );
       } catch (escrowErr) {
         if (escrowErr.code === "23505") {
@@ -600,7 +617,7 @@ export const approveOrRejectOffer = async (req, res) => {
             `UPDATE escrow
                 SET amount = $2, status = 'held'
               WHERE project_id = $1`,
-            [offer.project_id, offer.bid_amount]
+            [offer.project_id, escrowAmount]
           );
         } else {
           throw escrowErr;
@@ -627,7 +644,7 @@ export const approveOrRejectOffer = async (req, res) => {
           projectId: offer.project_id,
           projectTitle: offer.project_title,
           freelancerId: offer.freelancer_id,
-          amount: offer.bid_amount,
+          amount: escrowAmount,
         });
 
         if (Array.isArray(otherPendingOffers)) {
@@ -654,9 +671,21 @@ export const approveOrRejectOffer = async (req, res) => {
       });
     }
   } catch (error) {
-    await client.query("ROLLBACK");
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      /* no open transaction (e.g. failure before BEGIN) */
+    }
     console.error("approveOrRejectOffer error:", error);
-    return res.status(500).json({ success: false, message: "Server error" });
+    const isProd = process.env.NODE_ENV === "production";
+    const message = isProd
+      ? "Server error"
+      : error?.message || String(error);
+    return res.status(500).json({
+      success: false,
+      message,
+      ...(isProd ? {} : { code: error?.code, detail: error?.detail }),
+    });
   } finally {
     client.release();
   }

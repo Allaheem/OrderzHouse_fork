@@ -306,7 +306,6 @@ export const createCheckoutSession = async (req, res) => {
 
 ============================================================ */
 export const createProjectCheckoutSession = async (req, res) => {
-  const client = await pool.connect();
   try {
     // Check payment mode feature flag
     const paymentsMode = (process.env.PAYMENTS_MODE || "offline").toLowerCase();
@@ -339,6 +338,8 @@ export const createProjectCheckoutSession = async (req, res) => {
     const userId = req.token.userId;
     const roleId = req.token.role || req.token.roleId;
     const projectData = req.body;
+    const bodySuccessUrl = projectData.success_url ?? projectData.successUrl;
+    const bodyCancelUrl = projectData.cancel_url ?? projectData.cancelUrl;
     const projectType = projectData.project_type;
     const title = projectData.title != null ? String(projectData.title).trim() : "";
 
