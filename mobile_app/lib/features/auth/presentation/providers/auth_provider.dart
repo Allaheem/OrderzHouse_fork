@@ -1,5 +1,5 @@
-// ??? ????????
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/models/user.dart';
@@ -77,7 +77,8 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  static const Duration _sessionBootstrapTimeout = Duration(seconds: 5);
+  /// Render cold starts can exceed 5s; avoid leaving [isChecking] stuck forever.
+  static const Duration _sessionBootstrapTimeout = Duration(seconds: 25);
 
   AuthNotifier(
     this._repository,
@@ -110,30 +111,44 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Restore session from secure storage on app startup.
   /// Sets isChecking false and either authenticated (with user) or unauthenticated.
   Future<void> restoreSession() async {
-    final token = await _readAccessToken();
-    if (token == null) {
+    try {
+      final token = await _readAccessToken();
+      if (token == null) {
+        state = const AuthState();
+        return;
+      }
+      final response = await _repository.getUserData().timeout(
+        _sessionBootstrapTimeout,
+        onTimeout: () => const ApiResponse<User>(
+          success: false,
+          message: 'Session restore timeout',
+        ),
+      );
+      if (response.success && response.data != null) {
+        state = AuthState(user: response.data);
+        await _writeCachedUser(response.data!);
+        return;
+      }
+      final cachedUser = await _readCachedUser();
+      if (cachedUser != null) {
+        state = AuthState(user: cachedUser);
+        return;
+      }
       state = const AuthState();
-      return;
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('restoreSession error: $e');
+        debugPrint('$st');
+      }
+      try {
+        final cachedUser = await _readCachedUser();
+        state = cachedUser != null
+            ? AuthState(user: cachedUser)
+            : const AuthState();
+      } catch (_) {
+        state = const AuthState();
+      }
     }
-    final response = await _repository.getUserData().timeout(
-      _sessionBootstrapTimeout,
-      onTimeout: () => const ApiResponse<User>(
-        success: false,
-        message: 'Session restore timeout',
-      ),
-    );
-    if (response.success && response.data != null) {
-      state = AuthState(user: response.data);
-      await _writeCachedUser(response.data!);
-      return;
-    }
-    final cachedUser = await _readCachedUser();
-    if (cachedUser != null) {
-      state = AuthState(user: cachedUser);
-      return;
-    }
-    // Token invalid/expired and no cached user fallback
-    state = const AuthState();
   }
 
   Future<bool> login(String email, String password) async {

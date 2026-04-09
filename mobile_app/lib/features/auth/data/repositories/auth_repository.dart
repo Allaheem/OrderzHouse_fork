@@ -564,14 +564,26 @@ class AuthRepository {
   Future<ApiResponse<User>> getUserData() async {
     try {
       final response = await _dio.get('/users/getUserdata');
-      final userData = response.data['user'] as Map<String, dynamic>;
-      // Include terms acceptance fields
-      if (response.data['must_accept_terms'] != null) {
-        userData['must_accept_terms'] = response.data['must_accept_terms'];
+      final raw = response.data;
+      if (raw is! Map<String, dynamic>) {
+        return const ApiResponse(
+          success: false,
+          message: 'Invalid user response',
+        );
       }
-      if (response.data['terms_version_required'] != null) {
-        userData['terms_version_required'] =
-            response.data['terms_version_required'];
+      final userRaw = raw['user'];
+      if (userRaw is! Map<String, dynamic>) {
+        return const ApiResponse(
+          success: false,
+          message: 'Missing user in response',
+        );
+      }
+      final userData = Map<String, dynamic>.from(userRaw);
+      if (raw['must_accept_terms'] != null) {
+        userData['must_accept_terms'] = raw['must_accept_terms'];
+      }
+      if (raw['terms_version_required'] != null) {
+        userData['terms_version_required'] = raw['terms_version_required'];
       }
       final user = User.fromJson(userData);
       return ApiResponse(success: true, data: user);
@@ -581,6 +593,11 @@ class AuthRepository {
         message:
             e.response?.data['message'] as String? ??
             'Failed to fetch user data',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Failed to parse user data: $e',
       );
     }
   }
