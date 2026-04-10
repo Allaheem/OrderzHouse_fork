@@ -26,7 +26,7 @@ jobs:
       - run: dart analyze lib test
       - name: Unit tests (exclude goldens — OS-specific pixel baselines)
         run: |
-          flutter test $(find test -name '*_test.dart' ! -path '*/goldens/*' -type f)
+          flutter test $(find test -name '*_test.dart' ! -path '*/goldens/*' ! -name '*_golden_test.dart' -type f)
 
   backend:
     runs-on: ubuntu-latest
