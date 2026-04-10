@@ -36,7 +36,7 @@ BASE_URL=http://10.0.2.2:5050
 ENV=development
 ```
 
-**Note**: For Android emulator, use `http://10.0.2.2:5050` to access `localhost:5050` on your host machine (default backend port avoids macOS AirPlay on 5000).
+**Note**: Local API defaults to **port 5050** (avoids macOS often reserving **5000** for AirPlay / Control Center). Match `APP_API_URL` / `BASE_URL` to whatever `PORT` you set in `backendEsModule/.env`.
 
 ### 4. Run the App
 

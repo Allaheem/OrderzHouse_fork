@@ -2,6 +2,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../storage/secure_store.dart';
+import '../storage/app_prefs.dart';
+import '../session/auth_api_binding.dart';
+import '../session/auth_session_events.dart';
 class AuthInterceptor extends Interceptor {
   /// Set on [Options.extra] for public routes (login, forgot password, etc.)
   /// so we never attach a stale session token to unauthenticated endpoints.
@@ -85,41 +88,74 @@ class LoggingInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (_shouldLog) {
-      // ignore: avoid_print
-      print(
-        'ERROR[${err.response?.statusCode ?? 'null'}] => PATH: ${err.requestOptions.path}',
-      );
-      // ignore: avoid_print
-      print('ERROR => Type: ${err.type}');
-      // ignore: avoid_print
-      print('ERROR => URI: ${err.requestOptions.uri}');
-      // ignore: avoid_print
-      print('ERROR => Message: ${err.message}');
-      if (err.error != null) {
+      final code = err.response?.statusCode;
+      final path = err.requestOptions.path;
+      final data = err.response?.data;
+      final isShortAuthFailure =
+          err.type == DioExceptionType.badResponse &&
+          (code == 401 || code == 403) &&
+          data is Map;
+      if (isShortAuthFailure) {
         // ignore: avoid_print
-        print('ERROR => Error: ${err.error}');
+        print(
+          'ERROR[$code] => $path — ${data['message'] ?? data} (session cleared if invalid token)',
+        );
+      } else {
+        // ignore: avoid_print
+        print(
+          'ERROR[${code ?? 'null'}] => PATH: $path',
+        );
+        // ignore: avoid_print
+        print('ERROR => Type: ${err.type}');
+        // ignore: avoid_print
+        print('ERROR => URI: ${err.requestOptions.uri}');
+        // ignore: avoid_print
+        print('ERROR => Message: ${err.message}');
+        if (err.error != null) {
+          // ignore: avoid_print
+          print('ERROR => Error: ${err.error}');
+        }
+        if (err.response != null) {
+          // ignore: avoid_print
+          print('ERROR => Status Code: ${err.response?.statusCode}');
+          // ignore: avoid_print
+          print('ERROR => Response Data: ${err.response?.data}');
+        }
+        // ignore: avoid_print
+        print('ERROR => Stack Trace: ${err.stackTrace}');
       }
-      if (err.response != null) {
-        // ignore: avoid_print
-        print('ERROR => Status Code: ${err.response?.statusCode}');
-        // ignore: avoid_print
-        print('ERROR => Response Data: ${err.response?.data}');
-      }
-      // ignore: avoid_print
-      print('ERROR => Stack Trace: ${err.stackTrace}');
     }
     handler.next(err);
   }
 }
 
 class ErrorInterceptor extends Interceptor {
+  static const String _cachedAuthUserKey = 'cached_auth_user';
+
+  static bool _shouldInvalidateSession(DioException err) {
+    final code = err.response?.statusCode;
+    if (code == 401) return true;
+    if (code != 403) return false;
+    final data = err.response?.data;
+    if (data is! Map) return false;
+    if (data['code'] == 'TERMS_NOT_ACCEPTED') return false;
+    final msg = (data['message'] ?? '').toString().toLowerCase();
+    if (msg.contains('account has been deleted')) return true;
+    return msg.contains('invalid') &&
+        (msg.contains('token') || msg.contains('expired'));
+  }
+
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // 401: clear stored auth so user is sent to login
-    if (err.response?.statusCode == 401) {
-      SecureStore.clearAll();
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
+    if (_shouldInvalidateSession(err)) {
+      await SecureStore.clearAll();
+      await AuthApiBinding.clear();
+      await AppPrefs.remove(_cachedAuthUserKey);
+      authSessionInvalidated.add(null);
     }
-    // 401/403: backend message is in response.data.message and is used by callers
     handler.next(err);
   }
 }

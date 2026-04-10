@@ -65,7 +65,7 @@ const mistakes = grammarMatches.length;
 ## Issue 2: API Connection Failures
 
 ### Root Cause
-1. Hardcoded `http://localhost:5000` in `EditProfile.jsx`
+1. Hardcoded `http://localhost:5050` in `EditProfile.jsx`
 2. `VITE_APP_API_URL` environment variable might be undefined
 3. No graceful error handling for network failures
 4. Network errors caused crashes instead of showing user-friendly messages
@@ -74,7 +74,7 @@ const mistakes = grammarMatches.length;
 
 #### 1. `frontend/src/adminDash/pages/EditProfile.jsx`
 **Lines 50, 196**:
-- **Problem**: Hardcoded `http://localhost:5000` URLs
+- **Problem**: Hardcoded `http://localhost:5050` URLs
 - **Fix**: 
   - Use `import.meta.env.VITE_APP_API_URL` with fallback
   - Added proper error handling for network failures
@@ -83,10 +83,10 @@ const mistakes = grammarMatches.length;
 **Changes:**
 ```javascript
 // Before
-const response = await fetch("http://localhost:5000/users/getUserdata", {...});
+const response = await fetch("http://localhost:5050/users/getUserdata", {...});
 
 // After
-const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
 const response = await fetch(`${API_BASE}/users/getUserdata`, {...});
 
 // Added error handling
@@ -119,7 +119,7 @@ axios.get(`${API_BASE}/users/getUserdata`, {...})
   .catch(() => handleLogout()); // Logs out on any error
 
 // After
-const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
 if (!API_BASE) {
   console.error("API_BASE is not configured...");
   return;
@@ -149,7 +149,7 @@ axios.get(`${API_BASE}/users/getUserdata`, {...})
   .catch(() => {}) // Silent failure
 
 // After
-const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+const API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
 if (!API_BASE) {
   console.error("API_BASE is not configured...");
   return;
@@ -178,7 +178,7 @@ const API = axios.create({
 });
 
 // After
-const API_BASE_URL = import.meta.env.VITE_APP_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
 const API = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 second timeout
@@ -247,7 +247,7 @@ Component
 
 1. **Test with undefined API URL**:
    - Remove `VITE_APP_API_URL` from `.env`
-   - Verify fallback to `http://localhost:5000` works
+   - Verify fallback to `http://localhost:5050` works
    - Verify error messages are user-friendly
 
 2. **Test with backend down**:
@@ -270,7 +270,7 @@ Component
 
 Ensure `.env` file in `frontend/` directory contains:
 ```env
-VITE_APP_API_URL=http://localhost:5000
+VITE_APP_API_URL=http://localhost:5050
 ```
 
 Or for production:

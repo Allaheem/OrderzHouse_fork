@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,8 @@ import '../../../../core/storage/secure_store.dart';
 import '../../../../core/cache/cache_service.dart';
 import '../../../../core/routing/route_tracker.dart';
 import '../../../../core/storage/app_prefs.dart';
+import '../../../../core/session/auth_api_binding.dart';
+import '../../../../core/session/auth_session_events.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository();
@@ -23,8 +26,14 @@ final pendingSignupPayloadProvider = StateProvider<SignupPayload?>(
 /// Prevents CircularDependencyError: do NOT call ref.invalidate() on providers that depend on auth from inside AuthNotifier.
 final authEpochProvider = StateProvider<int>((ref) => 0);
 
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(authRepositoryProvider), ref);
+final authStateProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final notifier = AuthNotifier(ref.read(authRepositoryProvider), ref);
+  final sub = authSessionInvalidated.stream.listen((_) async {
+    await notifier.onRemoteSessionInvalidated();
+  });
+  ref.onDispose(sub.cancel);
+  return notifier;
 });
 
 typedef CacheClearer = Future<void> Function();
@@ -117,6 +126,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = const AuthState();
         return;
       }
+      if (!await AuthApiBinding.matchesCurrentApi()) {
+        await SecureStore.clearAll();
+        await AuthApiBinding.clear();
+        await _clearCachedUser();
+        state = const AuthState();
+        return;
+      }
       final response = await _repository.getUserData().timeout(
         _sessionBootstrapTimeout,
         onTimeout: () => const ApiResponse<User>(
@@ -127,6 +143,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (response.success && response.data != null) {
         state = AuthState(user: response.data);
         await _writeCachedUser(response.data!);
+        await AuthApiBinding.recordCurrentApiForSession();
         return;
       }
       final cachedUser = await _readCachedUser();
@@ -271,12 +288,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await _repository.logout();
+    await AuthApiBinding.clear();
     await _clearCache();
     await _clearLastRoute();
     await _clearCachedUser();
     _ref.read(pendingSignupPayloadProvider.notifier).state = null;
     _ref.read(authEpochProvider.notifier).state++;
     state = const AuthState();
+  }
+
+  /// After [ErrorInterceptor] clears tokens (invalid/expired JWT), sync Riverpod + routing.
+  Future<void> onRemoteSessionInvalidated() async {
+    if (!state.isAuthenticated && await _readAccessToken() == null) {
+      return;
+    }
+    await logout();
   }
 
   Future<void> refreshUser() async {

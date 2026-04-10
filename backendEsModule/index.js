@@ -94,7 +94,9 @@ import adminTenderVaultRoutes from "./router/adminTenderVaultRoutes.js";
 
 
 const app = express();
-const PORT = process.env.NODE_ENV === "test" ? 0 : process.env.PORT || 5050;
+
+/** Default 5050: on many Macs port 5000 is taken by Control Center (AirPlay). */
+const DEFAULT_DEV_PORT = 5050;
 
 if (process.env.NODE_ENV !== "test") {
   app.set("trust proxy", 1);
@@ -242,30 +244,56 @@ if (process.env.NODE_ENV !== "test") {
   const { default: initSocket } = await import("./sockets/socket.js");
   io = initSocket(server);
 
-  const startServer = (portToUse) => {
+  const isTest = process.env.NODE_ENV === "test";
+  const envPortRaw = process.env.PORT;
+  const parsedEnv =
+    envPortRaw !== undefined && String(envPortRaw).trim() !== ""
+      ? Number.parseInt(String(envPortRaw), 10)
+      : NaN;
+  const primaryPort = isTest
+    ? 0
+    : Number.isFinite(parsedEnv) && parsedEnv > 0
+      ? parsedEnv
+      : DEFAULT_DEV_PORT;
+  const fallbackPorts = [5000, 5001, 3001].filter(
+    (p) => Number.isFinite(p) && p > 0 && p !== primaryPort
+  );
+  const portsToTry = isTest ? [0] : [primaryPort, ...fallbackPorts];
+
+  const tryListen = (index) => {
+    if (index >= portsToTry.length) {
+      console.error("❌ Could not bind. Tried ports:", portsToTry.join(", "));
+      process.exit(1);
+    }
+    const port = portsToTry[index];
+    server.removeAllListeners("error");
     server.once("error", (err) => {
       if (err && err.code === "EADDRINUSE") {
-        console.error(
-          `⚠️ Port ${portToUse} in use. Retrying with a random free port...`
+        const next = portsToTry[index + 1];
+        console.warn(
+          `⚠️ Port ${port} in use${next != null ? ` — trying ${next}…` : ""}`
         );
-        server.close(() => startServer(0));
+        tryListen(index + 1);
         return;
       }
       throw err;
     });
-
-    server.listen(portToUse, () => {
+    server.listen(port, () => {
       const addressInfo = server.address();
       const boundPort =
         typeof addressInfo === "object" && addressInfo
           ? addressInfo.port
-          : portToUse;
-
+          : port;
+      if (!isTest && boundPort !== primaryPort) {
+        console.warn(
+          `ℹ️ Bound on ${boundPort} (preferred was ${primaryPort}). Update backendEsModule/.env: PORT=${boundPort} and APP_API_URL=http://localhost:${boundPort}`
+        );
+      }
       console.log(`✅ Server listening at http://localhost:${boundPort}`);
     });
   };
 
-  startServer(PORT);
+  tryListen(0);
 } else {
   // For tests, create minimal server without socket.io
   server = http.createServer(app);

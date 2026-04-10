@@ -1,4 +1,10 @@
 {
+  "scripts": {
+    "dev": "npm run dev --prefix backendEsModule",
+    "dev:backend": "npm run dev --prefix backendEsModule",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "start:backend": "npm start --prefix backendEsModule"
+  },
   "dependencies": {
     "@adminjs/themes": "^1.0.1",
     "@emailjs/browser": "^4.4.1",

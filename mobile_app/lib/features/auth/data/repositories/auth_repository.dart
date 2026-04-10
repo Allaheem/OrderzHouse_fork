@@ -12,6 +12,7 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/dio_interceptors.dart';
 import '../../../../core/storage/secure_store.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/session/auth_api_binding.dart';
 import '../models/signup_payload.dart';
 
 typedef GoogleSignInFactory =
@@ -75,6 +76,10 @@ class AuthRepository {
     String? serverClientId,
   }) {
     return GoogleSignIn(scopes: scopes, serverClientId: serverClientId);
+  }
+
+  Future<void> _recordSessionApiOrigin() async {
+    await AuthApiBinding.recordCurrentApiForSession();
   }
 
   String? _extractErrorMessage(Object? data) {
@@ -206,6 +211,7 @@ class AuthRepository {
         if (refreshToken != null && refreshToken.isNotEmpty) {
           await _tokenStore.saveRefreshToken(refreshToken);
         }
+        await _recordSessionApiOrigin();
 
         final rawUser = data['userInfo'] ?? data['user'];
         if (rawUser == null || rawUser is! Map<String, dynamic>) {
@@ -301,6 +307,7 @@ class AuthRepository {
         if (refreshToken != null && refreshToken.isNotEmpty) {
           await _tokenStore.saveRefreshToken(refreshToken);
         }
+        await _recordSessionApiOrigin();
 
         final userData = data['userInfo'] as Map<String, dynamic>;
         // Include terms acceptance fields
@@ -351,6 +358,7 @@ class AuthRepository {
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await _tokenStore.saveRefreshToken(refreshToken);
       }
+      await _recordSessionApiOrigin();
 
       final userData = data['userInfo'] as Map<String, dynamic>;
       // Include terms acceptance fields
@@ -449,6 +457,7 @@ class AuthRepository {
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await _tokenStore.saveRefreshToken(refreshToken);
       }
+      await _recordSessionApiOrigin();
       final userInfo = respData['userInfo'] as Map<String, dynamic>?;
       if (userInfo == null) {
         return const ApiResponse(

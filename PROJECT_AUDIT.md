@@ -150,14 +150,14 @@ Client/freelancer marketplace (Fiverr-like). This report is based on actual repo
 | `adminDash/api/admin.js` | Uses `VITE_API_URL` (wrong). Vite convention is `VITE_APP_API_URL`. So with only `VITE_APP_API_URL` set, `API_BASE` is `""`. **Fix:** use `import.meta.env.VITE_APP_API_URL`. |
 | `adminDash/pages/operation/Tasks.jsx` | `baseURL: import.meta.env.VITE_API_URL \|\| ""` — same wrong env name. |
 | `adminDash/pages/insights/Analytics.jsx` | Same: `VITE_API_URL`. |
-| `api/client.js` | ✅ Uses `VITE_APP_API_URL` with fallback `http://localhost:5000`. |
+| `api/client.js` | ✅ Uses `VITE_APP_API_URL` with fallback `http://localhost:5050`. |
 | `adminDash/api/axios.js` | ✅ Uses `VITE_APP_API_URL` (no fallback; can be undefined if env missing). |
 | Others | Most use `VITE_APP_API_URL`; some use `\|\| ""` so requests can go to relative origin when undefined. |
 
 ### Pages that may fail fetch
 
 - **Categories:** Depend on `VITE_APP_API_URL` and `GET /category`. If env is unset and no fallback, requests break (e.g. `category.js` uses `` `${import.meta.env.VITE_APP_API_URL}/category` ``).
-- **Dashboard:** `dashboard.js` uses `API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5000"` — safe.
+- **Dashboard:** `dashboard.js` uses `API_BASE = import.meta.env.VITE_APP_API_URL || "http://localhost:5050"` — safe.
 - **Admin user list:** Uses `admin.js` → `VITE_API_URL`; will be wrong unless fixed.
 
 ---
@@ -214,7 +214,7 @@ Client/freelancer marketplace (Fiverr-like). This report is based on actual repo
 | 1 | **Access-denied route:** Role-forbidden users are sent to `/access-denied` but get 404. | `frontend/src/App.jsx`: Add `<Route path="/access-denied" element={<AccessDenied />} />` and use a proper component (e.g. uncomment/restore `AccessDenied.jsx` or create a minimal “Access denied” page). |
 | 2 | **Google login vs backend JWT:** After “Google login”, frontend uses Google credential as Bearer token; backend expects its own JWT. All authenticated API calls will 403. | Either: (a) Add backend endpoint (e.g. `POST /users/login-google`) that accepts Google ID token, finds/creates user, returns app JWT; then in `Login.jsx` call it and store that JWT. Or (b) Remove Google login until (a) is done. |
 | 3 | **Admin API baseURL:** Admin user list and any use of `admin.js` use wrong env name. | `frontend/src/adminDash/api/admin.js`: Change `VITE_API_URL` to `VITE_APP_API_URL`. |
-| 4 | **Tasks & Analytics baseURL:** Same wrong env. | `frontend/src/adminDash/pages/operation/Tasks.jsx`, `frontend/src/adminDash/pages/insights/Analytics.jsx`: Use `VITE_APP_API_URL` (and optionally fallback like `http://localhost:5000`). |
+| 4 | **Tasks & Analytics baseURL:** Same wrong env. | `frontend/src/adminDash/pages/operation/Tasks.jsx`, `frontend/src/adminDash/pages/insights/Analytics.jsx`: Use `VITE_APP_API_URL` (and optionally fallback like `http://localhost:5050`). |
 | 5 | **Ensure API URL everywhere:** Avoid undefined baseURL. | All files that use `import.meta.env.VITE_APP_API_URL`: Prefer a shared client (e.g. `api/client.js` or `adminDash/api/axios.js`) with a single fallback so all requests have a valid base. |
 
 ### P1 — Important
