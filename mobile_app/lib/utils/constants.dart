@@ -1,7 +1,6 @@
 // ??? ????????
 class AppConstants {
-  // API Configuration
-  static const String baseUrl = 'http://10.0.2.2:5050';
+  // API base URL: use [AppConfig.baseUrl] (reads .env APP_API_URL / defaults).
 
   // Storage Keys
   static const String tokenKey = 'jwt_token';

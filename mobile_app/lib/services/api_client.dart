@@ -1,6 +1,6 @@
 // ??? ????????
 import 'package:dio/dio.dart';
-import '../utils/constants.dart';
+import '../core/config/app_config.dart';
 import 'storage_service.dart';
 
 class ApiClient {
@@ -9,7 +9,7 @@ class ApiClient {
   ApiClient() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: AppConstants.baseUrl,
+        baseUrl: AppConfig.baseUrl,
         headers: {'Content-Type': 'application/json'},
         connectTimeout: const Duration(seconds: 30),
         receiveTimeout: const Duration(seconds: 30),
