@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AppConfig {
   AppConfig._();
 
+  /// **Security:** `.env` is listed as a Flutter asset and is shipped inside the app binary.
+  /// Put only non-secret overrides here (e.g. `APP_API_URL`). Never store API keys or shared secrets.
   static const String _releaseDefaultApiUrl =
       'https://orderzhouse-backend.onrender.com';
 

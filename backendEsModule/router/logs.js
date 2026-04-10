@@ -1,6 +1,6 @@
 import express from "express";
 import { authentication } from "../middleware/authentication.js";
-import authorization from "../middleware/authorization.js";
+import adminOnly from "../middleware/adminOnly.js";
 import {
   getMessageLogs,
   getSystemLogs,
@@ -15,8 +15,8 @@ import {
 
 const logsRouter = express.Router();
 
-// Apply authentication middleware to all routes
-logsRouter.use(authentication);
+// System / message logs are sensitive — restrict to admin (was: any authenticated user)
+logsRouter.use(authentication, adminOnly);
 
 // Get message logs (existing functionality)
 logsRouter.get("/messages", getMessageLogs);

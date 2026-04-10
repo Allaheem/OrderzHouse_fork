@@ -1,0 +1,3 @@
+# Declares tags used by tests (silences "tag was not specified" for golden_toolkit).
+tags:
+  golden:

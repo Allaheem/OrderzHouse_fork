@@ -58,7 +58,11 @@ const authentication = (req, res, next) => {
         }
       } catch (dbErr) {
         console.error("Auth middleware DB check error:", dbErr);
-        // Continue if DB check fails (don't block request, but log error)
+        // Fail closed: do not trust JWT if we cannot verify user/terms in DB
+        return res.status(503).json({
+          success: false,
+          message: "Service temporarily unavailable. Please try again.",
+        });
       }
 
       req.token = result;
@@ -77,16 +81,35 @@ const authSocket = async (socket, next) => {
       return next(new Error("Authentication error: Token required"));
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        return next(new Error("Authentication error: Invalid token"));
-      }
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch {
+      return next(new Error("Authentication error: Invalid token"));
+    }
 
-      // attach user to socket
-      socket.user = decoded;
-      console.log("🔐 Socket authenticated:", decoded);
-      next();
-    });
+    if (decoded?.is_deleted === true) {
+      return next(new Error("Authentication error: Account deleted"));
+    }
+
+    try {
+      const userCheck = await pool.query(
+        "SELECT id FROM users WHERE id = $1 AND is_deleted = FALSE",
+        [decoded.userId]
+      );
+      if (userCheck.rows.length === 0) {
+        return next(new Error("Authentication error: Invalid session"));
+      }
+    } catch (dbErr) {
+      console.error("authSocket DB check error:", dbErr);
+      return next(new Error("Authentication error: Service unavailable"));
+    }
+
+    socket.user = decoded;
+    if (process.env.NODE_ENV !== "production") {
+      console.log("🔐 Socket authenticated userId:", decoded?.userId);
+    }
+    next();
   } catch (err) {
     console.error("authSocket error:", err);
     next(new Error("Authentication error"));

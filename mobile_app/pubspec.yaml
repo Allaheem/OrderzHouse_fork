@@ -76,6 +76,7 @@ flutter:
   generate: true
 
   assets:
+    # Bundled into the app — no secrets (use CI --dart-define for sensitive build-time values).
     - .env
     - assets/icon.png
     - assets/policies/

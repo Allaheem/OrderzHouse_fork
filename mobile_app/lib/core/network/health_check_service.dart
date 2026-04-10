@@ -1,6 +1,6 @@
-// ??? ????????
 import 'package:dio/dio.dart';
 import '../config/app_config.dart';
+import '../utils/app_debug_log.dart';
 
 class HealthCheckService {
   HealthCheckService._();
@@ -23,20 +23,18 @@ class HealthCheckService {
   }
 
   /// Ping the API server to check connectivity
-  /// Tries /health, /api/health, /, and /api/stats in order
+  /// Tries /health, /api/health, /, and /api/public-stats in order
   static Future<HealthCheckResult> ping() async {
     final dio = _createHealthCheckDio();
     final baseUrl = AppConfig.baseUrl;
 
-    // List of endpoints to try
-    final endpoints = ['/health', '/api/health', '/', '/api/stats'];
+    final endpoints = ['/health', '/api/health', '/', '/api/public-stats'];
 
     for (final endpoint in endpoints) {
       try {
         final response = await dio.get(endpoint);
 
-        // ignore: avoid_print
-        print(
+        appDebugLog(
           '✅ Health check SUCCESS: $baseUrl$endpoint - Status: ${response.statusCode}',
         );
         return HealthCheckResult(
@@ -48,8 +46,7 @@ class HealthCheckService {
       } on DioException catch (e) {
         // If we get a response (even error), server is reachable
         if (e.response != null) {
-          // ignore: avoid_print
-          print(
+          appDebugLog(
             '⚠️ Health check PARTIAL: $baseUrl$endpoint - Status: ${e.response?.statusCode}',
           );
           return HealthCheckResult(
@@ -61,19 +58,15 @@ class HealthCheckService {
           );
         }
         // Continue to next endpoint if connection failed
-        // ignore: avoid_print
-        print(
+        appDebugLog(
           '❌ Health check FAILED: $baseUrl$endpoint - ${e.type}: ${e.message}',
         );
       } catch (e) {
-        // ignore: avoid_print
-        print('❌ Health check ERROR: $baseUrl$endpoint - $e');
+        appDebugLog('❌ Health check ERROR: $baseUrl$endpoint - $e');
       }
     }
 
-    // All endpoints failed
-    // ignore: avoid_print
-    print('❌ Health check FAILED: Could not reach API at $baseUrl');
+    appDebugLog('❌ Health check FAILED: Could not reach API at $baseUrl');
     return HealthCheckResult(
       success: false,
       endpoint: null,

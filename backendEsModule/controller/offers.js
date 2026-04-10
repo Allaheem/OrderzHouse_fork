@@ -767,6 +767,7 @@ export const getOffersForMyProjects = async (req, res) => {
 export const getOffersForProject = async (req, res) => {
   try {
     const ownerId = req.token?.userId;
+    const roleId = req.token?.role ?? req.token?.roleId;
     const { projectId } = req.params;
 
     if (!ownerId)
@@ -788,7 +789,8 @@ export const getOffersForProject = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Project not found" });
 
-    if (String(proj.rows[0].user_id) !== String(ownerId))
+    const isAdmin = Number(roleId) === 1;
+    if (!isAdmin && String(proj.rows[0].user_id) !== String(ownerId))
       return res.status(403).json({
         success: false,
         message: "Not authorized to view offers for this project",

@@ -1,4 +1,5 @@
 import pool from "../../models/db.js";
+import { userMayAccessProjectDetails } from "../../services/projectAccessControl.js";
 import { LogCreators, ACTION_TYPES } from "../../services/loggingService.js";
 import cloudinary from "../../cloudinary/setupfile.js";
 import { Readable } from "stream";
@@ -35,9 +36,9 @@ export const uploadToCloudinary = (buffer, folder = "project_files") => {
 export const createProject = async (req, res) => {
   const client = await pool.connect();
   try {
-    // Debug: Log files and body
-    console.log("[createProject] req.files:", req.files);
-    console.log("[createProject] req.body:", req.body);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[createProject] req.files keys:", req.files ? Object.keys(req.files) : null);
+    }
     
     const userId = req.token?.userId;
     
@@ -1082,21 +1083,6 @@ export const approveWorkCompletion = async (req, res) => {
       try {
         await dbClient.query("BEGIN");
 
-        // [DEBUG] Resolved projectId must be projects.id (not task/submission/application id)
-        console.log("[approveWorkCompletion] resolved projectId (projects.id) for release:", resolvedProjectId);
-
-        // [DEBUG] Escrow row before release (full row)
-        const escrowBefore = await dbClient.query(
-          `SELECT id, project_id, freelancer_id, amount, status, payment_id FROM escrow WHERE project_id = $1 LIMIT 1`,
-          [resolvedProjectId]
-        );
-        const walletBefore = escrowBefore.rows[0]
-          ? (await dbClient.query(`SELECT balance FROM wallets WHERE user_id = $1`, [escrowBefore.rows[0].freelancer_id])).rows[0]?.balance
-          : null;
-        console.log("[approveWorkCompletion] projectId used for release:", resolvedProjectId);
-        console.log("[approveWorkCompletion] escrow row before:", escrowBefore.rows[0] ?? "none");
-        console.log("[approveWorkCompletion] wallet balance before:", walletBefore ?? "n/a (no wallet row)");
-
         // 1) Persist approval in same transaction (only columns that exist: status, completion_status)
         await dbClient.query(
           `UPDATE projects SET status = $1, completion_status = $1 WHERE id = $2`,
@@ -1151,9 +1137,8 @@ export const approveWorkCompletion = async (req, res) => {
         }
 
         // 5) After successful release, set projects.payment_released_at (same transaction)
-        let paymentReleasedAtResult;
         try {
-          paymentReleasedAtResult = await dbClient.query(
+          await dbClient.query(
             `UPDATE projects SET payment_released_at = NOW() WHERE id = $1`,
             [resolvedProjectId]
           );
@@ -1167,8 +1152,6 @@ export const approveWorkCompletion = async (req, res) => {
             error: payErr.message,
           });
         }
-        console.log("[approveWorkCompletion] project.payment_released_at update result:", paymentReleasedAtResult?.rowCount ?? "n/a");
-
         await dbClient.query("COMMIT");
         escrowRelease = {
           released: releaseResult.released,
@@ -1177,17 +1160,6 @@ export const approveWorkCompletion = async (req, res) => {
           amount: releaseResult.amount ?? null,
           freelancerId: releaseResult.freelancerId ?? null,
         };
-
-        // [DEBUG] Release result object and wallet after
-        const escrowAfter = await pool.query(
-          `SELECT id, status FROM escrow WHERE project_id = $1 LIMIT 1`,
-          [resolvedProjectId]
-        );
-        const walletAfter = escrowRelease.freelancerId
-          ? (await pool.query(`SELECT balance FROM wallets WHERE user_id = $1`, [escrowRelease.freelancerId])).rows[0]?.balance
-          : null;
-        console.log("[approveWorkCompletion] release result object:", releaseResult);
-        console.log("[approveWorkCompletion] escrow after:", escrowAfter.rows[0]?.status ?? "none", "| wallet balance after:", walletAfter ?? "n/a");
 
         dbClient.release();
       } catch (err) {
@@ -1254,7 +1226,7 @@ export const resubmitWorkCompletion = async (req, res) => {
     const files = req.files || [];
 
     const { rows: projectRows } = await pool.query(
-      `SELECT assigned_freelancer_id, title, completion_status
+      `SELECT title, completion_status
        FROM projects WHERE id = $1 AND is_deleted = false`,
       [projectId]
     );
@@ -1266,10 +1238,19 @@ export const resubmitWorkCompletion = async (req, res) => {
     }
     const project = projectRows[0];
 
-    if (project.assigned_freelancer_id !== freelancerId) {
+    const { rows: activeAssignment } = await pool.query(
+      `SELECT 1
+         FROM project_assignments
+        WHERE project_id = $1
+          AND freelancer_id = $2
+          AND status = 'active'
+        LIMIT 1`,
+      [projectId, freelancerId]
+    );
+    if (!activeAssignment.length) {
       return res.status(403).json({
         success: false,
-        message: "Only assigned freelancer can resubmit",
+        message: "Only an active freelancer on this project can resubmit",
       });
     }
 
@@ -1457,10 +1438,14 @@ export const addProjectFiles = async (req, res) => {
   const { projectId } = req.params;
   const userId = req.token?.userId;
 
-  // Debug: Log request details
-  console.log("[addProjectFiles] req.files:", req.files);
-  console.log("[addProjectFiles] req.body:", req.body);
-  console.log("[addProjectFiles] projectId:", projectId);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      "[addProjectFiles] projectId:",
+      projectId,
+      "files:",
+      req.files ? (Array.isArray(req.files) ? req.files.length : Object.keys(req.files)) : null
+    );
+  }
 
   if (!userId)
     return res
@@ -1482,13 +1467,40 @@ export const addProjectFiles = async (req, res) => {
       .json({ success: false, message: "No files uploaded" });
   }
 
+  const roleId = req.token?.role ?? req.token?.roleId;
+
   try {
+    const { rows: projectPeek } = await pool.query(
+      `SELECT user_id, project_type, status, admin_approval_status, is_deleted
+       FROM projects WHERE id = $1 AND is_deleted = false`,
+      [projectIdNum]
+    );
+    if (!projectPeek.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+    const allowed = await userMayAccessProjectDetails(
+      pool,
+      projectPeek[0],
+      projectIdNum,
+      userId,
+      roleId
+    );
+    if (!allowed) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to add files to this project.",
+      });
+    }
+
     const uploadedFiles = [];
 
     for (const file of req.files) {
       const result = await uploadToCloudinary(
         file.buffer,
-        `projects/${projectId}`
+        `projects/${projectIdNum}`
       );
 
       const { rows } = await pool.query(
@@ -1497,7 +1509,7 @@ export const addProjectFiles = async (req, res) => {
          VALUES ($1, $2, $3, $4, $5, $6) 
          RETURNING *`,
         [
-          projectId,
+          projectIdNum,
           userId,
           file.originalname,
           result.secure_url,
@@ -1591,11 +1603,14 @@ export const deleteProjectByOwner = async (req, res) => {
 export const getProjectTimeline = async (req, res) => {
   try {
     const { projectId } = req.params;
+    const userId = req.token?.userId;
+    const roleId = req.token?.role ?? req.token?.roleId;
 
     const { rows: projectRows } = await pool.query(
       `SELECT 
          p.id, p.title, p.status, p.completion_status, 
-         p.created_at, p.assigned_freelancer_id, 
+         p.created_at, p.assigned_freelancer_id,
+         p.user_id, p.project_type, p.admin_approval_status, p.is_deleted,
          u.username AS client_name, 
          f.username AS freelancer_name
        FROM projects p
@@ -1611,6 +1626,27 @@ export const getProjectTimeline = async (req, res) => {
         .json({ success: false, message: "Project not found" });
 
     const project = projectRows[0];
+
+    const accessRow = {
+      user_id: project.user_id,
+      project_type: project.project_type,
+      status: project.status,
+      admin_approval_status: project.admin_approval_status,
+      is_deleted: project.is_deleted,
+    };
+    const allowed = await userMayAccessProjectDetails(
+      pool,
+      accessRow,
+      projectId,
+      userId,
+      roleId
+    );
+    if (!allowed) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to view this timeline.",
+      });
+    }
 
     const { rows: history } = await pool.query(
       `SELECT event, timestamp 
@@ -2003,6 +2039,7 @@ export const submitProjectDelivery = async (req, res) => {
 
 export const getProjectDeliveries = async (req, res) => {
   const userId = req.token?.userId;
+  const roleId = req.token?.role ?? req.token?.roleId;
   const { projectId } = req.params;
 
   if (!userId) {
@@ -2028,14 +2065,16 @@ export const getProjectDeliveries = async (req, res) => {
     }
 
     const project = projectRows[0];
+    const isAdmin = Number(roleId) === 1;
 
     // 2) Permission:
+    // - admin
     // - client can view
     // - OR any freelancer with active / pending assignment
     const isClient = String(project.client_id) === String(userId);
 
     let isFreelancer = false;
-    if (!isClient) {
+    if (!isAdmin && !isClient) {
       const { rows: activeAssignment } = await pool.query(
         `SELECT 1
            FROM project_assignments
@@ -2049,7 +2088,7 @@ export const getProjectDeliveries = async (req, res) => {
       isFreelancer = activeAssignment.length > 0;
     }
 
-    if (!isClient && !isFreelancer) {
+    if (!isAdmin && !isClient && !isFreelancer) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to view this project's deliveries",
@@ -2110,6 +2149,7 @@ export const getProjectDeliveries = async (req, res) => {
 /// GET /projects/:projectId/change-requests
 export const getProjectChangeRequests = async (req, res) => {
   const requesterId = req.token?.userId;
+  const roleId = req.token?.role ?? req.token?.roleId;
   const { projectId } = req.params;
 
   if (!requesterId) return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -2127,6 +2167,8 @@ export const getProjectChangeRequests = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
+    const isAdmin = Number(roleId) === 1;
+
     // Get active freelancer assignment
     const { rows: ar } = await pool.query(
       `SELECT freelancer_id
@@ -2142,11 +2184,11 @@ export const getProjectChangeRequests = async (req, res) => {
 
     const freelancerId = ar[0].freelancer_id;
 
-    // Check if requester is the assigned freelancer or the client owner
+    // Check if requester is admin, the assigned freelancer, or the client owner
     const isFreelancer = String(requesterId) === String(freelancerId);
     const isClient = String(requesterId) === String(pr[0].client_id);
 
-    if (!isFreelancer && !isClient) {
+    if (!isAdmin && !isFreelancer && !isClient) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
@@ -2183,6 +2225,22 @@ export const markProjectChangeRequestsAsRead = async (req, res) => {
   if (!projectId) return res.status(400).json({ success: false, message: "Missing projectId" });
 
   try {
+    const { rows: assignOk } = await pool.query(
+      `SELECT 1
+         FROM project_assignments
+        WHERE project_id = $1
+          AND freelancer_id = $2
+          AND status = 'active'
+        LIMIT 1`,
+      [projectId, freelancerId]
+    );
+    if (!assignOk.length) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update change requests for this project",
+      });
+    }
+
     const { rowCount } = await pool.query(
       `UPDATE project_change_requests
        SET is_resolved = true
@@ -2770,7 +2828,7 @@ export const getProjectSuccess = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch project details",
-      error: err.message,
+      ...(process.env.NODE_ENV !== "production" && { error: err.message }),
     });
   }
 };

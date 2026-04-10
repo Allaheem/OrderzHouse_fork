@@ -14,6 +14,7 @@ import 'core/storage/app_prefs.dart';
 import 'core/routing/route_tracker.dart';
 import 'core/cache/cache_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'core/utils/app_debug_log.dart';
 
 void main() async {
   // Step 1: Ensure Flutter binding is initialized
@@ -30,34 +31,25 @@ void main() async {
   // Step 5: Load environment variables (gracefully handle missing .env file)
   try {
     await dotenv.load(fileName: '.env');
-    // ignore: avoid_print
-    print('✅ Environment variables loaded successfully');
+    appDebugLog('✅ Environment variables loaded successfully');
   } catch (e) {
-    // .env file not found - initialize with empty data to avoid NotInitializedError
-    // ignore: avoid_print
-    print('⚠️ Warning: .env file not found, using defaults');
     dotenv.testLoad(fileInput: '');
+    appDebugLog('⚠️ Warning: .env file not found, using defaults');
   }
 
-  // Step 6: Log baseUrl for debugging
-  // ignore: avoid_print
-  print('🌐 API Base URL: ${AppConfig.baseUrl}');
+  appDebugLog('🌐 API Base URL: ${AppConfig.baseUrl}');
 
-  // Step 7: Perform health check (non-blocking)
   unawaited(
     HealthCheckService.ping()
         .then((result) {
           if (result.success) {
-            // ignore: avoid_print
-            print('✅ ${result.message}');
+            appDebugLog('✅ ${result.message}');
           } else {
-            // ignore: avoid_print
-            print('❌ ${result.message}');
+            appDebugLog('❌ ${result.message}');
           }
         })
         .catchError((error) {
-          // ignore: avoid_print
-          print('❌ Health check error: $error');
+          appDebugLog('❌ Health check error: $error');
         }),
   );
 

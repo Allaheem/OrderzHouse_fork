@@ -2,8 +2,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../storage/secure_store.dart';
-import '../config/app_config.dart';
-
 class AuthInterceptor extends Interceptor {
   /// Set on [Options.extra] for public routes (login, forgot password, etc.)
   /// so we never attach a stale session token to unauthenticated endpoints.
@@ -28,7 +26,8 @@ class AuthInterceptor extends Interceptor {
 }
 
 class LoggingInterceptor extends Interceptor {
-  bool get _shouldLog => kDebugMode || AppConfig.isDevelopment;
+  /// Never log bodies/headers in release — even if ENV=development in a bundled .env.
+  bool get _shouldLog => kDebugMode;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -126,12 +125,23 @@ class ErrorInterceptor extends Interceptor {
 }
 
 class RetryInterceptor extends Interceptor {
+  static const _maxRetries = 1;
+
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (_shouldRetry(err)) {
+    final attempt = (err.requestOptions.extra['_retryCount'] as int?) ?? 0;
+    if (_shouldRetry(err) && attempt < _maxRetries) {
+      err.requestOptions.extra['_retryCount'] = attempt + 1;
       await Future.delayed(const Duration(seconds: 1));
       try {
-        final dio = Dio();
+        final dio = Dio(
+          BaseOptions(
+            connectTimeout: err.requestOptions.connectTimeout,
+            receiveTimeout: err.requestOptions.receiveTimeout,
+            sendTimeout: err.requestOptions.sendTimeout,
+            validateStatus: err.requestOptions.validateStatus,
+          ),
+        );
         final response = await dio.fetch(err.requestOptions);
         handler.resolve(response);
         return;

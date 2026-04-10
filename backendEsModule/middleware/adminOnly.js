@@ -1,7 +1,5 @@
 const adminOnly = (req, res, next) => {
   try {
-    console.log(req.token);
-    
     const tokenData = req.token; 
     
     if (!tokenData) {

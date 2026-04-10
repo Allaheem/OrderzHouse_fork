@@ -112,8 +112,20 @@ class _SecurityCenterScreenState extends ConsumerState<SecurityCenterScreen> {
     }
 
     final qrUrl = gen.data!['qrCodeUrl'] as String?;
-    final secret = gen.data!['secret'] as String?;
     final png = _decodeQrPng(qrUrl);
+    if (png == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${l10n.error}: could not show QR. Try again or use another network.',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return;
+    }
     final codeController = TextEditingController();
 
     final verified = await showDialog<bool>(
@@ -131,17 +143,9 @@ class _SecurityCenterScreenState extends ConsumerState<SecurityCenterScreen> {
                 style: AppTextStyles.bodySmall,
               ),
               const SizedBox(height: AppSpacing.md),
-              if (png != null)
-                Center(
-                  child: Image.memory(png, width: 200, height: 200),
-                )
-              else
-                Text(
-                  secret ?? '',
-                  style: AppTextStyles.bodySmall.copyWith(
-                    fontFamily: 'monospace',
-                  ),
-                ),
+              Center(
+                child: Image.memory(png, width: 200, height: 200),
+              ),
               const SizedBox(height: AppSpacing.md),
               TextField(
                 controller: codeController,

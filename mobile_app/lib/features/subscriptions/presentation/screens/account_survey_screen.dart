@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/utils/safe_url_launch.dart';
 
 /// Survey / offline subscription flow (same as web: opens external survey URL).
 /// Route: /account-survey?planId=...
@@ -57,7 +58,7 @@ class AccountSurveyScreen extends StatelessWidget {
 
   Future<void> _openSurvey(BuildContext context, Uri uri) async {
     try {
-      final launched = await launchUrl(
+      final launched = await launchTrustedHttpUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );

@@ -11,6 +11,7 @@ import '../../../../core/widgets/loading_shimmer.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/utils/safe_url_launch.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -396,7 +397,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Future<void> _openCompanySubscribeUrl() async {
     final uri = Uri.parse(AppConfig.companySubscribeUrl);
     try {
-      final launched = await launchUrl(
+      final launched = await launchTrustedHttpUrl(
         uri,
         mode: LaunchMode.externalApplication,
       );

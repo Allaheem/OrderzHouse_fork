@@ -3,6 +3,7 @@ import {
   fetchActiveExposedTenderVaultProjects,
   fetchExposedTenderByPublicId,
 } from "../../services/tenderVaultExposureService.js";
+import { userMayAccessProjectDetails } from "../../services/projectAccessControl.js";
 
 /**
  * Shared filter based on type/status
@@ -786,6 +787,8 @@ export const getProjectsBySubSubCategoryId = async (req, res) => {
 export const getProjectById = async (req, res) => {
   try {
     const { projectId } = req.params;
+    const userId = req.token?.userId;
+    const roleId = req.token?.role ?? req.token?.roleId;
 
     if (!projectId) {
       return res
@@ -813,8 +816,29 @@ export const getProjectById = async (req, res) => {
 
     if (projectRows.length > 0) {
       const project = projectRows[0];
-      // Debug: Log client_id to verify it's in response
-      console.log("[getProjectById] Project client_id:", project.client_id, "user_id:", project.user_id);
+
+      const allowed = await userMayAccessProjectDetails(
+        pool,
+        project,
+        projectId,
+        userId,
+        roleId
+      );
+      if (!allowed) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to view this project",
+        });
+      }
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log(
+          "[getProjectById] projectId:",
+          projectId,
+          "requester:",
+          userId
+        );
+      }
       return res.status(200).json({ success: true, project });
     }
 
@@ -974,11 +998,38 @@ export const getProjectsByUserRole = async (req, res) => {
 export const getProjectFilesByProjectId = async (req, res) => {
   try {
     const { projectId } = req.params;
+    const userId = req.token?.userId;
+    const roleId = req.token?.role ?? req.token?.roleId;
 
     if (!projectId || isNaN(projectId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid or missing project ID.",
+      });
+    }
+
+    const { rows: projectPeek } = await pool.query(
+      `SELECT user_id, project_type, status, admin_approval_status, is_deleted
+       FROM projects WHERE id = $1 AND is_deleted = false`,
+      [projectId]
+    );
+    if (projectPeek.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found.",
+      });
+    }
+    const allowed = await userMayAccessProjectDetails(
+      pool,
+      projectPeek[0],
+      projectId,
+      userId,
+      roleId
+    );
+    if (!allowed) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to view files for this project.",
       });
     }
 

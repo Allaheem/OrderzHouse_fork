@@ -27,7 +27,9 @@ export const createCheckoutSession = async (req, res) => {
       });
     }
 
-    console.log("[Stripe] Request body:", req.body);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[Stripe] createCheckoutSession keys:", Object.keys(req.body || {}));
+    }
     // Accept both plan_id/planId and user_id/userId
     const plan_id = req.body.plan_id || req.body.planId;
     const user_id = req.body.user_id || req.body.userId;

@@ -31,7 +31,6 @@ export const getUsersByRole = async (req, res) => {
         u.first_name, 
         u.last_name, 
         u.email, 
-        u.password,
         u.is_deleted,
         u.phone_number, 
         u.country, 
@@ -176,6 +175,14 @@ export const createUser = async (req, res) => {
   } = req.body;
 
   try {
+    if (!password || typeof password !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Password is required",
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const query = `
       INSERT INTO users (role_id, first_name, last_name, email, password, phone_number, country, username)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -187,7 +194,7 @@ export const createUser = async (req, res) => {
       first_name,
       last_name,
       email,
-      password,
+      hashedPassword,
       phone_number,
       country,
       username,
@@ -281,7 +288,9 @@ export const updateUser = async (req, res) => {
 
     const { rows } = await pool.query(query, values);
 
-    res.status(200).json({ success: true, data: rows[0] });
+    const row = rows[0];
+    const { password: _passwordHash, ...safeUser } = row;
+    res.status(200).json({ success: true, data: safeUser });
   } catch (error) {
     if (error.code === "23505") {
       return res.status(400).json({

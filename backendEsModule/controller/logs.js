@@ -26,10 +26,10 @@ export const getMessageLogs = async (req, res) => {
       logs: rows
     });
   } catch (err) {
+    console.error("getMessageLogs:", err);
     res.status(500).json({
       success: false,
       message: "Server Error",
-      error: err
     });
   }
 };

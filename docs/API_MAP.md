@@ -24,8 +24,8 @@ Authorization: Bearer <jwt-token>
 - **Response**: `{ success: true, token: string, userInfo: {...} }`
 
 ### POST `/auth/2fa/generate`
-**Auth Required** - Generate 2FA secret and QR code
-- **Response**: `{ success: true, qrCodeUrl: string, secret: string }`
+**Auth Required** - Generate TOTP secret (stored server-side) and return a QR code for the authenticator app. The raw secret is **not** returned in the JSON body (scan the QR only).
+- **Response**: `{ success: true, qrCodeUrl: string }` (and optional `message`)
 
 ### POST `/auth/2fa/verify`
 **Auth Required** - Verify 2FA token to enable 2FA

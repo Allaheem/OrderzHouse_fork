@@ -1,0 +1,43 @@
+# Quality gate: Flutter analyze + unit tests, Node backend tests.
+# Golden tests are skipped in CI (font/renderer drift across runners).
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart analyze lib test
+      - name: Unit tests (exclude goldens — OS-specific pixel baselines)
+        run: |
+          flutter test $(find test -name '*_test.dart' ! -path '*/goldens/*' -type f)
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backendEsModule
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backendEsModule/package-lock.json
+      - run: npm ci
+      - name: npm audit (informational — does not fail the job)
+        run: npm audit || true
+      - run: npm test

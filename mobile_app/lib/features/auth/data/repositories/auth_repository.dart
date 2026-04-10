@@ -806,7 +806,7 @@ class AuthRepository {
   }
 
   // ==================== Two-Factor Authentication ====================
-  /// POST /auth/2fa/generate — returns QR data URL + secret (enable flow step 1).
+  /// POST /auth/2fa/generate — returns QR data URL only (secret never sent over the wire).
   Future<ApiResponse<Map<String, dynamic>>> generateTwoFactor() async {
     try {
       final response = await _dio.post('/auth/2fa/generate');
@@ -824,7 +824,6 @@ class AuthRepository {
         success: true,
         data: {
           'qrCodeUrl': raw['qrCodeUrl'] as String?,
-          'secret': raw['secret'] as String?,
         },
       );
     } on DioException catch (e) {

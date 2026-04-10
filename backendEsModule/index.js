@@ -1,6 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
 import "./models/db.js";
 import cors from "cors";
 import http from "http";
@@ -17,6 +18,28 @@ import { registerTenderVaultExposureRotationCron } from "./cron/tenderVaultExpos
 import liveScreenRoutes from "./router/LiveScreen.js";
 
 dotenv.config();
+
+if (process.env.NODE_ENV !== "test") {
+  const secret = process.env.JWT_SECRET || "";
+  const minLen = process.env.NODE_ENV === "production" ? 32 : 16;
+  if (secret.length < minLen) {
+    console.error(
+      `FATAL: JWT_SECRET must be set and at least ${minLen} characters (current length: ${secret.length}).`
+    );
+    process.exit(1);
+  }
+  if (process.env.NODE_ENV === "production" && !process.env.OTP_SECRET) {
+    console.warn(
+      "⚠️  OTP_SECRET is not set; OTP HMAC falls back to JWT_SECRET. Set OTP_SECRET for isolation."
+    );
+  }
+  if (process.env.NODE_ENV === "production" && !process.env.REFRESH_TOKEN_SECRET) {
+    console.error(
+      "FATAL: REFRESH_TOKEN_SECRET must be set in production (do not reuse JWT_SECRET)."
+    );
+    process.exit(1);
+  }
+}
 
 // Check email configuration (Resend) so OTP works everywhere
 const hasEmailConfig = !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM);
@@ -70,15 +93,19 @@ import tenderVaultRouter from "./router/tenderVault.js";
 import adminTenderVaultRoutes from "./router/adminTenderVaultRoutes.js";
 
 
-// DB connection
-dotenv.config();
-
 const app = express();
 const PORT = process.env.NODE_ENV === "test" ? 0 : process.env.PORT || 5050;
 
 if (process.env.NODE_ENV !== "test") {
   app.set("trust proxy", 1);
-  
+}
+
+if (process.env.NODE_ENV === "production") {
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+  );
 }
 
 // ✅ Stripe webhook needs the raw body (mounted BEFORE express.json())
@@ -149,6 +176,8 @@ const authLimiter = rateLimit({
 });
 app.use("/users/login", authLimiter);
 app.use("/users/register", authLimiter);
+app.use("/auth/google", authLimiter);
+app.use("/auth/2fa/verify-login", authLimiter);
 
 // Stricter limiter for password reset (do not leak email existence)
 const passwordResetLimiter = rateLimit({
@@ -163,6 +192,16 @@ app.use("/users/reset-password", passwordResetLimiter);
 app.use("/auth/forgot-password", passwordResetLimiter);
 app.use("/auth/verify-reset-otp", passwordResetLimiter);
 app.use("/auth/reset-password", passwordResetLimiter);
+
+const signupOtpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDevelopment ? 200 : 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many signup attempts. Please try again later." },
+});
+app.use("/users/request-signup-otp", signupOtpLimiter);
+app.use("/users/verify-and-register", signupOtpLimiter);
 
 // Routers
 //APPOINTMENTS

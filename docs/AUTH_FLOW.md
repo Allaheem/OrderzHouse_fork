@@ -238,14 +238,13 @@ If user has **3 or more failed login attempts**, or password verification fails,
 {
   "success": true,
   "message": "Scan this QR code with your authenticator app.",
-  "qrCodeUrl": "data:image/png;base64,iVBORw0KG...",
-  "secret": "JBSWY3DPEHPK3PXP"
+  "qrCodeUrl": "data:image/png;base64,iVBORw0KG..."
 }
 ```
 
 **What Happens:**
 1. TOTP secret is generated using speakeasy
-2. QR code is generated with user's email
+2. QR code is generated with user's email (secret is not exposed in the API response; use the QR to enroll)
 3. Secret is stored in `users.two_factor_secret`
 4. `is_two_factor_enabled` is set to `false` (not enabled yet)
 

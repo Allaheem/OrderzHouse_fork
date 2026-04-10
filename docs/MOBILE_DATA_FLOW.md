@@ -303,7 +303,7 @@ This document maps Flutter screens to backend API endpoints, providing a bluepri
 ### 13. Settings Screen (`/settings`)
 
 **Endpoints Used:**
-- `POST /auth/2fa/generate` - Generate 2FA secret
+- `POST /auth/2fa/generate` - Generate 2FA enrollment (QR in response; secret stored server-side only)
 - `POST /auth/2fa/verify` - Verify and enable 2FA
 - `POST /auth/2fa/disable` - Disable 2FA
 - `GET /subscriptions/admin/all` - Get my subscriptions (if applicable)

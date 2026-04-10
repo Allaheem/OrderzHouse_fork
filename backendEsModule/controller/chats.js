@@ -1,5 +1,11 @@
 import pool from "../models/db.js";
 import { NotificationCreators } from "../services/notificationService.js";
+import {
+  isAdmin,
+  getProjectParticipants,
+  getTaskParticipants,
+  isChatAllowed,
+} from "../services/chatParticipantAccess.js";
 
 /*======= Helper Functions =======*/
 // This is a new helper function to get a user's name by their ID.
@@ -24,77 +30,6 @@ const getAdminIds = async () => {
 const getSystemSenderId = async () => {
   const { rows } = await pool.query(`SELECT id FROM users WHERE role_id = 1 AND is_deleted = false ORDER BY id ASC LIMIT 1`);
   return rows[0]?.id || null;
-};
-
-const isAdmin = async (userId) => {
-  if (!userId) return false;
-  const { rows } = await pool.query(`SELECT role_id FROM users WHERE id = $1 AND is_deleted = false`, [userId]);
-  return rows[0]?.role_id === 1;
-};
-
-const getProjectParticipants = async (projectId) => {
-  const { rows } = await pool.query(
-    `SELECT p.user_id, pa.freelancer_id
-     FROM projects p
-     LEFT JOIN project_assignments pa ON pa.project_id = p.id
-     WHERE p.id = $1 AND p.is_deleted = false`,
-    [projectId]
-  );
-  const ids = new Set(rows.flatMap((r) => [r.user_id, r.freelancer_id]).filter(Boolean));
-  const { rows: offerRows } = await pool.query(
-    `SELECT DISTINCT freelancer_id FROM offers
-     WHERE project_id = $1 AND offer_status IN ('pending', 'accepted')`,
-    [projectId]
-  );
-  for (const r of offerRows) {
-    if (r.freelancer_id) ids.add(r.freelancer_id);
-  }
-  return [...ids];
-};
-
-const getTaskParticipants = async (taskId) => {
-  const { rows } = await pool.query(`SELECT freelancer_id, assigned_client_id FROM tasks WHERE id = $1`, [taskId]);
-  if (!rows.length) return [];
-  return [rows[0].freelancer_id, rows[0].assigned_client_id].filter(Boolean);
-};
-
-const isChatAllowed = async (projectId, taskId) => {
-  // Allow chat during bidding / admin gate / active work (client ↔ freelancer flows).
-  const allowedProject = [
-    "active",
-    "bidding",
-    "in_progress",
-    "pending_review",
-    "reviewing",
-    "pending_admin_approval",
-  ];
-
-  try {
-    if (projectId) {
-      const { rows } = await pool.query(
-        `SELECT status, completion_status FROM projects WHERE id = $1 AND is_deleted = false`,
-        [projectId]
-      );
-      return (
-        rows.length > 0 &&
-        (allowedProject.includes(rows[0].status) ||
-          allowedProject.includes(rows[0].completion_status))
-      );
-    }
-    
-    if (taskId) {
-      const { rows } = await pool.query(
-        `SELECT status FROM tasks WHERE id = $1`,
-        [taskId]
-      );
-      return rows.length > 0 && allowed.includes(rows[0].status);
-    }
-    
-    return false;
-  } catch (err) {
-    console.error("❌ Error in isChatAllowed:", err.message);
-    return false;
-  }
 };
 
 const forbiddenPatterns = [

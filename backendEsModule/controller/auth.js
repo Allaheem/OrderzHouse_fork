@@ -181,7 +181,6 @@ export const generateTwoFactorSecret = async (req, res) => {
         success: true,
         message: "Scan this QR code with your authenticator app.",
         qrCodeUrl: data_url,
-        secret: secret.base32,
       });
     });
   } catch (error) {

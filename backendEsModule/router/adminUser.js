@@ -17,7 +17,7 @@ const AdminUser = express.Router();
 // ----------------------
 AdminUser.post("/", authentication, adminOnly, createUser); 
 AdminUser.get("/role/:roleId", authentication, adminOnly, getUsersByRole);
-AdminUser.get("/:id", adminOnly, getUserById);
+AdminUser.get("/:id", authentication, adminOnly, getUserById);
 AdminUser.put("/:id", authentication, adminOnly, updateUser);
 AdminUser.delete("/:id", authentication, adminOnly, deleteUser);
 AdminUser.patch("/verify/:id", authentication, adminOnly, verifyFreelancer);

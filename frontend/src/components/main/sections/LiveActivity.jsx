@@ -21,7 +21,7 @@ export default function LiveActivity() {
   // ========= FETCH REAL DATA FROM DATABASE =========
   const fetchStats = async () => {
     try {
-      const res = await API.get("/api/stats");
+      const res = await API.get("/api/public-stats");
       const data = res.data;
 
       // Add pulse animation when values update

@@ -13,10 +13,6 @@ const authorization = (permission) => {
           AND permissions.permission = $2
         LIMIT 1
       `;
-      // console.log("POOL IS:", pool);
-      console.log("Decoded JWT:", req.token);
-      console.log("Checking permission for role:", req.token.role);
-
       const result = await pool.query(query, [role, permission]);
 
       if (result.rows.length) {

@@ -1,5 +1,6 @@
 import 'package:OrderzHouse/core/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
 
 void main() {
@@ -26,13 +27,23 @@ void main() {
         ),
       );
 
+    const surface = Size(320, 420);
     await tester.pumpWidgetBuilder(
-      builder.build(),
-      surfaceSize: const Size(300, 200),
+      ScreenUtilInit(
+        designSize: surface,
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (_, __) => builder.build(),
+      ),
+      surfaceSize: surface,
     );
     await screenMatchesGolden(
       tester,
-      'goldens/widgets/primary_gradient_button',
+      'widgets/primary_gradient_button',
+      // CircularProgressIndicator never settles; avoid pumpAndSettle timeout.
+      customPump: (tester) async {
+        await tester.pump(const Duration(milliseconds: 100));
+      },
     );
   });
 }
