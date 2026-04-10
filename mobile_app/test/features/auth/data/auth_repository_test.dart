@@ -3,6 +3,7 @@ import 'package:OrderzHouse/features/auth/data/repositories/auth_repository.dart
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _MockDio extends Mock implements Dio {}
 
@@ -13,7 +14,9 @@ void main() {
   late AuthTokenStore tokenStore;
   late AuthRepository repository;
 
-  setUpAll(() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
     registerFallbackValue(RequestOptions(path: '/users/login'));
   });
 
