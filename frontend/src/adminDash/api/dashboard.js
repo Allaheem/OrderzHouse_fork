@@ -380,7 +380,7 @@ export async function fetchAdminDashboard() {
       API.get("/projects/admin/projects"),
       API.get("/projects/admin/freelancers"),
       API.get("/users/deactivated-users"),
-      API.get("/payments/admin/all"),
+      API.get("/payments/admin/payments"),
       API.get("/tasks/admin"),
     ]);
 
