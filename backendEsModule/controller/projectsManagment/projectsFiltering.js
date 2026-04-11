@@ -860,7 +860,7 @@ export const getProjectById = async (req, res) => {
 export const getProjectsByUserRole = async (req, res) => {
   try {
     const userId = req.token?.userId;
-    const roleId = req.token?.role;
+    const roleId = req.token?.role ?? req.token?.roleId;
 
     if (!userId || !roleId) {
       return res.status(401).json({

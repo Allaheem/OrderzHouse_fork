@@ -1941,13 +1941,13 @@ export const submitProjectDelivery = async (req, res) => {
 
     const project = projectRows[0];
 
-    // تحقق الصلاحية عبر project_assignments فقط
+    // تحقق الصلاحية عبر project_assignments (يشمل انتظار موافقة الإدارة بعد قبول العميل)
     const { rows: activeAssignment } = await pool.query(
       `SELECT 1
          FROM project_assignments
         WHERE project_id = $1
           AND freelancer_id = $2
-          AND status = 'active'
+          AND status IN ('active', 'pending_admin_approval')
         LIMIT 1`,
       [projectId, freelancerId]
     );
@@ -1960,10 +1960,11 @@ export const submitProjectDelivery = async (req, res) => {
     }
 
     const st = String(project.status || "").toLowerCase();
-    if (st !== "in_progress") {
+    if (st !== "in_progress" && st !== "pending_admin_approval") {
       return res.status(400).json({
         success: false,
-        message: "Project must be in progress to submit a delivery",
+        message:
+          "Project must be in progress (or pending admin approval after client acceptance) to submit a delivery",
       });
     }
 
@@ -2080,7 +2081,7 @@ export const getProjectDeliveries = async (req, res) => {
            FROM project_assignments
           WHERE project_id = $1
             AND freelancer_id = $2
-            AND status IN ('active', 'pending_client_approval', 'pending_acceptance')
+            AND status IN ('active', 'pending_admin_approval', 'pending_client_approval', 'pending_acceptance')
           LIMIT 1`,
         [projectId, userId]
       );
@@ -2169,11 +2170,14 @@ export const getProjectChangeRequests = async (req, res) => {
 
     const isAdmin = Number(roleId) === 1;
 
-    // Get active freelancer assignment
+    // Assigned freelancer (نشط أو بانتظار موافقة الإدارة)
     const { rows: ar } = await pool.query(
       `SELECT freelancer_id
          FROM project_assignments
-        WHERE project_id = $1 AND status = 'active'`,
+        WHERE project_id = $1
+          AND status IN ('active', 'pending_admin_approval')
+        ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END
+        LIMIT 1`,
       [projectId]
     );
 
@@ -2230,7 +2234,7 @@ export const markProjectChangeRequestsAsRead = async (req, res) => {
          FROM project_assignments
         WHERE project_id = $1
           AND freelancer_id = $2
-          AND status = 'active'
+          AND status IN ('active', 'pending_admin_approval')
         LIMIT 1`,
       [projectId, freelancerId]
     );
@@ -2278,12 +2282,14 @@ export const requestProjectChanges = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    // get active freelancer assignment
+    // get assigned freelancer (نشط أو بانتظار موافقة الإدارة)
     const { rows: ar } = await pool.query(
       `SELECT freelancer_id
          FROM project_assignments
-         WHERE project_id = $1 AND status = 'active'
-        `,
+        WHERE project_id = $1
+          AND status IN ('active', 'pending_admin_approval')
+        ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END
+        LIMIT 1`,
       [projectId]
     );
     if (!ar.length) {

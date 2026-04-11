@@ -463,7 +463,8 @@ final workspaceItemsProvider = Provider<AsyncValue<List<Project>>>((ref) {
           return status == 'active' ||
               status == 'in_progress' ||
               status == 'in-progress' ||
-              status == 'not_started';
+              status == 'not_started' ||
+              status == 'pending_admin_approval';
         }).toList();
       }
       filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -494,7 +495,8 @@ final profileStatsProvider = Provider<AsyncValue<ProfileStats>>((ref) {
             status == 'in-progress' ||
             status == 'pending' ||
             status == 'not_started' ||
-            status == 'pending_review') {
+            status == 'pending_review' ||
+            status == 'pending_admin_approval') {
           activeCount++;
         }
         // Completed status

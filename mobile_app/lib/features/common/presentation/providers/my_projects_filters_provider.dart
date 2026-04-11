@@ -40,6 +40,7 @@ bool _matchesStatus(Project project, String? selectedStatus) {
         'running',
         'started',
         'not_started',
+        'pending_admin_approval',
       ].contains(projectStatus);
     case 'pending':
       return projectStatus == 'pending' ||
