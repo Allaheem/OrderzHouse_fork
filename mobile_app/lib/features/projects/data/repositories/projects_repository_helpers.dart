@@ -11,6 +11,10 @@ String? projectsRepositoryExtractErrorMessage(Object? data) {
       return value;
     }
   }
+  if (data is String && data.trim().isNotEmpty) {
+    final t = data.trim();
+    return t.length > 160 ? '${t.substring(0, 160)}…' : t;
+  }
   return null;
 }
 

@@ -347,7 +347,7 @@ class ProjectsRepository implements IProjectsRepository {
   ) =>
       _changesDelivery.deliverProject(projectId, filePaths);
 
-  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectDeliveries(
+  Future<ApiResponse<ProjectDeliveriesPayload>> getProjectDeliveries(
     int projectId,
   ) =>
       _changesDelivery.getProjectDeliveries(projectId);

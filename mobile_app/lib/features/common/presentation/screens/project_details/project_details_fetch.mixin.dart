@@ -52,12 +52,15 @@ extension _ProjectDetailsFetchExtension on _ProjectDetailsScreenState {
       final response = await repository.getProjectDeliveries(project.id);
 
       if (mounted && response.success && response.data != null) {
+        final payload = response.data!;
         setState(() {
-          _deliveries = response.data!;
+          _deliveries = payload.deliveries;
+          _deliveriesAwaitingClientReview = payload.awaitingClientReview;
           _isLoadingDeliveries = false;
         });
       } else if (mounted) {
         setState(() {
+          _deliveriesAwaitingClientReview = false;
           _isLoadingDeliveries = false;
         });
       }
@@ -161,7 +164,20 @@ extension _ProjectDetailsFetchExtension on _ProjectDetailsScreenState {
         );
         if (projectData.isNotEmpty) {
           setState(() {
-            _projectData = projectData;
+            final incoming = Map<String, dynamic>.from(projectData);
+            final prev = _projectData;
+            // "My projects" list can lag behind; don't downgrade after formal delivery.
+            if (prev != null) {
+              for (final key in ['status', 'completion_status']) {
+                final inc =
+                    (incoming[key] ?? '').toString().toLowerCase();
+                final pr = (prev[key] ?? '').toString().toLowerCase();
+                if (pr == 'pending_review' && inc != 'pending_review') {
+                  incoming[key] = prev[key];
+                }
+              }
+            }
+            _projectData = incoming;
           });
         }
       }

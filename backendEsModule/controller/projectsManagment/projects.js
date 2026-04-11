@@ -5,6 +5,7 @@ import cloudinary from "../../cloudinary/setupfile.js";
 import { Readable } from "stream";
 import { upload } from "../../middleware/uploadMiddleware.js";
 import eventBus from "../../events/eventBus.js";
+import axios from "axios";
 
 /**
  * Upload fields for cover + project files (if sent as form-data)
@@ -2095,7 +2096,9 @@ export const getProjectDeliveries = async (req, res) => {
     // 1) Load project (NO assigned_freelancer_id)
     const { rows: projectRows } = await pool.query(
       `SELECT id,
-              user_id AS client_id
+              user_id AS client_id,
+              status,
+              completion_status
          FROM projects
         WHERE id = $1
           AND is_deleted = false`,
@@ -2177,13 +2180,124 @@ export const getProjectDeliveries = async (req, res) => {
       return tb - ta;
     });
 
+    const st = String(project.status ?? "").toLowerCase();
+    const cs = String(project.completion_status ?? "").toLowerCase();
+    const awaitingClientReview =
+      st === "pending_review" || cs === "pending_review";
+
     return res.json({
       success: true,
       deliveries,
+      awaiting_client_review: awaitingClientReview,
     });
   } catch (err) {
     console.error("getProjectDeliveries error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+function safeDownloadBaseName(name) {
+  const base = String(name || "download")
+    .replace(/[/\\?%*:|"<>]/g, "_")
+    .trim()
+    .slice(0, 180);
+  return base || "download";
+}
+
+/**
+ * Stream a delivery/project file through the API so the browser can download with JWT
+ * (avoids Cloudinary CORS / in-app browser / missing axios issues on the client).
+ * GET /projects/:projectId/files/:fileId/download
+ */
+export const downloadProjectDeliveryFile = async (req, res) => {
+  const userId = req.token?.userId;
+  const roleId = req.token?.role ?? req.token?.roleId;
+  const { projectId, fileId } = req.params;
+
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
+  const projectIdNum = Number(projectId);
+  const fileIdNum = Number(fileId);
+  if (
+    !Number.isInteger(projectIdNum) ||
+    projectIdNum <= 0 ||
+    !Number.isInteger(fileIdNum) ||
+    fileIdNum <= 0
+  ) {
+    return res.status(400).json({ success: false, message: "Invalid project or file id" });
+  }
+
+  try {
+    const { rows: projectRows } = await pool.query(
+      `SELECT id, user_id, project_type, status, admin_approval_status, is_deleted
+         FROM projects
+        WHERE id = $1 AND is_deleted = false`,
+      [projectIdNum]
+    );
+    if (!projectRows.length) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    const allowed = await userMayAccessProjectDetails(
+      pool,
+      projectRows[0],
+      projectIdNum,
+      userId,
+      roleId
+    );
+    if (!allowed) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT id, project_id, file_name, file_url
+         FROM project_files
+        WHERE id = $1 AND project_id = $2`,
+      [fileIdNum, projectIdNum]
+    );
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "File not found" });
+    }
+
+    const row = rows[0];
+    const remoteUrl = String(row.file_url || "").trim();
+    if (!remoteUrl || !/^https?:\/\//i.test(remoteUrl)) {
+      return res.status(502).json({ success: false, message: "Invalid stored file URL" });
+    }
+
+    const upstream = await axios.get(remoteUrl, {
+      responseType: "stream",
+      maxRedirects: 5,
+      timeout: 120_000,
+      validateStatus: (s) => s >= 200 && s < 400,
+    });
+
+    const safeName = safeDownloadBaseName(row.file_name);
+    const ascii = safeName.replace(/[^\x20-\x7E]/g, "_");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(safeName)}`
+    );
+
+    const ct = upstream.headers["content-type"];
+    if (ct) res.setHeader("Content-Type", ct);
+    const len = upstream.headers["content-length"];
+    if (len) res.setHeader("Content-Length", len);
+
+    upstream.data.on("error", (e) => {
+      console.error("downloadProjectDeliveryFile stream error:", e?.message || e);
+      if (!res.headersSent) res.status(502).end();
+      else res.destroy(e);
+    });
+
+    upstream.data.pipe(res);
+  } catch (err) {
+    console.error("downloadProjectDeliveryFile error:", err?.message || err);
+    if (!res.headersSent) {
+      return res.status(502).json({ success: false, message: "Failed to fetch file from storage" });
+    }
   }
 };
 

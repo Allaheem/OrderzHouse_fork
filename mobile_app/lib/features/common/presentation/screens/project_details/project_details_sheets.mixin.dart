@@ -27,6 +27,7 @@ extension _ProjectDetailsSheetsExtension on _ProjectDetailsScreenState {
             // Update local state immediately
             setState(() {
               _pendingLocal = true;
+              _deliveriesAwaitingClientReview = true;
               _projectData = {
                 ...?_projectData,
                 'completion_status': 'pending_review',
@@ -63,6 +64,22 @@ extension _ProjectDetailsSheetsExtension on _ProjectDetailsScreenState {
     final project = _project;
     if (project == null) return;
 
+    await fetchRawProjectData();
+    if (!awaitingClientReviewForApprove) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Work must be submitted for review before it can be approved. '
+              'Ask the freelancer to use Submit delivery.',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -75,6 +92,7 @@ extension _ProjectDetailsSheetsExtension on _ProjectDetailsScreenState {
 
       // Update local state immediately
       setState(() {
+        _deliveriesAwaitingClientReview = false;
         _projectData = {
           ...?_projectData,
           'completion_status': 'completed',

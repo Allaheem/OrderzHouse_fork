@@ -184,6 +184,7 @@ extension _ProjectDetailsSheetsDeliveriesExtension on _ProjectDetailsScreenState
 
   // Open Receive Panel (client) - new UI for viewing/approving deliveries
   Future<void> openReceivePanel(BuildContext context) async {
+    await fetchRawProjectData();
     // Fetch deliveries first if not already loaded
     if (_deliveries.isEmpty) {
       await fetchDeliveriesIfNeeded();

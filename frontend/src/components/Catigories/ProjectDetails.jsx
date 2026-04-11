@@ -548,6 +548,7 @@ export default function ProjectDetails({ mode: propMode }) {
                 <AttachmentList
                   attachments={item.attachments}
                   title="Project Attachments"
+                  projectId={id}
                 />
               </div>
             )}
@@ -555,8 +556,9 @@ export default function ProjectDetails({ mode: propMode }) {
             {projectFiles.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
                 <AttachmentList
-                  attachments={projectFiles.map((f) => f.file_url)}
+                  attachments={projectFiles}
                   title="Project Files"
+                  projectId={id}
                 />
               </div>
             )}

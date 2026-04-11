@@ -886,12 +886,20 @@ export default function ProjectDetailsDashboard({ mode: propMode }) {
               )}
               {item.attachments && (
                 <SectionCard title="Attachments" icon={Paperclip}>
-                  <AttachmentList attachments={item.attachments} title="" />
+                  <AttachmentList
+                    attachments={item.attachments}
+                    title={null}
+                    projectId={id}
+                  />
                 </SectionCard>
               )}
               {projectFiles.length > 0 ? (
                 <SectionCard title="Project Files" icon={FolderOpen}>
-                  <AttachmentList attachments={projectFiles.map((f) => f.file_url)} title="" />
+                  <AttachmentList
+                    attachments={projectFiles}
+                    title={null}
+                    projectId={id}
+                  />
                 </SectionCard>
               ) : !item.attachments?.length && (
                 <p className="text-slate-500 text-sm">No files or attachments yet.</p>

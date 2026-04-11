@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/utils/local_download_open.dart';
 import '../../../../core/models/project.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -88,6 +88,9 @@ abstract class _ProjectDetailsScreenBase extends ConsumerState<ProjectDetailsScr
   List<Map<String, dynamic>> _deliveries = [];
   bool _isLoadingDeliveries = false;
 
+  /// From [GET /projects/:id/deliveries] `awaiting_client_review` when API provides it (avoids stale my-projects payload).
+  bool _deliveriesAwaitingClientReview = false;
+
   // Flag to track if deep-link actions have been handled
   bool _deepLinkHandled = false;
 
@@ -95,6 +98,18 @@ abstract class _ProjectDetailsScreenBase extends ConsumerState<ProjectDetailsScr
   bool _projectInitialized = false;
 
   Project? get _project => _currentProject ?? widget.project;
+
+  /// Formal delivery submitted (`/deliver`) — not chat-only [project_files].
+  /// Matches backend rule for `PUT /projects/:id/approve`.
+  bool get awaitingClientReviewForApprove {
+    if (_deliveriesAwaitingClientReview) return true;
+    final ps = (_projectData?['status'] ?? _project?.status ?? '')
+        .toString()
+        .toLowerCase();
+    final cs =
+        (_projectData?['completion_status'] ?? '').toString().toLowerCase();
+    return ps == 'pending_review' || cs == 'pending_review';
+  }
 }
 
 class _ProjectDetailsScreenState extends _ProjectDetailsScreenBase {

@@ -5,6 +5,16 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/app_debug_log.dart';
 import '../models/change_request_model.dart';
 
+/// Result of [GET /projects/:id/deliveries] (list + server-derived review flag).
+class ProjectDeliveriesPayload {
+  const ProjectDeliveriesPayload({
+    required this.deliveries,
+    required this.awaitingClientReview,
+  });
+  final List<Map<String, dynamic>> deliveries;
+  final bool awaitingClientReview;
+}
+
 /// Change requests, deliver, client review flows.
 class ProjectsRepositoryChangesDelivery {
   ProjectsRepositoryChangesDelivery(this._dio, this._api);
@@ -257,7 +267,7 @@ class ProjectsRepositoryChangesDelivery {
     }
   }
 
-  Future<ApiResponse<List<Map<String, dynamic>>>> getProjectDeliveries(
+  Future<ApiResponse<ProjectDeliveriesPayload>> getProjectDeliveries(
     int projectId,
   ) async {
     try {
@@ -265,17 +275,25 @@ class ProjectsRepositoryChangesDelivery {
 
       final data = response.data as Map<String, dynamic>;
       final items = data['deliveries'] ?? data['data'] ?? [];
-      final list = (items is List) ? items : [];
+      final rawList = (items is List) ? items : [];
+      final list = rawList.map((e) => e as Map<String, dynamic>).toList();
+      final awaiting = data['awaiting_client_review'] == true;
 
       return ApiResponse(
         success: true,
-        data: list.map((e) => e as Map<String, dynamic>).toList(),
+        data: ProjectDeliveriesPayload(
+          deliveries: list,
+          awaitingClientReview: awaiting,
+        ),
         message: 'Deliveries fetched successfully',
       );
     } on DioException catch (e) {
       return ApiResponse(
         success: false,
-        data: [],
+        data: const ProjectDeliveriesPayload(
+          deliveries: <Map<String, dynamic>>[],
+          awaitingClientReview: false,
+        ),
         message:
             e.response?.data?['message'] as String? ??
             'Failed to fetch deliveries',
@@ -283,7 +301,10 @@ class ProjectsRepositoryChangesDelivery {
     } catch (e) {
       return ApiResponse(
         success: false,
-        data: [],
+        data: const ProjectDeliveriesPayload(
+          deliveries: <Map<String, dynamic>>[],
+          awaitingClientReview: false,
+        ),
         message: 'Failed to fetch deliveries: ${e.toString()}',
       );
     }

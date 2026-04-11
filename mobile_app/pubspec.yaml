@@ -61,6 +61,8 @@ dependencies:
   webview_flutter: ^4.4.2
   shimmer: ^3.0.0
   flutter_launcher_icons: ^0.14.4
+  open_file: ^3.5.11
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

@@ -1441,27 +1441,58 @@ function ClientReviewDrawer({
   };
 
   const startDownload = async ({ url, name, id }, idx) => {
-    const target = resolveUrl(url);
-    if (!target) return;
+    const numericId = id != null && /^\d+$/.test(String(id)) ? String(id) : null;
+    const proxyPath =
+      project?.id && numericId
+        ? `/projects/${project.id}/files/${numericId}/download`
+        : null;
+    const resolvedExternal = resolveUrl(url);
 
     const key = String(id ?? `${name || "file"}-${idx}`);
     setDownloadingMap((m) => ({ ...m, [key]: true }));
 
-    try {
-      const absolute = isAbsoluteUrl(target);
-      // Plain axios for external URLs (e.g. Cloudinary) — no API interceptors / Bearer on third-party hosts.
-      const client = absolute ? axios : API;
-      const headers =
-        !absolute && token ? { authorization: `Bearer ${token}` } : undefined;
-
-      const res = await client.get(target, {
+    const fetchBlob = (target, client, headers) =>
+      client.get(target, {
         responseType: "blob",
         headers,
       });
 
+    try {
+      let res;
+      let nameSourceUrl = "";
+
+      if (proxyPath) {
+        try {
+          res = await fetchBlob(
+            proxyPath,
+            API,
+            token ? { authorization: `Bearer ${token}` } : undefined
+          );
+          nameSourceUrl = proxyPath;
+        } catch {
+          if (!resolvedExternal) throw new Error("no file url");
+          const absolute = isAbsoluteUrl(resolvedExternal);
+          res = await fetchBlob(
+            resolvedExternal,
+            absolute ? axios : API,
+            !absolute && token ? { authorization: `Bearer ${token}` } : undefined
+          );
+          nameSourceUrl = resolvedExternal;
+        }
+      } else {
+        if (!resolvedExternal) return;
+        const absolute = isAbsoluteUrl(resolvedExternal);
+        res = await fetchBlob(
+          resolvedExternal,
+          absolute ? axios : API,
+          !absolute && token ? { authorization: `Bearer ${token}` } : undefined
+        );
+        nameSourceUrl = resolvedExternal;
+      }
+
       const cd = res?.headers?.["content-disposition"];
       const fromHeader = fileNameFromContentDisposition(cd);
-      const fromUrl = fileNameFromUrl(target);
+      const fromUrl = fileNameFromUrl(nameSourceUrl);
       const fileName = fromHeader || name || fromUrl || `attachment-${idx + 1}`;
 
       const blob = res?.data instanceof Blob ? res.data : new Blob([res.data]);
@@ -1477,9 +1508,10 @@ function ClientReviewDrawer({
     } catch (err) {
       console.error("Download failed:", err);
       toast?.error?.("Failed to download attachment.");
-      // Fallback: open in new tab (some servers block blob downloads / CORS)
       try {
-        window.open(target, "_blank", "noopener,noreferrer");
+        if (resolvedExternal && isAbsoluteUrl(resolvedExternal)) {
+          window.open(resolvedExternal, "_blank", "noopener,noreferrer");
+        }
       } catch {}
     } finally {
       setDownloadingMap((m) => {

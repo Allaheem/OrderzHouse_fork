@@ -26,6 +26,7 @@ import {
   reassignFreelancer,
   submitProjectDelivery,
   getProjectDeliveries,
+  downloadProjectDeliveryFile,
   adminApproveProject,
   requestProjectChanges,
   getProjectChangeRequests,
@@ -195,6 +196,14 @@ projectsRouter.post(
   upload.array("attachments", 10),
   uploadErrorHandler,
   addProjectFiles
+);
+
+// More specific than GET /:projectId/files — register first (Express matches in order).
+projectsRouter.get(
+  "/:projectId/files/:fileId/download",
+  authentication,
+  rejectTenderVaultAction,
+  downloadProjectDeliveryFile
 );
 
 projectsRouter.get(

@@ -4,15 +4,28 @@ part of 'package:OrderzHouse/features/common/presentation/screens/project_detail
 
 /// Receive sheet, file rows, history, downloads, offers & applications.
 extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
+  /// `project_files.id` from API — used for authenticated proxy download.
+  int? _deliveryFileDbId(dynamic file) {
+    if (file is! Map) return null;
+    final raw = file['id'] ?? file['file_id'];
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
   // Build File Item
   Widget buildFileItem(dynamic file) {
     final fileName = file is Map
-        ? (file['filename'] ?? file['name'] ?? 'File')
+        ? (file['filename'] ??
+            file['name'] ??
+            file['file_name'] ??
+            'File')
         : file.toString();
     final fileUrl = file is Map
         ? (file['url'] ?? file['file_url'] ?? file['path'])
         : null;
     final fileSize = file is Map ? (file['size'] ?? file['size_bytes']) : null;
+    final rowId = _deliveryFileDbId(file);
 
     // Check if URL is valid
     final hasValidUrl =
@@ -20,6 +33,9 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
         fileUrl.toString().isNotEmpty &&
         fileUrl.toString() != 'null' &&
         fileUrl.toString() != 'N/A';
+    final canUseProxy =
+        _project != null && rowId != null && rowId > 0;
+    final canDownload = hasValidUrl || canUseProxy;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -62,14 +78,18 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
             icon: Icon(
               Icons.download_rounded,
               size: 20,
-              color: hasValidUrl
+              color: canDownload
                   ? AppColors.accentOrange
                   : AppColors.textTertiary,
             ),
-            onPressed: hasValidUrl
-                ? () => downloadFile(fileUrl.toString(), fileName)
+            onPressed: canDownload
+                ? () => downloadFile(
+                      hasValidUrl ? fileUrl.toString() : '',
+                      fileName,
+                      fileId: rowId,
+                    )
                 : null,
-            tooltip: hasValidUrl ? 'Download' : 'File not available',
+            tooltip: canDownload ? 'Download' : 'File not available',
           ),
         ],
       ),
@@ -79,6 +99,8 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
   // Build Actions Card
   Widget buildActionsCard(Map<String, dynamic>? latestDelivery) {
     final hasDelivery = latestDelivery != null;
+    final canReviewWork =
+        hasDelivery && awaitingClientReviewForApprove;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -97,13 +119,22 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
             ),
           ),
           const SizedBox(height: 16),
+          if (hasDelivery && !awaitingClientReviewForApprove) ...[
+            Text(
+              'Approve opens after the freelancer submits work for review (status: pending review). Chat files alone are not a formal delivery.',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           Row(
             children: [
               Expanded(
                 child: SizedBox(
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: hasDelivery
+                    onPressed: canReviewWork
                         ? () {
                             Navigator.pop(context);
                             openRequestChangesModal(context);
@@ -112,7 +143,7 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
                       side: BorderSide(
-                        color: hasDelivery
+                        color: canReviewWork
                             ? AppColors.border
                             : AppColors.borderLight,
                       ),
@@ -133,14 +164,14 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
                 child: SizedBox(
                   height: 48,
                   child: PrimaryGradientButton(
-                    onPressed: hasDelivery
+                    onPressed: canReviewWork
                         ? () async {
                             Navigator.pop(context);
                             await handleApproveDelivery(context);
                           }
                         : null,
                     label: AppLocalizations.of(context)!.approve,
-                    isEnabled: hasDelivery,
+                    isEnabled: canReviewWork,
                     height: 48,
                     borderRadius: 12,
                     width: double.infinity,
@@ -253,9 +284,22 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
   }
 
   // Helper: Download file with authorization (no permissions needed)
-  Future<void> downloadFile(String url, String fileName) async {
-    // Validate URL
-    if (url.isEmpty || url == 'N/A' || url == 'null') {
+  Future<void> downloadFile(
+    String url,
+    String fileName, {
+    int? fileId,
+  }) async {
+    final project = _project;
+    final useProxy =
+        project != null && fileId != null && fileId > 0;
+    final downloadPath = useProxy
+        ? '/projects/${project.id}/files/$fileId/download'
+        : url.trim();
+
+    if (!useProxy &&
+        (downloadPath.isEmpty ||
+            downloadPath == 'N/A' ||
+            downloadPath == 'null')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No downloadable file available'),
@@ -284,11 +328,12 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
         orderzHouseDir.createSync(recursive: true);
       }
 
-      final savePath = '${orderzHouseDir.path}/$fileName';
+      final safeName = LocalDownloadOpen.safeFileName(fileName);
+      final savePath = '${orderzHouseDir.path}/$safeName';
 
       final repository = ref.read(projectsRepositoryProvider);
-      final downloadResult = await repository.downloadFile(
-        url: url,
+      var downloadResult = await repository.downloadFile(
+        url: downloadPath,
         savePath: savePath,
         onReceiveProgress: (received, total) {
           if (total != -1) {
@@ -297,6 +342,28 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
           }
         },
       );
+      // If production API has not shipped the proxy route yet (HTTP 404), retry direct URL.
+      final fallbackUrl = url.trim();
+      final canFallback = useProxy &&
+          fallbackUrl.isNotEmpty &&
+          fallbackUrl != 'N/A' &&
+          fallbackUrl != 'null' &&
+          fallbackUrl != downloadPath;
+      if (!downloadResult.success && canFallback) {
+        final msg = (downloadResult.message ?? '').toLowerCase();
+        if (msg.contains('404') || msg.contains('not found')) {
+          downloadResult = await repository.downloadFile(
+            url: fallbackUrl,
+            savePath: savePath,
+            onReceiveProgress: (received, total) {
+              if (total != -1) {
+                final progress = (received / total * 100).toStringAsFixed(0);
+                debugPrint('Download progress (fallback): $progress%');
+              }
+            },
+          );
+        }
+      }
       if (!downloadResult.success) {
         throw Exception(downloadResult.message ?? 'File download failed');
       }
@@ -319,7 +386,7 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Downloaded: $fileName',
+                  'Downloaded: $safeName',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -340,15 +407,15 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
               label: 'Open',
               textColor: Colors.white,
               onPressed: () async {
-                try {
-                  final fileUri = Uri.file(savePath);
-                  if (await canLaunchUrl(fileUri)) {
-                    await launchUrl(fileUri);
-                  } else {
-                    debugPrint('Could not open file: $savePath');
-                  }
-                } catch (e) {
-                  debugPrint('Error opening file: $e');
+                final err = await LocalDownloadOpen.openSavedDownload(savePath);
+                if (!mounted) return;
+                if (err != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(err),
+                      backgroundColor: Colors.orange.shade800,
+                    ),
+                  );
                 }
               },
             ),

@@ -45,6 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Expose app Documents (OrderzHouse/) in Files app + allow opening saved downloads -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 	<!-- Allow HTTP to local backend (iOS blocks cleartext by default) -->
 	<key>NSAppTransportSecurity</key>
 	<dict>

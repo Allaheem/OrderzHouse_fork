@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/models/api_response.dart';
+import '../../../../core/network/dio_interceptors.dart';
 import '../../../../core/utils/app_debug_log.dart';
 import 'projects_repository_helpers.dart';
 
@@ -260,25 +261,56 @@ class ProjectsRepositoryOffersApplications {
     void Function(int received, int total)? onReceiveProgress,
   }) async {
     try {
-      await _dio.download(
+      // Never send our JWT to third-party hosts (e.g. Cloudinary). A 401 there
+      // would trigger [ErrorInterceptor] session wipe → user kicked to login.
+      final resolved = Uri.tryParse(url);
+      final apiBase = Uri.tryParse(AppConfig.baseUrl);
+      final thirdParty = resolved != null &&
+          resolved.hasScheme &&
+          resolved.host.isNotEmpty &&
+          (apiBase == null || resolved.host != apiBase.host);
+
+      final response = await _dio.download(
         url,
         savePath,
         options: Options(
-          headers: const <String, String>{'Accept': '*/*'},
-          responseType: ResponseType.bytes,
+          extra: thirdParty
+              ? <String, dynamic>{AuthInterceptor.extraSkipAuth: true}
+              : <String, dynamic>{},
+          // Avoid default JSON content-type on binary GET (some proxies/proxies are picky).
+          headers: <String, dynamic>{
+            Headers.acceptHeader: '*/*',
+            Headers.contentTypeHeader: null,
+          },
           followRedirects: true,
-          validateStatus: (status) => status != null && status < 500,
+          validateStatus: (status) => status != null && status >= 200 && status < 400,
         ),
         onReceiveProgress: onReceiveProgress,
+        deleteOnError: true,
       );
+      final code = response.statusCode;
+      if (code == null || code < 200 || code >= 400) {
+        return ApiResponse(
+          success: false,
+          message: 'Download failed (HTTP $code)',
+        );
+      }
       return const ApiResponse(success: true);
     } on DioException catch (e) {
-      return ApiResponse(
-        success: false,
-        message:
-            projectsRepositoryExtractErrorMessage(e.response?.data) ??
-            'Failed to download file',
-      );
+      final status = e.response?.statusCode;
+      final extracted = projectsRepositoryExtractErrorMessage(e.response?.data);
+      final detail = e.message?.trim();
+      String message;
+      if (extracted != null && extracted.isNotEmpty) {
+        message = extracted;
+      } else if (status != null) {
+        message = 'Download failed (HTTP $status)';
+      } else if (detail != null && detail.isNotEmpty) {
+        message = detail;
+      } else {
+        message = 'Failed to download file';
+      }
+      return ApiResponse(success: false, message: message);
     } catch (e) {
       return ApiResponse(
         success: false,
