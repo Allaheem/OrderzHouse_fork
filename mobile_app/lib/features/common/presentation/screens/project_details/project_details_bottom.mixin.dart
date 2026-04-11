@@ -116,6 +116,20 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
       );
     }
 
+    // Apply created a `project_assignments` row (pending_client_approval) but
+    // work/delivery is only after client accepts — avoid greyed "Apply" with no deliver CTA.
+    if (isFreelancerRole && !isOwner && isFreelancerAssignmentAwaitingConfirmation) {
+      if (AppConfig.isDevelopment) {
+        debugPrint(
+          '✅ [ProjectDetails] Showing freelancer awaiting confirmation bar',
+        );
+      }
+      return buildFreelancerAwaitingConfirmationBar(
+        context,
+        loading: isLoadingActions,
+      );
+    }
+
     // Show Freelancer Actions (Deliver or Waiting status) if assigned
     if (isFreelancerRole && !isOwner && isAssignedToMe) {
       if (AppConfig.isDevelopment) {
@@ -332,6 +346,97 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
           ),
         ),
       ],
+    );
+  }
+
+  /// Application sent or invite not yet accepted — not the same as "assigned to work".
+  Widget buildFreelancerAwaitingConfirmationBar(
+    BuildContext context, {
+    required bool loading,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final status = (_assignment?['assignment_status'] ?? _assignment?['status'] ?? '')
+        .toString()
+        .toLowerCase();
+    final isInvite = status == 'pending_acceptance';
+    final title = isInvite
+        ? l10n.freelancerInvitePendingAcceptTitle
+        : l10n.freelancerApplicationWaitingClientTitle;
+    final body = isInvite
+        ? l10n.freelancerInvitePendingAcceptBody
+        : l10n.freelancerApplicationWaitingClientBody;
+
+    return SafeArea(
+      top: false,
+      bottom: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: loading
+            ? const SizedBox(
+                height: 48,
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            : Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.hourglass_top_rounded,
+                          color: Color(0xFFF59E0B),
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: const Color(0xFFB45309),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      body,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF92400E),
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+      ),
     );
   }
 

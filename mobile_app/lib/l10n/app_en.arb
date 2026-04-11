@@ -1025,5 +1025,10 @@
   "anyTime": "Any Time",
   "deliveryShort": "Up to 7 days",
   "deliveryMedium": "8 – 30 days",
-  "deliveryLong": "More than 30 days"
+  "deliveryLong": "More than 30 days",
+
+  "freelancerApplicationWaitingClientTitle": "Application sent",
+  "freelancerApplicationWaitingClientBody": "Waiting for the client to accept your application. You can submit work after you are assigned.",
+  "freelancerInvitePendingAcceptTitle": "Invitation pending",
+  "freelancerInvitePendingAcceptBody": "Please accept the client invitation to start work on this project."
 }

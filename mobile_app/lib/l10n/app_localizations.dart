@@ -4729,6 +4729,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'More than 30 days'**
   String get deliveryLong;
+
+  /// No description provided for @freelancerApplicationWaitingClientTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Application sent'**
+  String get freelancerApplicationWaitingClientTitle;
+
+  /// No description provided for @freelancerApplicationWaitingClientBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the client to accept your application. You can submit work after you are assigned.'**
+  String get freelancerApplicationWaitingClientBody;
+
+  /// No description provided for @freelancerInvitePendingAcceptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation pending'**
+  String get freelancerInvitePendingAcceptTitle;
+
+  /// No description provided for @freelancerInvitePendingAcceptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Please accept the client invitation to start work on this project.'**
+  String get freelancerInvitePendingAcceptBody;
 }
 
 class _AppLocalizationsDelegate

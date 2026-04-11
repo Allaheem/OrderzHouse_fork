@@ -2419,4 +2419,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deliveryLong => 'أكثر من 30 يوماً';
+
+  @override
+  String get freelancerApplicationWaitingClientTitle => 'تم إرسال الطلب';
+
+  @override
+  String get freelancerApplicationWaitingClientBody =>
+      'بانتظار قبول العميل لطلبك. يمكنك تسليم العمل بعد تعيينك رسمياً على المشروع.';
+
+  @override
+  String get freelancerInvitePendingAcceptTitle => 'دعوة بانتظار الموافقة';
+
+  @override
+  String get freelancerInvitePendingAcceptBody =>
+      'يرجى قبول دعوة العميل لبدء العمل على هذا المشروع.';
 }

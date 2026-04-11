@@ -1025,5 +1025,10 @@
   "anyTime": "أي وقت",
   "deliveryShort": "حتى 7 أيام",
   "deliveryMedium": "8 – 30 يوماً",
-  "deliveryLong": "أكثر من 30 يوماً"
+  "deliveryLong": "أكثر من 30 يوماً",
+
+  "freelancerApplicationWaitingClientTitle": "تم إرسال الطلب",
+  "freelancerApplicationWaitingClientBody": "بانتظار قبول العميل لطلبك. يمكنك تسليم العمل بعد تعيينك رسمياً على المشروع.",
+  "freelancerInvitePendingAcceptTitle": "دعوة بانتظار الموافقة",
+  "freelancerInvitePendingAcceptBody": "يرجى قبول دعوة العميل لبدء العمل على هذا المشروع."
 }

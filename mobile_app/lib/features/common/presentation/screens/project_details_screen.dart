@@ -110,6 +110,24 @@ abstract class _ProjectDetailsScreenBase extends ConsumerState<ProjectDetailsScr
         (_projectData?['completion_status'] ?? '').toString().toLowerCase();
     return ps == 'pending_review' || cs == 'pending_review';
   }
+
+  /// After [applyForProject], backend inserts `project_assignments` with
+  /// `pending_client_approval` — not yet eligible for delivery. Client invite
+  /// uses `pending_acceptance` until the freelancer accepts.
+  bool get isFreelancerAssignmentAwaitingConfirmation {
+    final authState = ref.read(authStateProvider);
+    if (authState.user?.roleId != 3) return false;
+    final currentUserId = authState.user?.id;
+    if (_assignment == null || currentUserId == null) return false;
+    final assignmentFreelancerId = _assignment!['freelancer_id'] as int?;
+    final assignmentStatus =
+        (_assignment!['assignment_status'] ?? _assignment!['status'] ?? '')
+            .toString()
+            .toLowerCase();
+    if (assignmentFreelancerId != currentUserId) return false;
+    return assignmentStatus == 'pending_client_approval' ||
+        assignmentStatus == 'pending_acceptance';
+  }
 }
 
 class _ProjectDetailsScreenState extends _ProjectDetailsScreenBase {

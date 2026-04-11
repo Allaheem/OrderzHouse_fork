@@ -2428,4 +2428,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryLong => 'More than 30 days';
+
+  @override
+  String get freelancerApplicationWaitingClientTitle => 'Application sent';
+
+  @override
+  String get freelancerApplicationWaitingClientBody =>
+      'Waiting for the client to accept your application. You can submit work after you are assigned.';
+
+  @override
+  String get freelancerInvitePendingAcceptTitle => 'Invitation pending';
+
+  @override
+  String get freelancerInvitePendingAcceptBody =>
+      'Please accept the client invitation to start work on this project.';
 }
