@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import API from "../../../api/axios.js";
 import { getClientProjects } from "../../../api/projects";
 import PeopleTable from "../../Tables";
@@ -1448,7 +1449,8 @@ function ClientReviewDrawer({
 
     try {
       const absolute = isAbsoluteUrl(target);
-      const client = absolute ? axios : api;
+      // Plain axios for external URLs (e.g. Cloudinary) — no API interceptors / Bearer on third-party hosts.
+      const client = absolute ? axios : API;
       const headers =
         !absolute && token ? { authorization: `Bearer ${token}` } : undefined;
 
