@@ -281,6 +281,10 @@ class ProjectsRepositoryOffersApplications {
           // with a conflicting content-type header (throws before the request).
           headers: const <String, dynamic>{Headers.acceptHeader: '*/*'},
           followRedirects: true,
+          // API streams from storage; default 30s receive is too tight for large PDFs.
+          receiveTimeout: thirdParty
+              ? const Duration(seconds: 60)
+              : const Duration(minutes: 5),
           validateStatus: (status) => status != null && status >= 200 && status < 400,
         ),
         onReceiveProgress: onReceiveProgress,

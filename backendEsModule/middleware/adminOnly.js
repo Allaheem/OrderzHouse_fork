@@ -9,7 +9,7 @@ const adminOnly = (req, res, next) => {
       });
     }
 
-    const roleId = tokenData.role || tokenData.role;
+    const roleId = tokenData.role ?? tokenData.roleId;
     
     if (Number(roleId) !== 1) {
       return res.status(403).json({ 

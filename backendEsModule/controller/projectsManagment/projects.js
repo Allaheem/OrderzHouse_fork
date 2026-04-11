@@ -16,12 +16,34 @@ export const uploadProjectMedia = upload.fields([
 ]);
 
 /**
- * Upload Buffer to Cloudinary
+ * Pick Cloudinary resource_type for project/delivery attachments so PDFs/docs
+ * are not misclassified as images (breaks delivery URLs / strict delivery rules).
  */
-export const uploadToCloudinary = (buffer, folder = "project_files") => {
+function cloudinaryDeliveryResourceType(file) {
+  const mt = String(file?.mimetype || "").toLowerCase();
+  const name = String(file?.originalname || "").toLowerCase();
+  if (mt.startsWith("image/")) return "image";
+  if (mt.startsWith("video/")) return "video";
+  if (mt.startsWith("audio/")) return "video";
+  if (
+    mt === "application/pdf" ||
+    /\.(pdf|zip|rar|7z|doc|docx|xls|xlsx|ppt|pptx|txt|csv|json|xml|psd|ai|eps|dmg)$/i.test(
+      name
+    )
+  ) {
+    return "raw";
+  }
+  return "auto";
+}
+
+/**
+ * Upload Buffer to Cloudinary
+ * @param {object} [uploadOpts] merged into upload_stream options (e.g. resource_type)
+ */
+export const uploadToCloudinary = (buffer, folder = "project_files", uploadOpts = {}) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "auto" },
+      { folder, resource_type: "auto", ...uploadOpts },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
@@ -128,17 +150,20 @@ export const createProject = async (req, res) => {
       });
     }
 
-    // Set project status - for skip-payment users, ensure it's 'active' to appear in listings
+    // Bidding: live immediately. Fixed/hourly: skip-payment clients go active; others wait for admin
+    // (offline payment / review) so freelancers only see offers after approval.
     let projectStatus;
+    let initialAdminApproval = "none";
     if (project_type === "bidding") {
       projectStatus = "bidding";
-    } else {
-      // For fixed/hourly projects, always set to 'active' so they appear in listings
-      // This applies to both paid and skip-payment users
+    } else if (canPostWithoutPayment) {
       projectStatus = "active";
+      initialAdminApproval = "none";
+    } else {
+      projectStatus = "pending_admin_approval";
+      initialAdminApproval = "pending";
     }
 
-    // Debug: Log status for skip-payment users
     if (canPostWithoutPayment) {
       console.log(`[createProject] Skip-payment user ${userId} creating project with status: ${projectStatus}, project_type: ${project_type}`);
     }
@@ -225,7 +250,7 @@ export const createProject = async (req, res) => {
       preferred_skills || [],
       projectStatus,
       paymentMethod,
-      'none' // admin_approval_status: 'none' for normal flows
+      initialAdminApproval,
     ]);
 
     let project = rows[0];
@@ -389,11 +414,15 @@ export const adminApproveProject = async (req, res) => {
   );
 
   await pool.query(
-    "UPDATE projects SET status = 'active' WHERE id = $1",
+    `UPDATE projects
+       SET status = 'active',
+           admin_approval_status = 'approved',
+           admin_approved_at = COALESCE(admin_approved_at, NOW())
+     WHERE id = $1`,
     [project.id]
   );
 
-  // ✅ when bidding project becomes active => notify freelancers now
+  // ✅ when project becomes active => notify freelancers now
   try {
     eventBus.emit("project.created", {
       projectId: project.id,
@@ -574,7 +603,7 @@ export const applyForProject = async (req, res) => {
     }
 
     const { rows: projectRows } = await pool.query(
-      `SELECT id, user_id, title, project_type, status 
+      `SELECT id, user_id, title, project_type, status, admin_approval_status
        FROM projects 
        WHERE id = $1 AND is_deleted = false`,
       [projectId]
@@ -596,6 +625,17 @@ export const applyForProject = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "You can only apply to projects that are active",
+      });
+    }
+
+    const adm = String(project.admin_approval_status ?? "none").toLowerCase();
+    if (adm === "pending" || adm === "rejected") {
+      return res.status(400).json({
+        success: false,
+        message:
+          adm === "pending"
+            ? "This project is waiting for admin approval before freelancers can apply."
+            : "This project is not accepting applications.",
       });
     }
 
@@ -1308,7 +1348,8 @@ export const resubmitWorkCompletion = async (req, res) => {
     for (const file of files) {
       const result = await uploadToCloudinary(
         file.buffer,
-        `projects/${projectId}`
+        `projects/${projectId}`,
+        { resource_type: cloudinaryDeliveryResourceType(file) }
       );
 
       uploadedFiles.push({
@@ -1542,7 +1583,8 @@ export const addProjectFiles = async (req, res) => {
     for (const file of req.files) {
       const result = await uploadToCloudinary(
         file.buffer,
-        `projects/${projectIdNum}`
+        `projects/${projectIdNum}`,
+        { resource_type: cloudinaryDeliveryResourceType(file) }
       );
 
       const { rows } = await pool.query(
@@ -1833,6 +1875,14 @@ export const getAllFreelancers = async (req, res) => {
  */
 export const getAllProjectsForAdmin = async (req, res) => {
   try {
+    const adminRole = req.token?.role ?? req.token?.roleId;
+    if (Number(adminRole) !== 1) {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access required",
+      });
+    }
+
     const { rows: projects } = await pool.query(`
       SELECT 
         p.id,
@@ -1841,7 +1891,9 @@ export const getAllProjectsForAdmin = async (req, res) => {
         p.status,
         p.completion_status,
         p.created_at,
-        u.username AS client_name
+        p.admin_approval_status,
+        p.user_id,
+        COALESCE(NULLIF(TRIM(u.username), ''), u.email, '—') AS client_name
       FROM projects p
       LEFT JOIN users u ON p.user_id = u.id
       WHERE p.is_deleted = false
@@ -1975,7 +2027,29 @@ export const adminUpdateProject = async (req, res) => {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    return res.json({ success: true, project: rows[0] });
+    let row = rows[0];
+    const pt = String(row.project_type || "").toLowerCase();
+    const st = String(row.status || "").toLowerCase();
+    const adm = String(row.admin_approval_status || "").toLowerCase();
+
+    // Keep fixed/hourly offline gate consistent: approved ⇔ active for freelancer listings.
+    if (pt === "fixed" || pt === "hourly") {
+      if (adm === "approved" && st !== "active") {
+        const r2 = await pool.query(
+          `UPDATE projects SET status = 'active', updated_at = NOW() WHERE id = $1 RETURNING id, title, status, completion_status, admin_approval_status, project_type`,
+          [projectId]
+        );
+        if (r2.rows.length) row = r2.rows[0];
+      } else if (st === "active" && adm === "pending") {
+        const r2 = await pool.query(
+          `UPDATE projects SET admin_approval_status = 'approved', admin_approved_at = COALESCE(admin_approved_at, NOW()), updated_at = NOW() WHERE id = $1 RETURNING id, title, status, completion_status, admin_approval_status, project_type`,
+          [projectId]
+        );
+        if (r2.rows.length) row = r2.rows[0];
+      }
+    }
+
+    return res.json({ success: true, project: row });
   } catch (err) {
     console.error("adminUpdateProject error:", err);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -2136,7 +2210,8 @@ export const submitProjectDelivery = async (req, res) => {
     for (const file of files) {
       const result = await uploadToCloudinary(
         file.buffer,
-        `projects/${projectId}/deliveries`
+        `projects/${projectId}/deliveries`,
+        { resource_type: cloudinaryDeliveryResourceType(file) }
       );
 
       const { rows } = await pool.query(
@@ -2385,22 +2460,92 @@ export const downloadProjectDeliveryFile = async (req, res) => {
     const remoteUrl = String(row.file_url || "").trim();
     const publicId = row.public_id != null ? String(row.public_id).trim() : "";
 
-    /** Try stored URL first, then Cloudinary-built URLs from public_id (stale secure_url, etc.) */
+    /**
+     * Order matters: Cloudinary "authenticated" / strict delivery returns 401 on unsigned URLs.
+     * Stored secure_url may also use the wrong resource_type (e.g. image/upload for a raw PDF).
+     * 1) Admin API discovers the real resource_type + type on Cloudinary → signed URL matches asset.
+     * 2) Fallback: try signed/unsigned URLs for each resource_type, then stored file_url.
+     */
     const candidateUrls = [];
-    if (remoteUrl && /^https?:\/\//i.test(remoteUrl)) {
-      candidateUrls.push(remoteUrl);
-    }
+    const pushUrl = (u) => {
+      if (typeof u === "string" && /^https?:\/\//i.test(u) && !candidateUrls.includes(u)) {
+        candidateUrls.push(u);
+      }
+    };
+
+    let resourceMeta = null;
     if (publicId) {
       for (const rt of ["raw", "image", "video"]) {
         try {
-          const built = cloudinary.url(publicId, { secure: true, resource_type: rt });
-          if (typeof built === "string" && /^https?:\/\//i.test(built) && !candidateUrls.includes(built)) {
-            candidateUrls.push(built);
+          resourceMeta = await cloudinary.api.resource(publicId, { resource_type: rt });
+          break;
+        } catch (_) {
+          /* wrong resource_type or asset missing */
+        }
+      }
+    }
+
+    if (resourceMeta?.public_id) {
+      const rt = String(resourceMeta.resource_type || "image");
+      const deliveryType = String(resourceMeta.type || "upload");
+      try {
+        pushUrl(
+          cloudinary.url(resourceMeta.public_id, {
+            secure: true,
+            resource_type: rt,
+            type: deliveryType,
+            sign_url: true,
+          })
+        );
+      } catch (_) {
+        /* e.g. missing CLOUDINARY_API_SECRET */
+      }
+      const canonical = String(resourceMeta.secure_url || resourceMeta.url || "").trim();
+      // Skip if identical to stored URL (that URL may already 401 on strict/authenticated delivery).
+      if (
+        canonical &&
+        canonical !== remoteUrl
+      ) {
+        pushUrl(canonical);
+      }
+    }
+
+    if (publicId) {
+      for (const rt of ["raw", "image", "video"]) {
+        try {
+          pushUrl(
+            cloudinary.url(publicId, {
+              secure: true,
+              resource_type: rt,
+              sign_url: true,
+            })
+          );
+        } catch (_) {
+          /* e.g. missing CLOUDINARY_API_SECRET */
+        }
+        for (const deliveryType of ["private", "authenticated"]) {
+          try {
+            pushUrl(
+              cloudinary.url(publicId, {
+                secure: true,
+                resource_type: rt,
+                type: deliveryType,
+                sign_url: true,
+              })
+            );
+          } catch (_) {
+            /* invalid type combo for this asset */
           }
+        }
+        try {
+          pushUrl(cloudinary.url(publicId, { secure: true, resource_type: rt }));
         } catch (_) {
           /* ignore */
         }
       }
+    }
+    if (remoteUrl && /^https?:\/\//i.test(remoteUrl)) {
+      pushUrl(remoteUrl);
     }
 
     if (!candidateUrls.length) {
@@ -2408,9 +2553,11 @@ export const downloadProjectDeliveryFile = async (req, res) => {
     }
 
     const axiosOpts = {
-      responseType: "stream",
+      responseType: "arraybuffer",
       maxRedirects: 5,
       timeout: 120_000,
+      maxContentLength: 80 * 1024 * 1024,
+      maxBodyLength: 80 * 1024 * 1024,
       validateStatus: (s) => s >= 200 && s < 400,
       headers: {
         Accept: "*/*",
@@ -2425,6 +2572,8 @@ export const downloadProjectDeliveryFile = async (req, res) => {
     for (const tryUrl of candidateUrls) {
       try {
         const upstream = await axios.get(tryUrl, axiosOpts);
+        const body = Buffer.from(upstream.data || []);
+        if (!body.length) throw new Error("Empty file body from storage");
 
         res.setHeader(
           "Content-Disposition",
@@ -2433,16 +2582,9 @@ export const downloadProjectDeliveryFile = async (req, res) => {
 
         const ct = upstream.headers["content-type"];
         if (ct) res.setHeader("Content-Type", ct);
-        const len = upstream.headers["content-length"];
-        if (len) res.setHeader("Content-Length", len);
+        res.setHeader("Content-Length", String(body.length));
 
-        upstream.data.on("error", (e) => {
-          console.error("downloadProjectDeliveryFile stream error:", e?.message || e);
-          if (!res.headersSent) res.status(502).end();
-          else res.destroy(e);
-        });
-
-        upstream.data.pipe(res);
+        res.status(200).send(body);
         return;
       } catch (e) {
         lastErr = e;
@@ -2769,6 +2911,7 @@ export const createOfflinePayment = async (req, res) => {
 ====================================================================== */
 export const adminApproveOfflinePayment = async (req, res) => {
   const client = await pool.connect();
+  let txnCommitted = false;
   try {
     await client.query("BEGIN");
 
@@ -2801,7 +2944,8 @@ export const adminApproveOfflinePayment = async (req, res) => {
 
     // Verify project exists and is pending approval (fetch budget/type for payment record)
     const projectCheck = await client.query(
-      `SELECT id, user_id, payment_method, admin_approval_status, status, project_type, budget
+      `SELECT id, user_id, payment_method, admin_approval_status, status, project_type, budget,
+              title, category_id
        FROM projects 
        WHERE id = $1 AND is_deleted = false`,
       [projectId]
@@ -2825,7 +2969,7 @@ export const adminApproveOfflinePayment = async (req, res) => {
       });
     }
 
-    // Approve: set status to approved and activate project
+    // Approve: activate project (commit ASAP so listing works even if payment/escrow rows fail)
     await client.query(
       `UPDATE projects 
        SET admin_approval_status = 'approved',
@@ -2835,75 +2979,99 @@ export const adminApproveOfflinePayment = async (req, res) => {
       [projectId]
     );
 
-    // إدراج سجل في payments حتى يعمل إنشاء الـ escrow عند تعيين الفريلانسر (مثل Stripe)
-    // stripe_session_id مطلوب UNIQUE ف نستخدم placeholder للدفع الأوفلاين
-    const offlineSessionId = `offline_${projectId}_${Date.now()}`;
-    let paymentAmount = Number(project.budget) || 0;
-    if (project.project_type === "bidding" && !paymentAmount) {
-      const offerRow = await client.query(
-        `SELECT o.bid_amount FROM offers o
-         JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id
-           AND pa.status IN ('active', 'pending_admin_approval')
-         WHERE o.project_id = $1 AND o.offer_status = 'accepted' LIMIT 1`,
-        [projectId]
-      );
-      paymentAmount = Number(offerRow.rows[0]?.bid_amount) || 0;
-    }
-    if (paymentAmount > 0) {
-      await client.query(
-        `INSERT INTO payments (user_id, amount, currency, purpose, reference_id, stripe_session_id, status)
-         VALUES ($1, $2, 'JOD', 'project', $3, $4, 'paid')
-         ON CONFLICT (stripe_session_id) DO NOTHING`,
-        [project.user_id, paymentAmount, projectId, offlineSessionId]
-      );
-      const payRow = await client.query(
-        `SELECT id FROM payments WHERE reference_id = $1 AND purpose = 'project' AND status = 'paid' ORDER BY created_at DESC LIMIT 1`,
-        [projectId]
-      );
-      const insertedPaymentId = payRow.rows[0]?.id || null;
-
-      // إذا كان الفريلانسر مُعيّناً مسبقاً ولا يوجد escrow بعد، أنشئ الـ escrow (ليُحرّر عند الموافقة على التسليم)
-      const assignRow = await client.query(
-        `SELECT freelancer_id FROM project_assignments
-         WHERE project_id = $1 AND status IN ('active', 'pending_admin_approval')
-         ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END
-         LIMIT 1`,
-        [projectId]
-      );
-      const escrowExists = await client.query(
-        `SELECT id FROM escrow WHERE project_id = $1 LIMIT 1`,
-        [projectId]
-      );
-      if (assignRow.rows.length > 0 && escrowExists.rows.length === 0 && insertedPaymentId) {
-        const { createEscrowHeld } = await import("../../services/escrowService.js");
-        await createEscrowHeld({
-          projectId,
-          clientId: project.user_id,
-          freelancerId: assignRow.rows[0].freelancer_id,
-          amount: paymentAmount,
-          paymentId: insertedPaymentId,
-        }, client);
-      }
-    }
-
-    // Fetch updated project to return
     const { rows: updatedProject } = await client.query(
       `SELECT p.*, u.first_name || ' ' || u.last_name AS client_name
        FROM projects p
-       LEFT JOIN users u ON p.user_id = u.id
+       LEFT JOIN users u ON u.id = p.user_id
        WHERE p.id = $1`,
       [projectId]
     );
 
     await client.query("COMMIT");
+    txnCommitted = true;
+
+    const projectRow = updatedProject[0];
+
+    // Best-effort: payments + escrow (must not roll back activation)
+    try {
+      const offlineSessionId = `offline_${projectId}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      let paymentAmount = Number(project.budget) || 0;
+      if (project.project_type === "bidding" && !paymentAmount) {
+        const offerRow = await pool.query(
+          `SELECT o.bid_amount FROM offers o
+         JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id
+           AND pa.status IN ('active', 'pending_admin_approval')
+         WHERE o.project_id = $1 AND o.offer_status = 'accepted' LIMIT 1`,
+          [projectId]
+        );
+        paymentAmount = Number(offerRow.rows[0]?.bid_amount) || 0;
+      }
+      if (paymentAmount > 0) {
+        await pool.query(
+          `INSERT INTO payments (user_id, amount, currency, purpose, reference_id, stripe_session_id, status)
+         VALUES ($1, $2, 'JOD', 'project', $3, $4, 'paid')
+         ON CONFLICT (stripe_session_id) DO NOTHING`,
+          [project.user_id, paymentAmount, projectId, offlineSessionId]
+        );
+        const payRow = await pool.query(
+          `SELECT id FROM payments WHERE reference_id = $1 AND purpose = 'project' AND status = 'paid' ORDER BY created_at DESC LIMIT 1`,
+          [projectId]
+        );
+        const insertedPaymentId = payRow.rows[0]?.id || null;
+
+        const assignRow = await pool.query(
+          `SELECT freelancer_id FROM project_assignments
+         WHERE project_id = $1 AND status IN ('active', 'pending_admin_approval')
+         ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END
+         LIMIT 1`,
+          [projectId]
+        );
+        const escrowExists = await pool.query(
+          `SELECT id FROM escrow WHERE project_id = $1 LIMIT 1`,
+          [projectId]
+        );
+        if (assignRow.rows.length > 0 && escrowExists.rows.length === 0 && insertedPaymentId) {
+          const { createEscrowHeld } = await import("../../services/escrowService.js");
+          await createEscrowHeld({
+            projectId,
+            clientId: project.user_id,
+            freelancerId: assignRow.rows[0].freelancer_id,
+            amount: paymentAmount,
+            paymentId: insertedPaymentId,
+          });
+        }
+      }
+    } catch (postErr) {
+      console.error(
+        "adminApproveOfflinePayment: payment/escrow after activation failed (project remains active):",
+        postErr?.message || postErr
+      );
+    }
+
+    try {
+      eventBus.emit("project.created", {
+        projectId,
+        projectTitle: project.title,
+        clientId: project.user_id,
+        categoryId: project.category_id,
+      });
+    } catch (emitErr) {
+      console.error("adminApproveOfflinePayment: project.created emit error:", emitErr);
+    }
 
     return res.json({
       success: true,
       message: "Offline payment approved. Project is now active.",
-      project: updatedProject[0],
+      project: projectRow,
     });
   } catch (err) {
-    await client.query("ROLLBACK");
+    if (!txnCommitted) {
+      try {
+        await client.query("ROLLBACK");
+      } catch (_) {
+        /* ignore */
+      }
+    }
     console.error("adminApproveOfflinePayment error:", err);
     return res.status(500).json({
       success: false,

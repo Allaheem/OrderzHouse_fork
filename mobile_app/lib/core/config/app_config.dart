@@ -1,6 +1,4 @@
 // ??? ????????
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -27,16 +25,6 @@ class AppConfig {
     return null;
   }
 
-  /// Local API when `ENV=development` and no APP_API_URL set.
-  /// Android emulator → 10.0.2.2; iOS simulator / desktop / web → 127.0.0.1
-  static String get _developmentDefaultApiUrl {
-    if (kIsWeb) return 'http://127.0.0.1:5050';
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5050';
-    }
-    return 'http://127.0.0.1:5050';
-  }
-
   static String get baseUrl {
     final configuredUrl =
         _readEnvValue('APP_API_URL') ?? _readEnvValue('BASE_URL');
@@ -44,12 +32,8 @@ class AppConfig {
       return configuredUrl;
     }
 
-    // Default to production backend unless ENV explicitly says development.
-    // This avoids "empty data" confusion when .env is missing in test builds.
-    final env = _readEnvValue('ENV');
-    if ((env ?? '').toLowerCase() == 'development') {
-      return _developmentDefaultApiUrl;
-    }
+    // Default: always online (Render). For local backend, set APP_API_URL in `.env`
+    // (e.g. http://127.0.0.1:5050) — do not rely on ENV=development alone.
     return _releaseDefaultApiUrl;
   }
 

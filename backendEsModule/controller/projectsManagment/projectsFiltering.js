@@ -48,10 +48,15 @@ export const getProjectsByCategory = async (req, res) => {
     // Always exclude deleted projects
     conditions.push(`p.is_deleted = false`);
     
-    // Always apply status filter
+    // Always apply status filter (same rules as buildStatusCondition: no pending admin for listings)
     conditions.push(`(
       (p.project_type IN ('fixed', 'hourly') AND p.status = 'active')
       OR (p.status = 'bidding')
+    )`);
+    conditions.push(`(
+      p.admin_approval_status = 'none'
+      OR p.admin_approval_status = 'approved'
+      OR p.admin_approval_status IS NULL
     )`);
     
     // Only apply category filter if NOT "all"
@@ -110,7 +115,7 @@ export const getProjectsByCategory = async (req, res) => {
         u.last_name,
         u.profile_pic_url
       FROM projects p
-      JOIN categories c ON p.category_id = c.id
+      LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
       LEFT JOIN sub_sub_categories ssc ON p.sub_sub_category_id = ssc.id
       LEFT JOIN users u ON u.id = p.user_id
@@ -453,6 +458,11 @@ export const getProjectsByCategoryId = async (req, res) => {
       (p.project_type IN ('fixed', 'hourly') AND p.status = 'active')
       OR (p.status = 'bidding')
     )`);
+    conditions.push(`(
+      p.admin_approval_status = 'none'
+      OR p.admin_approval_status = 'approved'
+      OR p.admin_approval_status IS NULL
+    )`);
     
     // Only add category filter if NOT "all"
     if (!isAllCategory) {
@@ -512,7 +522,7 @@ export const getProjectsByCategoryId = async (req, res) => {
         c.name AS category_name
       FROM projects p
       JOIN users u ON u.id = p.user_id
-      JOIN categories c ON c.id = p.category_id
+      LEFT JOIN categories c ON c.id = p.category_id
       WHERE ${whereClause}
       ORDER BY ${orderBy}
     `;

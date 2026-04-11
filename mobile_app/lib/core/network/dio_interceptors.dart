@@ -133,6 +133,11 @@ class ErrorInterceptor extends Interceptor {
   static const String _cachedAuthUserKey = 'cached_auth_user';
 
   static bool _shouldInvalidateSession(DioException err) {
+    // Public/third-party requests (e.g. Cloudinary fallback) may 401 without JWT;
+    // that must not clear our API session or the user gets sent to login.
+    if (err.requestOptions.extra[AuthInterceptor.extraSkipAuth] == true) {
+      return false;
+    }
     final code = err.response?.statusCode;
     if (code == 401) return true;
     if (code != 403) return false;

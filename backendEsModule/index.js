@@ -127,6 +127,22 @@ const allowedOrigins = [
   "http://localhost:5174"
 ].filter(Boolean); // Remove undefined values
 
+/** Admin UI opened from phone/tablet on same Wi‑Fi (http://192.168.x.x:5173) */
+function isPrivateLanOrigin(origin) {
+  try {
+    const u = new URL(origin);
+    const h = u.hostname.toLowerCase();
+    if (h === "localhost" || h === "127.0.0.1") return true;
+    if (h.endsWith(".local")) return true;
+    if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+    if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  } catch (_) {
+    return false;
+  }
+  return false;
+}
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or Postman)
@@ -134,6 +150,8 @@ app.use(cors({
     
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else if (isPrivateLanOrigin(origin)) {
       callback(null, true);
     } else {
       // In development, allow all origins for easier testing

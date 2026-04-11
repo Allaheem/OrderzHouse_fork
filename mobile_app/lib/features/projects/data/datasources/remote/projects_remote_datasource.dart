@@ -113,6 +113,31 @@ class ProjectsRemoteDataSource {
   Future<ApiResponse<List<Project>>> _fetchAllCategoriesProjects(
     Map<String, dynamic> queryParams,
   ) async {
+    // Prefer one request for "All categories" (avoids N round-trips and silent empty merges).
+    try {
+      final response = await _dio.get(
+        '${ApiEndpoints.projectPublicCategory}/all',
+        queryParameters: queryParams,
+      );
+      return _parseProjectsResponse(response);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 403 ||
+          e.response?.statusCode == 404) {
+        try {
+          final response = await _dio.get(
+            '${ApiEndpoints.projectCategory}/all',
+            queryParameters: queryParams,
+          );
+          return _parseProjectsResponse(response);
+        } on DioException catch (_) {
+          /* fall through to per-category */
+        }
+      }
+    } catch (_) {
+      /* fall through */
+    }
+
     try {
       final response = await _dio.get(ApiEndpoints.categories);
       final data = response.data as Map<String, dynamic>;

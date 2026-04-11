@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [react()],  
 
   server: {
+    // Expose dev server on LAN (e.g. open admin from phone: http://YOUR_IP:5173)
+    host: true,
+    port: 5173,
     proxy: {
       '/api': {
         target: 'https://orderzhouse-backend.onrender.com', 

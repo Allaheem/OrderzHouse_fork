@@ -332,7 +332,7 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
       final savePath = '${orderzHouseDir.path}/$safeName';
 
       final repository = ref.read(projectsRepositoryProvider);
-      var downloadResult = await repository.downloadFile(
+      final downloadResult = await repository.downloadFile(
         url: downloadPath,
         savePath: savePath,
         onReceiveProgress: (received, total) {
@@ -342,33 +342,8 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
           }
         },
       );
-      // If the API proxy fails (404, 502 from storage, timeouts, etc.), retry once via the
-      // original URL (e.g. Cloudinary) without JWT — phone may reach CDN when the server cannot.
-      final fallbackUrl = url.trim();
-      final canFallback = useProxy &&
-          fallbackUrl.isNotEmpty &&
-          fallbackUrl != 'N/A' &&
-          fallbackUrl != 'null' &&
-          fallbackUrl != downloadPath;
-      if (!downloadResult.success && canFallback) {
-        final msg = (downloadResult.message ?? '').toLowerCase();
-        final isAuthFailure = msg.contains('401') ||
-            msg.contains('403') ||
-            msg.contains('not authorized') ||
-            msg.contains('forbidden');
-        if (!isAuthFailure) {
-          downloadResult = await repository.downloadFile(
-            url: fallbackUrl,
-            savePath: savePath,
-            onReceiveProgress: (received, total) {
-              if (total != -1) {
-                final progress = (received / total * 100).toStringAsFixed(0);
-                debugPrint('Download progress (direct URL fallback): $progress%');
-              }
-            },
-          );
-        }
-      }
+      // Always use authenticated API proxy for project_files — direct Cloudinary URLs often 401
+      // and previously confused session handling; the server streams bytes with signed URLs.
       if (!downloadResult.success) {
         throw Exception(downloadResult.message ?? 'File download failed');
       }

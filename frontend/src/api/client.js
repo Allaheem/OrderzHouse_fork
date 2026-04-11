@@ -10,17 +10,45 @@ const PROACTIVE_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 const FIRST_REFRESH_DELAY_MS = 3000;
 
 /**
+ * True for RFC1918 / typical LAN hostnames so admin opened at http://192.168.x.x:5173
+ * talks to the same machine's API at http://192.168.x.x:5050 (not the phone's localhost).
+ */
+function isLikelyLanHostname(hostname) {
+  if (!hostname) return false;
+  const h = String(hostname).toLowerCase();
+  if (h === "localhost" || h === "127.0.0.1") return false;
+  if (h.endsWith(".local")) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  return false;
+}
+
+/**
  * API base URL: يختار تلقائياً حسب المكان (محلي أو لايف) بدون تغيير يدوي
  * - من localhost → http://localhost:5050
+ * - من نفس الـ IP على الشبكة (مثلاً فتح الأدمن من الموبايل) → http://THAT_IP:5050
  * - من orderzhouse.com → https://orderzhouse-backend.onrender.com
+ * - override: VITE_APP_API_URL (أولوية عند التعريف)
  */
 export function getApiBaseURL() {
+  const fromEnv = import.meta.env.VITE_APP_API_URL;
+  if (typeof fromEnv === "string" && fromEnv.trim()) {
+    return fromEnv.trim().replace(/\/$/, "");
+  }
+
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1") return "http://localhost:5050";
-    if (host === "orderzhouse.com" || host === "www.orderzhouse.com") return "https://orderzhouse-backend.onrender.com";
+    if (host === "orderzhouse.com" || host === "www.orderzhouse.com") {
+      return "https://orderzhouse-backend.onrender.com";
+    }
+    if (isLikelyLanHostname(host)) {
+      const apiPort = import.meta.env.VITE_APP_API_PORT || "5050";
+      return `http://${host}:${apiPort}`;
+    }
   }
-  return import.meta.env.VITE_APP_API_URL || "http://localhost:5050";
+  return "http://localhost:5050";
 }
 
 const baseURL = getApiBaseURL();
