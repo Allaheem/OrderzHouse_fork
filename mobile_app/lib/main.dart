@@ -1,5 +1,6 @@
 // ??? ????????
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -24,9 +25,17 @@ void main() async {
   await AppPrefs.init();
   await RouteTracker.init();
 
-  // Step 4: Initialize Hive for local cache (non-sensitive data only; no tokens)
-  await Hive.initFlutter();
-  await CacheService.init();
+  // Step 4: Initialize Hive for local cache (non-sensitive data only; no tokens).
+  // On some iOS Simulator betas, path_provider/Hive FFI can throw — continue without disk cache.
+  try {
+    await Hive.initFlutter();
+    await CacheService.init();
+  } catch (e, st) {
+    appDebugLog('⚠️ Hive/cache init failed (app runs without local cache): $e');
+    if (kDebugMode) {
+      debugPrint('$st');
+    }
+  }
 
   // Step 5: Load environment variables (gracefully handle missing .env file)
   try {

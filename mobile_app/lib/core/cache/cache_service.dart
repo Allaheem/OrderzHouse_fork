@@ -11,16 +11,17 @@ class CacheService {
 
   static Box<String>? _box;
 
+  /// False if [init] failed or was skipped (app still runs; cache reads/writes no-op).
+  static bool get isEnabled => _box != null;
+
   /// Call from main() after Hive.initFlutter(). Opens [boxName].
   static Future<void> init() async {
     if (_box != null) return;
-    _box = await Hive.openBox<String>(boxName);
-  }
-
-  static Box<String> get _instance {
-    if (_box == null)
-      throw StateError('CacheService.init() must be called before use');
-    return _box!;
+    try {
+      _box = await Hive.openBox<String>(boxName);
+    } catch (_) {
+      _box = null;
+    }
   }
 
   /// Get cached value. Returns null if missing or decode fails.
@@ -28,8 +29,10 @@ class CacheService {
     String key,
     T Function(Map<String, dynamic>) fromJson,
   ) {
+    final b = _box;
+    if (b == null) return null;
     try {
-      final raw = _instance.get(key);
+      final raw = b.get(key);
       if (raw == null) return null;
       final map = json.decode(raw) as Map<String, dynamic>;
       final data = map['v'];
@@ -47,10 +50,12 @@ class CacheService {
     int timestamp,
     Map<String, dynamic> Function(T) toJson,
   ) async {
+    final b = _box;
+    if (b == null) return;
     try {
       final map = {'v': toJson(value), 'ts': timestamp};
-      await _instance.put(key, json.encode(map));
-      await _instance.put('$key$_timestampSuffix', timestamp.toString());
+      await b.put(key, json.encode(map));
+      await b.put('$key$_timestampSuffix', timestamp.toString());
     } catch (e) {
       // ignore
     }
@@ -58,8 +63,10 @@ class CacheService {
 
   /// True if cache for [key] is older than [ttl]. Returns true if key missing.
   static bool isExpired(String key, [Duration ttl = defaultTtl]) {
+    final b = _box;
+    if (b == null) return true;
     try {
-      final raw = _instance.get('$key$_timestampSuffix');
+      final raw = b.get('$key$_timestampSuffix');
       if (raw == null) return true;
       final ts = int.tryParse(raw);
       if (ts == null) return true;
@@ -74,8 +81,10 @@ class CacheService {
     String key,
     T Function(Map<String, dynamic>) fromJson,
   ) {
+    final b = _box;
+    if (b == null) return null;
     try {
-      final raw = _instance.get(key);
+      final raw = b.get(key);
       if (raw == null) return null;
       final map = json.decode(raw) as Map<String, dynamic>;
       final list = map['v'];
@@ -101,11 +110,13 @@ class CacheService {
     Map<String, dynamic> Function(T) toJson,
   ) async {
     final ts = DateTime.now().millisecondsSinceEpoch;
+    final b = _box;
+    if (b == null) return;
     try {
       final list = data.map((e) => toJson(e)).toList();
       final map = {'v': list, 'ts': ts};
-      await _instance.put(key, json.encode(map));
-      await _instance.put('$key$_timestampSuffix', ts.toString());
+      await b.put(key, json.encode(map));
+      await b.put('$key$_timestampSuffix', ts.toString());
     } catch (e) {
       // ignore
     }
@@ -113,12 +124,20 @@ class CacheService {
 
   /// Clear one key (and its timestamp).
   static Future<void> clear(String key) async {
-    await _instance.delete(key);
-    await _instance.delete('$key$_timestampSuffix');
+    final b = _box;
+    if (b == null) return;
+    try {
+      await b.delete(key);
+      await b.delete('$key$_timestampSuffix');
+    } catch (_) {}
   }
 
   /// Clear all entries in cache box.
   static Future<void> clearAll() async {
-    await _instance.clear();
+    final b = _box;
+    if (b == null) return;
+    try {
+      await b.clear();
+    } catch (_) {}
   }
 }

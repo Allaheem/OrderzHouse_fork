@@ -392,7 +392,8 @@ export const approveOrRejectOffer = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized" });
 
     if (action === "accept" && String(offer.project_type) === "bidding") {
-      // Bidding: no Stripe; client accepts → project goes to admin approval, client sees payment panel (CliQ/Cash)
+      // Bidding: client accepts → start work immediately (freelancer assignment active).
+      // Admin no longer blocks delivery; payment panel (CliQ/Cash) can still be used in parallel.
       await client.query("BEGIN");
 
       const { rows: acceptedCheck } = await client.query(
@@ -419,74 +420,109 @@ export const approveOrRejectOffer = async (req, res) => {
         [offer.project_id, offerId]
       );
 
-      // Set project to pending_admin_approval (only status + updated_at to avoid schema issues)
       await client.query(
-        `UPDATE projects SET status = 'pending_admin_approval', updated_at = NOW() WHERE id = $1`,
+        `UPDATE projects
+         SET status = 'in_progress',
+             completion_status = 'in_progress',
+             updated_at = NOW()
+         WHERE id = $1`,
         [offer.project_id]
       );
-        
-        // Create assignment with pending status (not active yet)
-        let assignmentId = null;
-        try {
-          const { rows: insertRows } = await client.query(
-            `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at, assignment_type, user_invited)
-             VALUES ($1, $2, 'pending_admin_approval', NOW(), 'by_client', true)
+
+      let assignmentId = null;
+      try {
+        const { rows: insertRows } = await client.query(
+          `INSERT INTO project_assignments (project_id, freelancer_id, status, assigned_at, assignment_type, user_invited)
+           VALUES ($1, $2, 'active', NOW(), 'by_client', true)
+           RETURNING id`,
+          [offer.project_id, offer.freelancer_id]
+        );
+        assignmentId = insertRows[0]?.id || null;
+      } catch (assignErr) {
+        if (assignErr.code === "23505") {
+          const { rows: updateRows } = await client.query(
+            `UPDATE project_assignments
+             SET status = 'active', assigned_at = NOW()
+             WHERE project_id = $1 AND freelancer_id = $2
              RETURNING id`,
             [offer.project_id, offer.freelancer_id]
           );
-          assignmentId = insertRows[0]?.id || null;
-        } catch (assignErr) {
-          if (assignErr.code === "23505") {
-            const { rows: updateRows } = await client.query(
-              `UPDATE project_assignments 
-               SET status = 'pending_admin_approval', assigned_at = NOW()
-               WHERE project_id = $1 AND freelancer_id = $2
-               RETURNING id`,
-              [offer.project_id, offer.freelancer_id]
-            );
-            assignmentId = updateRows[0]?.id || null;
-          } else throw assignErr;
-        }
-        
-        // Emit events
-        try {
+          assignmentId = updateRows[0]?.id || null;
+        } else throw assignErr;
+      }
+
+      const { createEscrowHeld } = await import("../services/escrowService.js");
+      await createEscrowHeld(
+        {
+          projectId: offer.project_id,
+          clientId: offer.client_id,
+          freelancerId: offer.freelancer_id,
+          amount: offer.bid_amount,
+          paymentId: null,
+        },
+        client
+      );
+
+      const { activateSubscriptionOnFirstAcceptance } = await import(
+        "../services/subscriptionActivation.js"
+      );
+      await activateSubscriptionOnFirstAcceptance(
+        offer.freelancer_id,
+        client,
+        assignmentId
+      );
+
+      try {
+        eventBus.emit("offer.statusChanged", {
+          offerId: offer.id,
+          projectId: offer.project_id,
+          projectTitle: offer.project_title,
+          freelancerId: offer.freelancer_id,
+          accepted: true,
+          pendingAdminApproval: false,
+        });
+        eventBus.emit("freelancer.assignmentChanged", {
+          projectId: offer.project_id,
+          projectTitle: offer.project_title,
+          freelancerId: offer.freelancer_id,
+          assigned: true,
+        });
+        eventBus.emit("escrow.funded", {
+          projectId: offer.project_id,
+          projectTitle: offer.project_title,
+          freelancerId: offer.freelancer_id,
+          amount: offer.bid_amount,
+        });
+
+        const { rows: otherPendingOffers } = await client.query(
+          `SELECT id, freelancer_id FROM offers
+           WHERE project_id = $1 AND id <> $2 AND offer_status = 'pending'`,
+          [offer.project_id, offerId]
+        );
+
+        for (const o of otherPendingOffers || []) {
           eventBus.emit("offer.statusChanged", {
-            offerId: offer.id,
+            offerId: o.id,
             projectId: offer.project_id,
             projectTitle: offer.project_title,
-            freelancerId: offer.freelancer_id,
-            accepted: true,
-            pendingAdminApproval: true,
+            freelancerId: o.freelancer_id,
+            accepted: false,
+            autoRejected: true,
           });
-          
-          const { rows: otherPendingOffers } = await client.query(
-            `SELECT id, freelancer_id FROM offers
-             WHERE project_id = $1 AND id <> $2 AND offer_status = 'pending'`,
-            [offer.project_id, offerId]
-          );
-          
-          for (const o of otherPendingOffers || []) {
-            eventBus.emit("offer.statusChanged", {
-              offerId: o.id,
-              projectId: offer.project_id,
-              projectTitle: offer.project_title,
-              freelancerId: o.freelancer_id,
-              accepted: false,
-              autoRejected: true,
-            });
-          }
-        } catch (e) {
-          console.error("eventBus error (approveOrRejectOffer):", e);
         }
-        
-        await client.query("COMMIT");
+      } catch (e) {
+        console.error("eventBus error (approveOrRejectOffer bidding):", e);
+      }
+
+      await client.query("COMMIT");
 
       return res.json({
         success: true,
-        pendingAdminApproval: true,
+        pendingAdminApproval: false,
         showPaymentPanel: true,
         projectId: offer.project_id,
-        message: "Offer accepted. Choose payment method (CliQ/Cash). Project is pending admin approval.",
+        message:
+          "Offer accepted. Project is in progress — freelancer can start work. Complete payment (CliQ/Cash) if required.",
       });
     }
 
