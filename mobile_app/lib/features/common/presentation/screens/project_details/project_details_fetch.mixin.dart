@@ -24,7 +24,12 @@ extension _ProjectDetailsFetchExtension on _ProjectDetailsScreenState {
               .toLowerCase();
       isAssignedCheck =
           assignmentFreelancerId == currentUserId &&
-          ['active', 'assigned', 'accepted'].contains(assignmentStatus);
+          [
+            'active',
+            'assigned',
+            'accepted',
+            'pending_admin_approval',
+          ].contains(assignmentStatus);
     }
 
     if (!isOwnerCheck && !isAssignedCheck) {
@@ -134,6 +139,7 @@ extension _ProjectDetailsFetchExtension on _ProjectDetailsScreenState {
       'active',
       'assigned',
       'accepted',
+      'pending_admin_approval',
     ].contains(assignmentStatus);
 
     return isMyAssignment && isActiveStatus;

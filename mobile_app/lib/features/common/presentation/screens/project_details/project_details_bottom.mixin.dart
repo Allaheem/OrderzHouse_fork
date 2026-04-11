@@ -44,11 +44,17 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
               .toLowerCase();
       isAssignedToMe =
           assignmentFreelancerId == currentUserId &&
-          ['active', 'assigned', 'accepted'].contains(assignmentStatus);
+          [
+            'active',
+            'assigned',
+            'accepted',
+            'pending_admin_approval',
+          ].contains(assignmentStatus);
       isAssignedToSomeone = [
         'active',
         'assigned',
         'accepted',
+        'pending_admin_approval',
       ].contains(assignmentStatus);
     }
 
@@ -58,9 +64,16 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
         (_projectData?['completion_status'] ?? project.status ?? '')
             .toString()
             .toLowerCase();
-    final statusKey = completionStatus.isNotEmpty
+    var statusKey = completionStatus.isNotEmpty
         ? completionStatus
         : projectStatus;
+    // Bidding: client accepted offer but DB/API may still say pending_admin — freelancer should work.
+    if (isFreelancerRole &&
+        isAssignedToMe &&
+        (statusKey == 'pending_admin_approval' ||
+            projectStatus == 'pending_admin_approval')) {
+      statusKey = 'in_progress';
+    }
     final isProjectCompleted =
         projectStatus == 'completed' || completionStatus == 'completed';
 

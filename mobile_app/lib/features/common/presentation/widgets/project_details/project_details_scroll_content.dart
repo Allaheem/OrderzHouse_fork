@@ -17,18 +17,22 @@ class ProjectDetailsScrollContent extends StatelessWidget {
     required this.project,
     required this.imageUrl,
     required this.durationText,
+    this.statusBadgeOverride,
     this.headerTrailing,
   });
 
   final Project project;
   final String? imageUrl;
   final String durationText;
+  /// When set (e.g. freelancer assigned while project row still `pending_admin_approval`), shown instead of [Project.status] on the hero badge.
+  final String? statusBadgeOverride;
   final Widget? headerTrailing;
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM dd, yyyy');
-    final statusColor = projectDetailsStatusColor(project.status);
+    final badgeStatus = statusBadgeOverride ?? project.status;
+    final statusColor = projectDetailsStatusColor(badgeStatus);
     final l10n = AppLocalizations.of(context)!;
 
     return Column(
@@ -152,7 +156,7 @@ class ProjectDetailsScrollContent extends StatelessWidget {
                       ],
                     ),
                     child: Text(
-                      project.status.toUpperCase(),
+                      badgeStatus.toUpperCase(),
                       style: AppTextStyles.labelSmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

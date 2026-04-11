@@ -292,6 +292,15 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
     // Note: Actual visibility is controlled by _shouldShowStickyCTA which checks assignment
     final shouldShowButton = isFreelancer && hasValidProjectType;
 
+    // Badge: show in_progress for assigned freelancer when offer accepted but status not yet updated.
+    String? statusBadgeOverride;
+    if (isFreelancer && isAssignedToMe) {
+      final ps = project.status.toLowerCase();
+      if (ps == 'pending_admin_approval') {
+        statusBadgeOverride = 'in_progress';
+      }
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
@@ -318,6 +327,7 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
               project: project,
               imageUrl: imageUrl,
               durationText: durationText,
+              statusBadgeOverride: statusBadgeOverride,
               headerTrailing: isFreelancerRole && isAssignedToMe
                   ? buildChangeRequestsIconWithUnread(project.id)
                   : isAdminRole
