@@ -1862,6 +1862,126 @@ export const getAllProjectsForAdmin = async (req, res) => {
   }
 };
 
+/**
+ * Admin: update project fields (PeopleTable PUT /projects/admin/projects/:id)
+ * PUT /projects/admin/projects/:projectId
+ */
+export const adminUpdateProject = async (req, res) => {
+  try {
+    const adminId = req.token?.userId;
+    const roleId = Number(req.token?.role ?? req.token?.roleId ?? NaN);
+    if (!adminId || roleId !== 1) {
+      return res.status(403).json({ success: false, message: "Admin access required" });
+    }
+
+    const projectId = Number.parseInt(String(req.params.projectId ?? ""), 10);
+    if (!Number.isInteger(projectId) || projectId <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid project id" });
+    }
+
+    const body = req.body && typeof req.body === "object" ? req.body : {};
+    const ALLOWED_PROJECT_STATUS = new Set([
+      "active",
+      "bidding",
+      "in_progress",
+      "pending_review",
+      "completed",
+      "pending_admin_approval",
+      "pending_acceptance",
+      "open",
+      "terminated",
+    ]);
+    const ALLOWED_COMPLETION = new Set([
+      "not_started",
+      "in_progress",
+      "pending_review",
+      "completed",
+      "revision_requested",
+      "invitation_sent",
+      "overdue",
+    ]);
+    const ALLOWED_ADMIN_APPROVAL = new Set(["none", "pending", "approved", "rejected"]);
+
+    const sets = [];
+    const values = [];
+    let i = 1;
+
+    if (typeof body.title === "string" && body.title.trim()) {
+      sets.push(`title = $${i++}`);
+      values.push(body.title.trim());
+    }
+    if (body.budget != null && body.budget !== "") {
+      const b = Number(body.budget);
+      if (Number.isFinite(b) && b >= 0) {
+        sets.push(`budget = $${i++}`);
+        values.push(b);
+      }
+    }
+    if (typeof body.description === "string") {
+      sets.push(`description = $${i++}`);
+      values.push(body.description);
+    }
+
+    if (body.status != null && String(body.status).trim() !== "") {
+      const st = String(body.status).trim().toLowerCase();
+      if (!ALLOWED_PROJECT_STATUS.has(st)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Allowed: ${[...ALLOWED_PROJECT_STATUS].join(", ")}`,
+        });
+      }
+      sets.push(`status = $${i++}`);
+      values.push(st);
+    }
+
+    if (body.completion_status != null && String(body.completion_status).trim() !== "") {
+      const cs = String(body.completion_status).trim().toLowerCase();
+      if (!ALLOWED_COMPLETION.has(cs)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid completion_status",
+        });
+      }
+      sets.push(`completion_status = $${i++}`);
+      values.push(cs);
+    }
+
+    if (body.admin_approval_status != null && String(body.admin_approval_status).trim() !== "") {
+      const as = String(body.admin_approval_status).trim().toLowerCase();
+      if (!ALLOWED_ADMIN_APPROVAL.has(as)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid admin_approval_status",
+        });
+      }
+      sets.push(`admin_approval_status = $${i++}`);
+      values.push(as);
+    }
+
+    if (sets.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "No allowed fields to update. Send title, budget, description, status, completion_status, or admin_approval_status.",
+      });
+    }
+
+    sets.push(`updated_at = NOW()`);
+    values.push(projectId);
+
+    const q = `UPDATE projects SET ${sets.join(", ")} WHERE id = $${i} AND is_deleted = false RETURNING id, title, status, completion_status, admin_approval_status, project_type`;
+    const { rows } = await pool.query(q, values);
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    return res.json({ success: true, project: rows[0] });
+  } catch (err) {
+    console.error("adminUpdateProject error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 /**
  * -------------------------------
@@ -2252,7 +2372,7 @@ export const downloadProjectDeliveryFile = async (req, res) => {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, project_id, file_name, file_url
+      `SELECT id, project_id, file_name, file_url, public_id
          FROM project_files
         WHERE id = $1 AND project_id = $2`,
       [fileIdNum, projectIdNum]
@@ -2263,40 +2383,98 @@ export const downloadProjectDeliveryFile = async (req, res) => {
 
     const row = rows[0];
     const remoteUrl = String(row.file_url || "").trim();
-    if (!remoteUrl || !/^https?:\/\//i.test(remoteUrl)) {
+    const publicId = row.public_id != null ? String(row.public_id).trim() : "";
+
+    /** Try stored URL first, then Cloudinary-built URLs from public_id (stale secure_url, etc.) */
+    const candidateUrls = [];
+    if (remoteUrl && /^https?:\/\//i.test(remoteUrl)) {
+      candidateUrls.push(remoteUrl);
+    }
+    if (publicId) {
+      for (const rt of ["raw", "image", "video"]) {
+        try {
+          const built = cloudinary.url(publicId, { secure: true, resource_type: rt });
+          if (typeof built === "string" && /^https?:\/\//i.test(built) && !candidateUrls.includes(built)) {
+            candidateUrls.push(built);
+          }
+        } catch (_) {
+          /* ignore */
+        }
+      }
+    }
+
+    if (!candidateUrls.length) {
       return res.status(502).json({ success: false, message: "Invalid stored file URL" });
     }
 
-    const upstream = await axios.get(remoteUrl, {
+    const axiosOpts = {
       responseType: "stream",
       maxRedirects: 5,
       timeout: 120_000,
       validateStatus: (s) => s >= 200 && s < 400,
-    });
+      headers: {
+        Accept: "*/*",
+        "User-Agent": "OrderzHouse-API/1.0 (project-file-download)",
+      },
+    };
 
     const safeName = safeDownloadBaseName(row.file_name);
     const ascii = safeName.replace(/[^\x20-\x7E]/g, "_");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(safeName)}`
-    );
 
-    const ct = upstream.headers["content-type"];
-    if (ct) res.setHeader("Content-Type", ct);
-    const len = upstream.headers["content-length"];
-    if (len) res.setHeader("Content-Length", len);
+    let lastErr = null;
+    for (const tryUrl of candidateUrls) {
+      try {
+        const upstream = await axios.get(tryUrl, axiosOpts);
 
-    upstream.data.on("error", (e) => {
-      console.error("downloadProjectDeliveryFile stream error:", e?.message || e);
-      if (!res.headersSent) res.status(502).end();
-      else res.destroy(e);
-    });
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(safeName)}`
+        );
 
-    upstream.data.pipe(res);
+        const ct = upstream.headers["content-type"];
+        if (ct) res.setHeader("Content-Type", ct);
+        const len = upstream.headers["content-length"];
+        if (len) res.setHeader("Content-Length", len);
+
+        upstream.data.on("error", (e) => {
+          console.error("downloadProjectDeliveryFile stream error:", e?.message || e);
+          if (!res.headersSent) res.status(502).end();
+          else res.destroy(e);
+        });
+
+        upstream.data.pipe(res);
+        return;
+      } catch (e) {
+        lastErr = e;
+        if (process.env.NODE_ENV !== "production") {
+          console.error("downloadProjectDeliveryFile attempt failed:", tryUrl, e?.message || e);
+        }
+      }
+    }
+
+    throw lastErr || new Error("All storage download attempts failed");
   } catch (err) {
-    console.error("downloadProjectDeliveryFile error:", err?.message || err);
+    const status = err?.response?.status;
+    console.error(
+      "downloadProjectDeliveryFile error:",
+      status || err?.code || err?.message || err
+    );
     if (!res.headersSent) {
-      return res.status(502).json({ success: false, message: "Failed to fetch file from storage" });
+      let message = "Failed to fetch file from storage";
+      if (status === 404) {
+        message =
+          "The file is not available at the saved link (removed from storage or wrong URL in database). Re-upload the file.";
+      } else if (status === 403 || status === 401) {
+        message =
+          "Storage refused access to this file (private or restricted asset).";
+      } else if (typeof status === "number" && status >= 400) {
+        message = `Storage returned HTTP ${status}; the stored link may be invalid.`;
+      } else if (err?.code === "ECONNABORTED" || err?.code === "ETIMEDOUT") {
+        message = "Timed out while fetching the file from storage.";
+      } else if (err?.code === "ENOTFOUND" || err?.code === "ECONNREFUSED") {
+        message = "Could not reach the file host; the stored URL may be wrong.";
+      }
+      return res.status(502).json({ success: false, message });
     }
   }
 };

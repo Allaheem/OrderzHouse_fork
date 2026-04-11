@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../core/models/user.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/models/referral_info.dart';
 import '../../../../core/widgets/error_state.dart';
@@ -308,10 +309,12 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             // Fallback: navigate to explore/home based on role
                             final user = ref.read(authStateProvider).user;
                             final userRoleId = user?.roleId ?? 0;
-                            if (userRoleId == 2) {
+                            if (user?.isAdmin == true) {
+                              context.go('/admin/explore');
+                            } else if (userRoleId == 2) {
                               context.go('/client/explore');
                             } else if (userRoleId == 3) {
-                              context.go('/freelancer/home');
+                              context.go('/freelancer');
                             } else {
                               context.go('/client/explore');
                             }

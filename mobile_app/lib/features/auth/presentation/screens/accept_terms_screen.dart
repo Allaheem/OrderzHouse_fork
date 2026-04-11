@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/models/user.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -172,10 +173,15 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
     if (!mounted) return;
 
     if (success) {
+      final user = ref.read(authStateProvider).user;
       final role = ref.read(authStateProvider).userRole;
-      if (role == 'freelancer') {
+      if (user?.isAdmin == true) {
+        context.go('/admin');
+      } else if (role == 'freelancer') {
         context.go('/freelancer');
       } else if (role == 'client') {
+        context.go('/client');
+      } else {
         context.go('/client');
       }
     } else {

@@ -614,6 +614,18 @@ abstract class AppLocalizations {
   /// **'Messages'**
   String get messages;
 
+  /// No description provided for @adminMobileHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin account'**
+  String get adminMobileHomeTitle;
+
+  /// No description provided for @adminMobileHomeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This app is for clients and freelancers. Use the web admin dashboard for full management. Here you can browse the marketplace, open payments, and your profile.'**
+  String get adminMobileHomeBody;
+
   /// No description provided for @save.
   ///
   /// In en, this message translates to:

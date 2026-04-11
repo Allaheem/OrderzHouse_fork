@@ -37,6 +37,7 @@ import {
   adminRejectOfflinePayment,
   getPendingApprovalProjects,
   getProjectSuccess,
+  adminUpdateProject,
 } from "../controller/projectsManagment/projects.js";
 
 import {
@@ -253,6 +254,13 @@ projectsRouter.put(
   authentication,
   // adminViewerOnly,
   reassignFreelancer
+);
+
+// Admin: update project (status / completion / approval — used by admin PeopleTable)
+projectsRouter.put(
+  "/admin/projects/:projectId",
+  authentication,
+  adminUpdateProject
 );
 
 /* --------------------------------

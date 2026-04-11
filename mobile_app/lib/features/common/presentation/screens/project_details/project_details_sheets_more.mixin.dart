@@ -342,7 +342,8 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
           }
         },
       );
-      // If production API has not shipped the proxy route yet (HTTP 404), retry direct URL.
+      // If the API proxy fails (404, 502 from storage, timeouts, etc.), retry once via the
+      // original URL (e.g. Cloudinary) without JWT — phone may reach CDN when the server cannot.
       final fallbackUrl = url.trim();
       final canFallback = useProxy &&
           fallbackUrl.isNotEmpty &&
@@ -351,14 +352,18 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
           fallbackUrl != downloadPath;
       if (!downloadResult.success && canFallback) {
         final msg = (downloadResult.message ?? '').toLowerCase();
-        if (msg.contains('404') || msg.contains('not found')) {
+        final isAuthFailure = msg.contains('401') ||
+            msg.contains('403') ||
+            msg.contains('not authorized') ||
+            msg.contains('forbidden');
+        if (!isAuthFailure) {
           downloadResult = await repository.downloadFile(
             url: fallbackUrl,
             savePath: savePath,
             onReceiveProgress: (received, total) {
               if (total != -1) {
                 final progress = (received / total * 100).toStringAsFixed(0);
-                debugPrint('Download progress (fallback): $progress%');
+                debugPrint('Download progress (direct URL fallback): $progress%');
               }
             },
           );

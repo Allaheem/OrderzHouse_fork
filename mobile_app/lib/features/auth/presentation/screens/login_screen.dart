@@ -6,6 +6,7 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/models/user.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../providers/auth_provider.dart';
@@ -49,9 +50,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       final role = ref.read(authStateProvider).userRole;
-      if (role == 'freelancer') {
+      if (user?.isAdmin == true) {
+        context.go('/admin');
+      } else if (role == 'freelancer') {
         context.go('/freelancer');
       } else if (role == 'client') {
+        context.go('/client');
+      } else {
         context.go('/client');
       }
     } else {
@@ -288,9 +293,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
       final role = ref.read(authStateProvider).userRole;
-      if (role == 'freelancer') {
+      if (user?.isAdmin == true) {
+        context.go('/admin');
+      } else if (role == 'freelancer') {
         context.go('/freelancer');
       } else if (role == 'client') {
+        context.go('/client');
+      } else {
         context.go('/client');
       }
     } else {

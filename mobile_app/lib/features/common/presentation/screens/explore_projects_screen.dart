@@ -324,7 +324,9 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
             GestureDetector(
               onTap: () {
                 final location = GoRouterState.of(context).uri.path;
-                if (location.contains('/client')) {
+                if (location.contains('/admin')) {
+                  context.go('/admin/profile');
+                } else if (location.contains('/client')) {
                   context.go('/client/profile');
                 } else {
                   context.go('/freelancer/profile');
@@ -897,6 +899,43 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
             icon: Icons.person_outline,
             title: l10n.profile,
             route: '/freelancer/profile',
+          ),
+        ],
+      );
+    } else if (location.contains('/admin')) {
+      if (location.contains('/explore')) {
+        currentIndex = 1;
+      } else if (location.contains('/payments')) {
+        currentIndex = 2;
+      } else if (location.contains('/profile')) {
+        currentIndex = 3;
+      } else {
+        currentIndex = 0;
+      }
+
+      final l10n = AppLocalizations.of(context)!;
+      return AppBottomNavBar(
+        currentIndex: currentIndex,
+        items: [
+          NavItem(
+            icon: Icons.home_outlined,
+            title: l10n.home,
+            route: '/admin',
+          ),
+          NavItem(
+            icon: Icons.explore_outlined,
+            title: l10n.explore,
+            route: '/admin/explore',
+          ),
+          NavItem(
+            icon: Icons.payments_outlined,
+            title: l10n.payments,
+            route: '/admin/payments',
+          ),
+          NavItem(
+            icon: Icons.person_outline,
+            title: l10n.profile,
+            route: '/admin/profile',
           ),
         ],
       );

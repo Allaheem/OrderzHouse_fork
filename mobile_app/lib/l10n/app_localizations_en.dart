@@ -271,6 +271,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messages => 'Messages';
 
   @override
+  String get adminMobileHomeTitle => 'Admin account';
+
+  @override
+  String get adminMobileHomeBody =>
+      'This app is for clients and freelancers. Use the web admin dashboard for full management. Here you can browse the marketplace, open payments, and your profile.';
+
+  @override
   String get save => 'Save';
 
   @override

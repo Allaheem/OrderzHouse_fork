@@ -97,6 +97,8 @@
   "explore": "Explore",
   "payments": "Payments",
   "messages": "Messages",
+  "adminMobileHomeTitle": "Admin account",
+  "adminMobileHomeBody": "This app is for clients and freelancers. Use the web admin dashboard for full management. Here you can browse the marketplace, open payments, and your profile.",
   
   "save": "Save",
   "cancel": "Cancel",

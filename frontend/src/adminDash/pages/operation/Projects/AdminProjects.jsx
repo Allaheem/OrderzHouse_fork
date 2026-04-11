@@ -280,30 +280,63 @@ function AdminProjects() {
     },
   ];
 
-  // form fields
+  // form fields — values must match DB enums (PUT /projects/admin/projects/:id)
   const formFields = [
     { key: "title", label: "Title", required: true },
-    { key: "client", label: "Client" },
-    { key: "owner", label: "Owner" },
+    {
+      key: "completion_status",
+      label: "Progress (completion_status)",
+      type: "select",
+      options: [
+        { value: "not_started", label: "Not started" },
+        { value: "in_progress", label: "In progress" },
+        { value: "pending_review", label: "Pending review" },
+        { value: "revision_requested", label: "Revision requested" },
+        { value: "completed", label: "Completed" },
+        { value: "invitation_sent", label: "Invitation sent" },
+        { value: "overdue", label: "Overdue" },
+      ],
+    },
     {
       key: "status",
-      label: "Status",
+      label: "Workflow (status)",
       type: "select",
-      options: ["Planning", "Active", "On hold", "Done"],
-      defaultValue: "Planning",
+      options: [
+        { value: "active", label: "Active (listed for fixed/hourly)" },
+        { value: "bidding", label: "Bidding" },
+        {
+          value: "pending_admin_approval",
+          label: "Pending admin approval (e.g. offline payment)",
+        },
+        { value: "in_progress", label: "In progress (work)" },
+        { value: "pending_review", label: "Pending review" },
+        { value: "completed", label: "Completed" },
+        { value: "pending_acceptance", label: "Pending acceptance" },
+        { value: "open", label: "Open" },
+        { value: "terminated", label: "Terminated" },
+      ],
     },
-    { key: "progress", label: "Progress %", type: "number", defaultValue: 0 },
+    {
+      key: "admin_approval_status",
+      label: "Payment / listing approval",
+      type: "select",
+      options: [
+        { value: "none", label: "None" },
+        { value: "pending", label: "Pending" },
+        { value: "approved", label: "Approved" },
+        { value: "rejected", label: "Rejected" },
+      ],
+    },
     { key: "budget", label: "Budget", type: "number", placeholder: "12000" },
-    { key: "due", label: "Due", type: "date" },
     { key: "description", label: "Description", type: "textarea" },
   ];
 
   const chips = [
     { label: "All", value: "" },
-    { label: "Planning", value: "Planning" },
-    { label: "Active", value: "Active" },
-    { label: "On hold", value: "On hold" },
-    { label: "Done", value: "Done" },
+    { label: "Not started", value: "not_started" },
+    { label: "In progress", value: "in_progress" },
+    { label: "Pending review", value: "pending_review" },
+    { label: "Completed", value: "completed" },
   ];
 
   return (
@@ -324,11 +357,11 @@ function AdminProjects() {
         columns={columns}
         formFields={formFields}
         chips={chips}
-        chipField="status"
+        chipField="completion_status"
         filters={[
           {
-            key: "status",
-            label: "Status",
+            key: "completion_status",
+            label: "Progress",
             options: chips.slice(1).map((c) => c.value),
           },
         ]}

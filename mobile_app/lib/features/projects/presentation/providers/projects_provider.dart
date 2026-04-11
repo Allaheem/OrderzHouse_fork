@@ -1,6 +1,7 @@
 // ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/project.dart';
+import '../../../../core/models/user.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/cache/cache_service.dart';
 import '../../../../core/network/dio_provider.dart';
@@ -74,7 +75,13 @@ final _myProjectsMemoryCacheUserIdProvider = StateProvider<int?>((ref) => null);
 final myProjectsProvider = FutureProvider<List<Project>>((ref) async {
   final repository = ref.read(projectsRepositoryProvider);
   ref.watch(authEpochProvider);
-  final userId = ref.watch(authStateProvider.select((state) => state.userId));
+  final auth = ref.watch(authStateProvider);
+  final userId = auth.userId;
+
+  // Admin APIs use /projects/myprojects for client (2) / freelancer (3) only.
+  if (auth.user?.isAdmin == true) {
+    return [];
+  }
 
   final memoryOwner = ref.read(_myProjectsMemoryCacheUserIdProvider);
   if (memoryOwner != userId) {
@@ -354,6 +361,10 @@ final latestProjectsProvider = FutureProvider.autoDispose<List<Project>>((
     return [];
   }
 
+  if (authState.user?.isAdmin == true) {
+    return [];
+  }
+
   // Fetch all projects (no category filter) with limit 2, sorted by created_at DESC
   final response = await repository.fetchExploreProjects(
     query: null,
@@ -407,8 +418,10 @@ final workspaceInProgressProjectsProvider = FutureProvider<List<Project>>((
 ) async {
   final repository = ref.read(projectsRepositoryProvider);
   ref.watch(authEpochProvider);
-  final userId = ref.watch(authStateProvider.select((s) => s.userId));
+  final auth = ref.watch(authStateProvider);
+  final userId = auth.userId;
   if (userId == null) return [];
+  if (auth.user?.isAdmin == true) return [];
 
   final response = await repository.getMyProjects(
     statusKey: 'in_progress',

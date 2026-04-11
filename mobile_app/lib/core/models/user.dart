@@ -34,6 +34,8 @@ class User with _$User {
 extension UserExtension on User {
   String get role {
     switch (roleId) {
+      case 1:
+        return 'admin';
       case 2:
         return 'client';
       case 3:
@@ -42,6 +44,8 @@ extension UserExtension on User {
         return 'unknown';
     }
   }
+
+  bool get isAdmin => roleId == 1;
 
   String get displayName {
     if (firstName != null && lastName != null) {

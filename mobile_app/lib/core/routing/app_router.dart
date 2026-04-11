@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/models/project.dart';
+import '../../core/models/user.dart';
 import '../../core/routing/route_tracker.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
@@ -14,6 +15,7 @@ import '../../features/freelancer/presentation/screens/freelancer_home_screen.da
 import '../../features/freelancer/presentation/screens/freelancer_projects_screen.dart';
 import '../../features/client/presentation/screens/client_home_screen.dart';
 import '../../features/client/presentation/screens/client_projects_screen.dart';
+import '../../features/admin/presentation/screens/admin_home_screen.dart';
 import '../../features/common/presentation/screens/explore_projects_screen.dart';
 import '../../features/common/presentation/screens/project_details_screen.dart';
 import '../../features/common/presentation/screens/applicants_screen.dart';
@@ -63,6 +65,17 @@ final _authRefreshListenableProvider = Provider<_AuthRefreshNotifier>((ref) {
   return _authRefreshNotifier;
 });
 
+String _defaultHome(AuthState auth) {
+  if (auth.user?.isAdmin == true) return '/admin';
+  return auth.userRole == 'freelancer' ? '/freelancer' : '/client';
+}
+
+/// Admin must not restore a stale /client or /freelancer deep link (those APIs return "Role not allowed").
+bool _lastRouteIncompatibleWithUser(String last, AuthState auth) {
+  if (auth.user?.isAdmin != true) return false;
+  return last.startsWith('/client') || last.startsWith('/freelancer');
+}
+
 String? _redirect(BuildContext context, GoRouterState state) {
   final auth = ProviderScope.containerOf(context).read(authStateProvider);
   final path = state.uri.path;
@@ -77,12 +90,17 @@ String? _redirect(BuildContext context, GoRouterState state) {
     if (path == '/accept-terms') return null;
     return '/accept-terms';
   }
+  if (auth.user?.isAdmin == true &&
+      (path.startsWith('/client') || path.startsWith('/freelancer'))) {
+    return '/admin';
+  }
   if (RouteTracker.isAuthRoute(path) || path == '/splash') {
     final last = RouteTracker.getLastRoute();
-    final defaultHome = auth.userRole == 'freelancer'
-        ? '/freelancer'
-        : '/client';
-    return last ?? defaultHome;
+    final home = _defaultHome(auth);
+    if (last != null && !_lastRouteIncompatibleWithUser(last, auth)) {
+      return last;
+    }
+    return home;
   }
   RouteTracker.saveLastRoute(path);
   return null;
@@ -173,6 +191,31 @@ final List<RouteBase> _appRoutes = [
       GoRoute(
         path: 'notifications',
         name: 'freelancerNotifications',
+        builder: (context, state) => const NotificationsPage(),
+      ),
+    ],
+  ),
+  // Admin (mobile: browse + profile only; full tools stay on web dashboard)
+  GoRoute(
+    path: '/admin',
+    builder: (context, state) => const AdminHomeScreen(),
+    routes: [
+      GoRoute(
+        path: 'explore',
+        builder: (context, state) =>
+            const ExploreProjectsScreen(readOnly: false),
+      ),
+      GoRoute(
+        path: 'payments',
+        builder: (context, state) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: 'notifications',
+        name: 'adminNotifications',
         builder: (context, state) => const NotificationsPage(),
       ),
     ],

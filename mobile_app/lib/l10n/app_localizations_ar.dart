@@ -269,6 +269,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get messages => 'الرسائل';
 
   @override
+  String get adminMobileHomeTitle => 'حساب إداري';
+
+  @override
+  String get adminMobileHomeBody =>
+      'هذا التطبيق مخصص للعملاء والفريلانسر. لإدارة المشاريع والموافقات الكاملة استخدم لوحة الإدارة على الويب. من هنا يمكنك استكشاف السوق والمدفوعات والملف الشخصي.';
+
+  @override
   String get save => 'حفظ';
 
   @override

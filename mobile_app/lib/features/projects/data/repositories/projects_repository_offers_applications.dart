@@ -277,11 +277,9 @@ class ProjectsRepositoryOffersApplications {
           extra: thirdParty
               ? <String, dynamic>{AuthInterceptor.extraSkipAuth: true}
               : <String, dynamic>{},
-          // Avoid default JSON content-type on binary GET (some proxies/proxies are picky).
-          headers: <String, dynamic>{
-            Headers.acceptHeader: '*/*',
-            Headers.contentTypeHeader: null,
-          },
+          // Do not set Content-Type here: Dio forbids mixing Options.contentType
+          // with a conflicting content-type header (throws before the request).
+          headers: const <String, dynamic>{Headers.acceptHeader: '*/*'},
           followRedirects: true,
           validateStatus: (status) => status != null && status >= 200 && status < 400,
         ),

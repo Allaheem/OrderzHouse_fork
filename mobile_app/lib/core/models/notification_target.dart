@@ -45,9 +45,10 @@ class NotificationTargetMapper {
   /// Returns null if notification cannot be navigated
   static NotificationTarget? mapNotificationToTarget(
     AppNotification notification,
-    int userRoleId, // 2 = CLIENT, 3 = FREELANCER
+    int userRoleId, // 1 = ADMIN, 2 = CLIENT, 3 = FREELANCER
   ) {
     final isClient = userRoleId == 2;
+    final isAdmin = userRoleId == 1;
     final type = notification.type?.toLowerCase() ?? '';
     // Use primaryProjectId which handles projectId and referenceId fallback
     final projectId = notification.primaryProjectId;
@@ -56,7 +57,7 @@ class NotificationTargetMapper {
     if (notification.isProjectRelated && projectId != null) {
       // Work submitted - client sees deliveries, freelancer sees their submission
       if (notification.isDeliveryRelated) {
-        if (isClient) {
+        if (isClient || isAdmin) {
           return NotificationTarget(
             route: '/project/:id',
             pathParams: {'id': projectId.toString()},
@@ -81,7 +82,7 @@ class NotificationTargetMapper {
 
       // Offer-related - client sees applicants/offers, freelancer sees their offer
       if (notification.isOfferRelated) {
-        if (isClient) {
+        if (isClient || isAdmin) {
           return NotificationTarget(
             route: '/project/:id',
             pathParams: {'id': projectId.toString()},
@@ -112,7 +113,11 @@ class NotificationTargetMapper {
     // PAYMENT-RELATED NOTIFICATIONS
     if (notification.isPaymentRelated) {
       // Navigate to payments screen
-      final rolePrefix = isClient ? '/client' : '/freelancer';
+      final rolePrefix = isClient
+          ? '/client'
+          : isAdmin
+          ? '/admin'
+          : '/freelancer';
       return NotificationTarget(route: '$rolePrefix/payments');
     }
 
@@ -137,7 +142,11 @@ class NotificationTargetMapper {
 
     // REVIEW-RELATED
     if (type == NotificationType.reviewSubmitted) {
-      final rolePrefix = isClient ? '/client' : '/freelancer';
+      final rolePrefix = isClient
+          ? '/client'
+          : isAdmin
+          ? '/admin'
+          : '/freelancer';
       return NotificationTarget(route: '$rolePrefix/profile');
     }
 
