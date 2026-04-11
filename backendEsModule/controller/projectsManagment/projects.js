@@ -1083,80 +1083,115 @@ export const approveWorkCompletion = async (req, res) => {
       try {
         await dbClient.query("BEGIN");
 
-        // 1) Persist approval in same transaction (only columns that exist: status, completion_status)
-        await dbClient.query(
-          `UPDATE projects SET status = $1, completion_status = $1 WHERE id = $2`,
-          [newStatus, resolvedProjectId]
-        );
+        const paActiveLike = `pa.status IN ('active', 'pending_admin_approval', 'pending_acceptance', 'pending_client_approval')`;
 
-        // 2) Release escrow (uses dbClient; no internal COMMIT)
+        // 1) Release escrow first while project is still pending_review (only mark completed after funds move).
         let releaseResult = await releaseEscrowToFreelancer(resolvedProjectId, dbClient);
 
         if (!releaseResult.released && releaseResult.reason === "No held escrow found") {
-          // Fallback: create escrow from assignment + payment/offer, then release (all on dbClient)
           const assignRows = await dbClient.query(
             `SELECT pa.freelancer_id FROM project_assignments pa
              WHERE pa.project_id = $1
-               AND pa.status IN ('active', 'pending_admin_approval')
-             ORDER BY CASE pa.status WHEN 'active' THEN 0 ELSE 1 END
+               AND ${paActiveLike.replace("pa.", "pa.")}
+             ORDER BY CASE pa.status
+               WHEN 'active' THEN 0
+               WHEN 'pending_admin_approval' THEN 1
+               ELSE 2 END
              LIMIT 1`,
             [resolvedProjectId]
           );
+
+          // Bidding offer checkout stores payments as purpose 'offer' + reference_id = offer id (not project id).
           const payRows = await dbClient.query(
-            `SELECT id, amount FROM payments WHERE reference_id = $1 AND purpose = 'project' ORDER BY created_at DESC LIMIT 1`,
+            `SELECT p.id, p.amount FROM payments p
+             WHERE p.status = 'paid'
+               AND (
+                 (p.purpose = 'project' AND p.reference_id = $1)
+                 OR (
+                   p.purpose = 'offer'
+                   AND EXISTS (
+                     SELECT 1 FROM offers o
+                     WHERE o.id = p.reference_id AND o.project_id = $1
+                   )
+                 )
+               )
+             ORDER BY p.created_at DESC NULLS LAST, p.id DESC
+             LIMIT 1`,
             [resolvedProjectId]
           );
-          const offerRows = await dbClient.query(
+
+          let offerRows = await dbClient.query(
             `SELECT o.bid_amount, o.freelancer_id FROM offers o
-             JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id
-               AND pa.status IN ('active', 'pending_admin_approval')
-             WHERE o.project_id = $1 AND o.offer_status = 'accepted' LIMIT 1`,
+             JOIN project_assignments pa
+               ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id AND ${paActiveLike}
+             WHERE o.project_id = $1 AND o.offer_status = 'accepted'
+             LIMIT 1`,
             [resolvedProjectId]
           );
-          if (assignRows.rows.length > 0 && (payRows.rows.length > 0 || offerRows.rows.length > 0)) {
-            const freelancerId = assignRows.rows[0].freelancer_id;
-            const clientIdForEscrow = project.user_id;
-            const amount = payRows.rows.length > 0 ? payRows.rows[0].amount : offerRows.rows[0].bid_amount;
-            const paymentId = payRows.rows.length > 0 ? payRows.rows[0].id : null;
-            await createEscrowHeld({
-              projectId: Number(resolvedProjectId),
-              clientId: clientIdForEscrow,
-              freelancerId,
-              amount,
-              paymentId,
-            }, dbClient);
+
+          if (offerRows.rows.length === 0) {
+            offerRows = await dbClient.query(
+              `SELECT o.bid_amount, o.freelancer_id FROM offers o
+               WHERE o.project_id = $1 AND o.offer_status = 'accepted'
+               LIMIT 1`,
+              [resolvedProjectId]
+            );
+          }
+
+          const freelancerId =
+            assignRows.rows[0]?.freelancer_id ?? offerRows.rows[0]?.freelancer_id ?? null;
+          const rawAmount =
+            payRows.rows.length > 0 ? payRows.rows[0].amount : offerRows.rows[0]?.bid_amount;
+          const amount = Number(rawAmount);
+          const paymentId = payRows.rows.length > 0 ? payRows.rows[0].id : null;
+
+          if (
+            freelancerId != null &&
+            Number.isFinite(amount) &&
+            amount > 0 &&
+            (payRows.rows.length > 0 || offerRows.rows.length > 0)
+          ) {
+            await createEscrowHeld(
+              {
+                projectId: Number(resolvedProjectId),
+                clientId: project.user_id,
+                freelancerId,
+                amount,
+                paymentId,
+              },
+              dbClient
+            );
             releaseResult = await releaseEscrowToFreelancer(resolvedProjectId, dbClient);
           }
         }
 
-        // If release failed and not alreadyReleased, rollback and return error
         if (!releaseResult.released) {
           await dbClient.query("ROLLBACK");
           dbClient.release();
-          console.error("[approveWorkCompletion] Escrow release failed, rolled back. reason:", releaseResult.reason);
+          console.error(
+            "[approveWorkCompletion] Escrow release failed, rolled back. reason:",
+            releaseResult.reason
+          );
           return res.status(500).json({
             success: false,
             message: "Escrow release failed. Freelancer wallet was not credited.",
-            escrowRelease: { released: false, alreadyReleased: false, reason: releaseResult.reason },
+            escrowRelease: {
+              released: false,
+              alreadyReleased: false,
+              reason: releaseResult.reason,
+            },
           });
         }
 
-        // 5) After successful release, set projects.payment_released_at (same transaction)
-        try {
-          await dbClient.query(
-            `UPDATE projects SET payment_released_at = NOW() WHERE id = $1`,
-            [resolvedProjectId]
-          );
-        } catch (payErr) {
-          await dbClient.query("ROLLBACK");
-          dbClient.release();
-          console.error("[approveWorkCompletion] payment_released_at update failed:", payErr);
-          return res.status(500).json({
-            success: false,
-            message: "Escrow released but payment_released_at update failed.",
-            error: payErr.message,
-          });
-        }
+        await dbClient.query(
+          `UPDATE projects
+             SET status = $1,
+                 completion_status = $1,
+                 payment_released_at = NOW()
+           WHERE id = $2`,
+          [newStatus, resolvedProjectId]
+        );
+
         await dbClient.query("COMMIT");
         escrowRelease = {
           released: releaseResult.released,
