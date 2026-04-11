@@ -1095,7 +1095,11 @@ export const approveWorkCompletion = async (req, res) => {
         if (!releaseResult.released && releaseResult.reason === "No held escrow found") {
           // Fallback: create escrow from assignment + payment/offer, then release (all on dbClient)
           const assignRows = await dbClient.query(
-            `SELECT pa.freelancer_id FROM project_assignments pa WHERE pa.project_id = $1 AND pa.status = 'active' LIMIT 1`,
+            `SELECT pa.freelancer_id FROM project_assignments pa
+             WHERE pa.project_id = $1
+               AND pa.status IN ('active', 'pending_admin_approval')
+             ORDER BY CASE pa.status WHEN 'active' THEN 0 ELSE 1 END
+             LIMIT 1`,
             [resolvedProjectId]
           );
           const payRows = await dbClient.query(
@@ -1104,8 +1108,9 @@ export const approveWorkCompletion = async (req, res) => {
           );
           const offerRows = await dbClient.query(
             `SELECT o.bid_amount, o.freelancer_id FROM offers o
-             JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id AND pa.status = 'active'
-             WHERE o.project_id = $1 AND o.status = 'accepted' LIMIT 1`,
+             JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id
+               AND pa.status IN ('active', 'pending_admin_approval')
+             WHERE o.project_id = $1 AND o.offer_status = 'accepted' LIMIT 1`,
             [resolvedProjectId]
           );
           if (assignRows.rows.length > 0 && (payRows.rows.length > 0 || offerRows.rows.length > 0)) {
@@ -1185,7 +1190,8 @@ export const approveWorkCompletion = async (req, res) => {
     // 4) Optional notification (safe)
     try {
       const { rows: freelancers } = await pool.query(
-        `SELECT freelancer_id FROM project_assignments WHERE project_id = $1 AND status = 'active'`,
+        `SELECT freelancer_id FROM project_assignments
+         WHERE project_id = $1 AND status IN ('active', 'pending_admin_approval')`,
         [resolvedProjectId]
       );
       for (const f of freelancers) {
@@ -2509,8 +2515,9 @@ export const adminApproveOfflinePayment = async (req, res) => {
     if (project.project_type === "bidding" && !paymentAmount) {
       const offerRow = await client.query(
         `SELECT o.bid_amount FROM offers o
-         JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id AND pa.status = 'active'
-         WHERE o.project_id = $1 AND o.status = 'accepted' LIMIT 1`,
+         JOIN project_assignments pa ON pa.freelancer_id = o.freelancer_id AND pa.project_id = o.project_id
+           AND pa.status IN ('active', 'pending_admin_approval')
+         WHERE o.project_id = $1 AND o.offer_status = 'accepted' LIMIT 1`,
         [projectId]
       );
       paymentAmount = Number(offerRow.rows[0]?.bid_amount) || 0;
@@ -2530,7 +2537,10 @@ export const adminApproveOfflinePayment = async (req, res) => {
 
       // إذا كان الفريلانسر مُعيّناً مسبقاً ولا يوجد escrow بعد، أنشئ الـ escrow (ليُحرّر عند الموافقة على التسليم)
       const assignRow = await client.query(
-        `SELECT freelancer_id FROM project_assignments WHERE project_id = $1 AND status = 'active' LIMIT 1`,
+        `SELECT freelancer_id FROM project_assignments
+         WHERE project_id = $1 AND status IN ('active', 'pending_admin_approval')
+         ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END
+         LIMIT 1`,
         [projectId]
       );
       const escrowExists = await client.query(

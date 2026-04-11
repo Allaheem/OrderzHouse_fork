@@ -58,9 +58,9 @@ class ApiClient {
     return _dio.get('/projects/$projectId/change-requests');
   }
 
-  /// PATCH /projects/:projectId/change-requests/mark-read
+  /// PUT /projects/:projectId/change-requests/mark-read
   Future<Response> markChangeRequestsRead(int projectId) {
-    return _dio.patch('/projects/$projectId/change-requests/mark-read');
+    return _dio.put('/projects/$projectId/change-requests/mark-read');
   }
 
   /// POST /projects/:projectId/request-changes
