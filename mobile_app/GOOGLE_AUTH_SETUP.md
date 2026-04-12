@@ -41,8 +41,9 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
 ## 5. iOS
 
 1. Create an **iOS** OAuth 2.0 client in Google Cloud Console.
-2. In `ios/Runner/Info.plist`, replace the URL scheme:
-   - Find: `com.googleusercontent.apps.YOUR_IOS_CLIENT_ID`
-   - Replace with your **Reversed Client ID** (e.g. `com.googleusercontent.apps.123456789012-abcdefghijklmnop`)
+2. Copy `ios/Flutter/Secrets.xcconfig.example` to **`ios/Flutter/Secrets.xcconfig`** (this file is gitignored).
+3. Set `GOOGLE_REVERSED_CLIENT_ID` to your **Reversed Client ID** exactly as shown in Google Cloud (e.g. `com.googleusercontent.apps.123456789012-abcdefghijklmnop`).
 
-The Reversed Client ID is shown when you create the iOS OAuth client.
+`Info.plist` reads `$(GOOGLE_REVERSED_CLIENT_ID)` from that xcconfig at build time. **Do not** leave the literal `YOUR_IOS_CLIENT_ID` placeholder — App Store Connect rejects it (error **90158**): URL schemes may only use letters, digits, `.`, `-`, and `+` (no underscores).
+
+**Before every `flutter build ipa` or Archive:** ensure `Secrets.xcconfig` exists on the machine doing the build.

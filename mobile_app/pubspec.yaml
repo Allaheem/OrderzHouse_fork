@@ -64,6 +64,11 @@ dependencies:
   open_file: ^3.5.11
   path: ^1.9.1
 
+# Pins transitive objective_c below 9.3.0; 9.3.x can produce an arm64 slice
+# marked for simulator and fail App Store validation (ITMS-91169).
+dependency_overrides:
+  objective_c: 9.2.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

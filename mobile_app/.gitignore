@@ -26,6 +26,9 @@ migrate_working_dir/
 # Local env (never commit secrets; use .env.example for keys list)
 .env
 
+# Google Sign-In reversed client id for iOS URL scheme (see ios/Flutter/Secrets.xcconfig.example)
+ios/Flutter/Secrets.xcconfig
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
