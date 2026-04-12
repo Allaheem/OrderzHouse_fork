@@ -43,6 +43,9 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Required by App Store validation when using image_picker / photo APIs (ITMS-90683) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>OrderzHouse needs access to your photo library so you can choose images for project covers and other uploads you start in the app.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<!-- Expose app Documents (OrderzHouse/) in Files app + allow opening saved downloads -->
