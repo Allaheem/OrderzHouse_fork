@@ -831,12 +831,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dontHaveAccount => 'ليس لديك حساب؟';
 
   @override
-  String get orContinueWith => 'أو تابع باستخدام';
-
-  @override
-  String get continueWithGoogle => 'المتابعة عبر Google';
-
-  @override
   String get email => 'البريد الإلكتروني';
 
   @override

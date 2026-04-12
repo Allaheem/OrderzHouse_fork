@@ -4,19 +4,13 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/models/user.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/dio_interceptors.dart';
 import '../../../../core/storage/secure_store.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/session/auth_api_binding.dart';
 import '../models/signup_payload.dart';
-
-typedef GoogleSignInFactory =
-    GoogleSignIn Function({List<String> scopes, String? serverClientId});
 
 abstract class AuthTokenStore {
   Future<void> saveAccessToken(String token);
@@ -41,42 +35,15 @@ class SecureAuthTokenStore implements AuthTokenStore {
   Future<void> clearAll() => SecureStore.clearAll();
 }
 
-/*
-  GOOGLE SIGN-IN CONFIGURATION CHECKLIST:
-  ———————————————————————————————————————
-  Android:
-    - SHA-1 (debug + release) must be added to Google Cloud Console OAuth credentials.
-    - Package name must match applicationId in build.gradle.
-    - GOOGLE_WEB_CLIENT_ID in .env = Web application client ID from Console.
-  iOS:
-    - Bundle ID must match Google Cloud Console iOS OAuth client.
-    - Info.plist: CFBundleURLTypes with REVERSED_CLIENT_ID (e.g. com.googleusercontent.apps.xxx).
-    - GOOGLE_WEB_CLIENT_ID in .env = Web application client ID (used as serverClientId).
-  Backend:
-    - POST /auth/google accepts { idToken }.
-    - GOOGLE_WEB_CLIENT_ID or GOOGLE_CLIENT_ID in backend .env.
-*/
-
 class AuthRepository {
   AuthRepository({
     Dio? dio,
     AuthTokenStore? tokenStore,
-    GoogleSignInFactory? googleSignInFactory,
-  }) : _dio = dio ?? DioClient.instance,
-       _tokenStore = tokenStore ?? SecureAuthTokenStore(),
-       _googleSignInFactory =
-           googleSignInFactory ?? _defaultGoogleSignInFactory;
+  })  : _dio = dio ?? DioClient.instance,
+        _tokenStore = tokenStore ?? SecureAuthTokenStore();
 
   final Dio _dio;
   final AuthTokenStore _tokenStore;
-  final GoogleSignInFactory _googleSignInFactory;
-
-  static GoogleSignIn _defaultGoogleSignInFactory({
-    List<String> scopes = const <String>[],
-    String? serverClientId,
-  }) {
-    return GoogleSignIn(scopes: scopes, serverClientId: serverClientId);
-  }
 
   Future<void> _recordSessionApiOrigin() async {
     await AuthApiBinding.recordCurrentApiForSession();
@@ -133,159 +100,6 @@ class AuthRepository {
       return 'This username is already taken. Please choose another.';
     }
     return currentMessage;
-  }
-
-  /// Sign in with Google: get idToken, send to backend, store JWT.
-  Future<ApiResponse<User>> signInWithGoogle() async {
-    try {
-      final serverClientId = AppConfig.googleWebClientId;
-      if (kDebugMode && (serverClientId == null || serverClientId.isEmpty)) {
-        developer.log(
-          'GOOGLE_SIGNIN: GOOGLE_WEB_CLIENT_ID is not set in .env',
-          name: 'Auth',
-        );
-      }
-
-      final googleSignIn = _googleSignInFactory(
-        scopes: ['email', 'profile'],
-        serverClientId: serverClientId,
-      );
-
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        if (kDebugMode) {
-          developer.log('GOOGLE_SIGNIN: User cancelled', name: 'Auth');
-        }
-        return const ApiResponse(
-          success: false,
-          message: 'Sign in was cancelled',
-        );
-      }
-
-      if (kDebugMode) {
-        developer.log('GOOGLE_SIGNIN: email=${googleUser.email}', name: 'Auth');
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      final accessToken = googleAuth.accessToken;
-
-      if (kDebugMode) {
-        developer.log(
-          'GOOGLE_SIGNIN: idToken=${idToken != null ? "${idToken.substring(0, idToken.length < 15 ? idToken.length : 15)}..." : "null"}',
-          name: 'Auth',
-        );
-        developer.log(
-          'GOOGLE_SIGNIN: accessToken=${accessToken != null ? "${accessToken.substring(0, accessToken.length < 15 ? accessToken.length : 15)}..." : "null"}',
-          name: 'Auth',
-        );
-      }
-
-      if (idToken == null || idToken.isEmpty) {
-        if (kDebugMode) {
-          developer.log(
-            'GOOGLE_SIGNIN: idToken is null - OAuth config issue (serverClientId?)',
-            name: 'Auth',
-          );
-        }
-        return const ApiResponse(
-          success: false,
-          message:
-              'Missing idToken (OAuth config issue). Check GOOGLE_WEB_CLIENT_ID and SHA-1.',
-        );
-      }
-
-      final response = await _dio.post(
-        '/auth/google',
-        data: {
-          'idToken': idToken,
-          if (accessToken != null) 'accessToken': accessToken,
-        },
-      );
-
-      final data = response.data as Map<String, dynamic>;
-      if (data['token'] != null) {
-        final token = data['token'] as String;
-        await _tokenStore.saveAccessToken(token);
-        final refreshToken = data['refreshToken'] as String?;
-        if (refreshToken != null && refreshToken.isNotEmpty) {
-          await _tokenStore.saveRefreshToken(refreshToken);
-        }
-        await _recordSessionApiOrigin();
-
-        final rawUser = data['userInfo'] ?? data['user'];
-        if (rawUser == null || rawUser is! Map<String, dynamic>) {
-          return const ApiResponse(
-            success: false,
-            message: 'Invalid response from server',
-          );
-        }
-        final userData = Map<String, dynamic>.from(rawUser);
-        if (data['must_accept_terms'] != null) {
-          userData['must_accept_terms'] = data['must_accept_terms'];
-        }
-        if (data['terms_version_required'] != null) {
-          userData['terms_version_required'] = data['terms_version_required'];
-        }
-        final user = User.fromJson(userData);
-        return ApiResponse(
-          success: true,
-          message: data['message'] as String?,
-          data: user,
-        );
-      }
-
-      return ApiResponse(
-        success: false,
-        message: data['message'] as String? ?? 'Google sign in failed',
-      );
-    } on PlatformException catch (e) {
-      if (kDebugMode) {
-        developer.log(
-          'GOOGLE_SIGNIN PlatformException: ${e.runtimeType} code=${e.code} message=${e.message}',
-          name: 'Auth',
-        );
-        developer.log(
-          'GOOGLE_SIGNIN stack: ${e.stacktrace ?? e.toString()}',
-          name: 'Auth',
-        );
-      }
-      final msg = '${e.code}: ${e.message ?? "Platform error"}';
-      return ApiResponse(success: false, message: msg);
-    } on DioException catch (e) {
-      final backendMsg = e.response?.data is Map
-          ? (e.response!.data as Map)['message'] as String?
-          : null;
-      final msg = backendMsg ?? e.message ?? 'Google sign in failed';
-      if (kDebugMode) {
-        developer.log(
-          'GOOGLE_SIGNIN DioException: ${e.runtimeType} status=${e.response?.statusCode} message=$msg',
-          name: 'Auth',
-        );
-        developer.log(
-          'GOOGLE_SIGNIN response: ${e.response?.data}',
-          name: 'Auth',
-        );
-      }
-      return ApiResponse(success: false, message: msg);
-    } catch (e, stack) {
-      if (kDebugMode) {
-        developer.log(
-          'GOOGLE_SIGNIN Exception: ${e.runtimeType} $e',
-          name: 'Auth',
-        );
-        developer.log('GOOGLE_SIGNIN stack: $stack', name: 'Auth');
-      }
-      final isCancel =
-          e.toString().toLowerCase().contains('cancel') ||
-          e.toString().toLowerCase().contains('sign_in_canceled');
-      return ApiResponse(
-        success: false,
-        message: isCancel
-            ? 'Sign in was cancelled'
-            : 'Google sign in failed: ${e.runtimeType}',
-      );
-    }
   }
 
   Future<ApiResponse<User>> login({
@@ -895,7 +709,6 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
-    await GoogleSignIn().signOut();
     await _tokenStore.clearAll();
   }
 

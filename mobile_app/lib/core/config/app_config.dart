@@ -49,15 +49,6 @@ class AppConfig {
 
   static bool get isDevelopment => environment == 'development';
 
-  /// Google OAuth Web Client ID (for server-side verification).
-  /// Set GOOGLE_WEB_CLIENT_ID in .env.
-  static String? get googleWebClientId {
-    if (dotenv.isInitialized) {
-      return dotenv.env['GOOGLE_WEB_CLIENT_ID'];
-    }
-    return null;
-  }
-
   /// Company subscription survey URL (offline payment / Subscribe from Company).
   /// Set COMPANY_SUBSCRIBE_URL in .env, e.g. https://appointments.battechno.com/survey
   static String get companySubscribeUrl {

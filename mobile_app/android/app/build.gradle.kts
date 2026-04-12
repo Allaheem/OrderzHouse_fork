@@ -35,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId = "com.orderzhouse.app"
-        minSdk = flutter.minSdkVersion  // Required for Google Sign-In
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

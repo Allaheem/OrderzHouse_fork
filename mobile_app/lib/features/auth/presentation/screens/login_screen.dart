@@ -194,37 +194,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderRadius: 30, // Pill shape
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        // زر التسجيل عبر Google — مخفي حسب الطلب
-                        // Row(
-                        //   children: [
-                        //     Expanded(
-                        //       child: Container(
-                        //         height: 1,
-                        //         color: const Color(0xFFE5E7EB),
-                        //       ),
-                        //     ),
-                        //     Padding(
-                        //       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                        //       child: Text(
-                        //         l10n.orContinueWith,
-                        //         style: AppTextStyles.bodySmall.copyWith(
-                        //           color: const Color(0xFF6B7280),
-                        //           fontSize: 12,
-                        //         ),
-                        //       ),
-                        //     ),
-                        //     Expanded(
-                        //       child: Container(
-                        //         height: 1,
-                        //         color: const Color(0xFFE5E7EB),
-                        //       ),
-                        //     ),
-                        //   ],
-                        // ),
-                        // const SizedBox(height: AppSpacing.lg),
-                        // _buildGoogleSignInButton(l10n),
-                        // const SizedBox(height: AppSpacing.xl),
-                        // Bottom link
                         Wrap(
                           alignment: WrapAlignment.center,
                           crossAxisAlignment: WrapCrossAlignment.center,
@@ -265,51 +234,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
     );
-  }
-
-  // مخفي مع زر Google — يمكن إعادة الاستخدام لاحقاً
-  // ignore: unused_element
-  Widget _buildGoogleSignInButton(AppLocalizations l10n) {
-    final authState = ref.watch(authStateProvider);
-    return GradientButton(
-      onPressed: authState.isLoading ? null : _handleGoogleSignIn,
-      label: l10n.continueWithGoogle,
-      isLoading: authState.isLoading,
-      height: 52,
-      borderRadius: 30,
-    );
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    final authNotifier = ref.read(authStateProvider.notifier);
-    final success = await authNotifier.loginWithGoogle();
-
-    if (!mounted) return;
-
-    if (success) {
-      final user = ref.read(authStateProvider).user;
-      if (user?.mustAcceptTerms == true) {
-        context.go('/accept-terms');
-        return;
-      }
-      final role = ref.read(authStateProvider).userRole;
-      if (user?.isAdmin == true) {
-        context.go('/admin');
-      } else if (role == 'freelancer') {
-        context.go('/freelancer');
-      } else if (role == 'client') {
-        context.go('/client');
-      } else {
-        context.go('/client');
-      }
-    } else {
-      final error = ref.read(authStateProvider).error;
-      if (error != null && !error.toLowerCase().contains('cancel')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error), duration: const Duration(seconds: 5)),
-        );
-      }
-    }
   }
 }
 

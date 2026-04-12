@@ -1724,18 +1724,6 @@ abstract class AppLocalizations {
   /// **'Don\'t have an account?'**
   String get dontHaveAccount;
 
-  /// No description provided for @orContinueWith.
-  ///
-  /// In en, this message translates to:
-  /// **'Or continue with'**
-  String get orContinueWith;
-
-  /// No description provided for @continueWithGoogle.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue with Google'**
-  String get continueWithGoogle;
-
   /// No description provided for @email.
   ///
   /// In en, this message translates to:

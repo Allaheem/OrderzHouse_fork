@@ -181,20 +181,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return false;
   }
 
-  /// Sign in with Google. Updates state and invalidates user-scoped providers via authEpoch.
-  Future<bool> loginWithGoogle() async {
-    state = const AuthState(isLoading: true);
-    final response = await _repository.signInWithGoogle();
-    if (response.success && response.data != null) {
-      state = AuthState(user: response.data);
-      await _writeCachedUser(response.data!);
-      _ref.read(authEpochProvider.notifier).state++;
-      return true;
-    }
-    state = AuthState(error: response.message);
-    return false;
-  }
-
   Future<bool> verifyOtp(String email, String otp) async {
     state = const AuthState(isLoading: true);
     final response = await _repository.verifyOtp(email: email, otp: otp);

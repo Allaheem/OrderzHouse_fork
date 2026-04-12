@@ -833,12 +833,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dontHaveAccount => 'Don\'t have an account?';
 
   @override
-  String get orContinueWith => 'Or continue with';
-
-  @override
-  String get continueWithGoogle => 'Continue with Google';
-
-  @override
   String get email => 'Email';
 
   @override

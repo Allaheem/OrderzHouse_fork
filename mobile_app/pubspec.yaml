@@ -44,9 +44,6 @@ dependencies:
   # Environment
   flutter_dotenv: ^5.1.0
 
-  # Google Sign-In
-  google_sign_in: ^6.2.2
-
   # Localization
   intl: 0.20.2
 
