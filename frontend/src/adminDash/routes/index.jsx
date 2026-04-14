@@ -10,6 +10,7 @@ import Categories from "../pages/learning/Categories.jsx";
 import SubCategories from "../pages/learning/SubCategories.jsx";
 import SubSubCategories from "../pages/learning/SubSubCategories.jsx";
 import Verifications from "../pages/operation/Verifications.jsx";
+import ContentReports from "../pages/operation/ContentReports.jsx";
 
 import AdminProjects from "../pages/operation/Projects/AdminProjects.jsx";
 import AdminPendingProjects from "../pages/operation/Projects/AdminPendingProjects.jsx";
@@ -74,6 +75,7 @@ export default function AdminRouter() {
         />
 
         <Route path="operation/verifications" element={<Verifications />} />
+        <Route path="operation/content-reports" element={<ContentReports />} />
 
         <Route path="operation/projects" element={<AdminProjects />} />
         <Route path="operation/pending-approvals" element={<AdminPendingProjects />} />

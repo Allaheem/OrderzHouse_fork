@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/utils/support_contact.dart';
 import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -20,8 +20,6 @@ class SupportScreen extends ConsumerStatefulWidget {
 }
 
 class _SupportScreenState extends ConsumerState<SupportScreen> {
-  static const String _supportEmail = 'info@battechno.com';
-
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
@@ -46,7 +44,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
   Future<void> _copyEmail() async {
     final l10n = AppLocalizations.of(context)!;
-    await Clipboard.setData(const ClipboardData(text: _supportEmail));
+    await Clipboard.setData(const ClipboardData(text: kSupportEmail));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -57,48 +55,15 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     }
   }
 
-  Uri _supportMailtoUri({required String subject, required String body}) {
-    return Uri(
-      scheme: 'mailto',
-      path: _supportEmail,
-      queryParameters: <String, String>{
-        'subject': subject,
-        if (body.isNotEmpty) 'body': body,
-      },
-    );
-  }
-
-  /// iOS/Android differ on which [LaunchMode] succeeds for `mailto:`; simulator often has no Mail.
-  Future<bool> _tryLaunchMailto(Uri uri) async {
-    for (final mode in [
-      LaunchMode.platformDefault,
-      LaunchMode.externalApplication,
-    ]) {
-      try {
-        if (await launchUrl(uri, mode: mode)) {
-          return true;
-        }
-      } catch (_) {
-        // Try next mode or clipboard fallback.
-      }
-    }
-    return false;
-  }
-
-  Future<void> _copySupportDraft(String subject, String body) async {
-    final draft = 'To: $_supportEmail\nSubject: $subject\n\n$body';
-    await Clipboard.setData(ClipboardData(text: draft));
-  }
-
   Future<void> _openMailto() async {
     final l10n = AppLocalizations.of(context)!;
     const subject = 'Support Request';
-    final uri = _supportMailtoUri(subject: subject, body: '');
+    final uri = supportMailtoUri(subject: subject, body: '');
     try {
-      if (await _tryLaunchMailto(uri)) {
+      if (await tryLaunchSupportMailto(uri)) {
         return;
       }
-      await _copySupportDraft(subject, '');
+      await copySupportDraft(subject, '');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -126,9 +91,9 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
       final subjectLabel = _getSelectedLabel(l10n);
       final subject = '[OrderzHouse] $subjectLabel';
       final body = _messageController.text.trim();
-      final mailto = _supportMailtoUri(subject: subject, body: body);
+      final mailto = supportMailtoUri(subject: subject, body: body);
 
-      if (await _tryLaunchMailto(mailto)) {
+      if (await tryLaunchSupportMailto(mailto)) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -139,7 +104,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
         );
         _messageController.clear();
       } else {
-        await _copySupportDraft(subject, body);
+        await copySupportDraft(subject, body);
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -332,7 +297,7 @@ class _EmailSupportCard extends StatelessWidget {
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
-                'info@battechno.com',
+                kSupportEmail,
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w500,

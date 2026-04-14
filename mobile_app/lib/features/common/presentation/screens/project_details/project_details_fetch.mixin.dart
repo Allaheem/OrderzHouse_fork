@@ -125,6 +125,15 @@ extension _ProjectDetailsFetchExtension on _ProjectDetailsScreenState {
     return authState.user?.roleId == 1; // ADMIN_ROLE_ID
   }
 
+  /// Same idea as backend chat participants: project owner, or freelancer assigned / who applied.
+  bool canOpenProjectMessagesFor(Project project) {
+    final uid = ref.read(authStateProvider).user?.id;
+    if (uid == null) return false;
+    if (project.userId == uid) return true;
+    if (isFreelancerRole && (isAssignedToMe || _hasApplied)) return true;
+    return false;
+  }
+
   bool get isAssignedToMe {
     if (_assignment == null) return false;
     final authState = ref.read(authStateProvider);

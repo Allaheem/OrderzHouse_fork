@@ -800,7 +800,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildStepContact() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _StyledTextField(
           controller: _phoneController,
@@ -808,6 +810,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           prefixIcon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
           validator: (v) => Validators.required(v, fieldName: 'Phone number'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          l10n.phoneNumberWhyWeCollectHint,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: const Color(0xFF8A8A95),
+            height: 1.45,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         _StyledTextField(

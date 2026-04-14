@@ -310,6 +310,110 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
+  String get phoneNumberWhyWeCollectHint =>
+      'Administrators may use this number to contact you about your account when needed—for example if a serious issue is reported—or to thank you and offer support. Full details are in the Privacy Policy.';
+
+  @override
+  String get blockedPeople => 'Blocked people';
+
+  @override
+  String get blockedPeopleSubtitle =>
+      'Manage users you blocked from project chat';
+
+  @override
+  String get blockedPeopleFooter =>
+      'Blocking is saved on your account and applies in project chat everywhere you use the app. For serious abuse, also submit a report so our team can review.';
+
+  @override
+  String get noBlockedUsers => 'No blocked users';
+
+  @override
+  String get unblockUser => 'Unblock';
+
+  @override
+  String get unblockUserConfirmTitle => 'Unblock this user?';
+
+  @override
+  String get unblockUserConfirmBody =>
+      'You will see their messages in project chat again on this device.';
+
+  @override
+  String get reportMessage => 'Report message';
+
+  @override
+  String get reportMessageTitle => 'Report to support';
+
+  @override
+  String get reportMessageHint =>
+      'Optional: describe what is wrong (helps us review faster).';
+
+  @override
+  String get reportMessageSent => 'Report opened in your mail app';
+
+  @override
+  String get reportSubmittedToTeam =>
+      'Thanks — your report was sent to our team for review.';
+
+  @override
+  String get blockSubmitFailed =>
+      'Could not block this user. Check your connection and try again.';
+
+  @override
+  String get blockUser => 'Block user';
+
+  @override
+  String get blockUserConfirmTitle => 'Block this user?';
+
+  @override
+  String get blockUserConfirmBody =>
+      'You will no longer see their messages in this project’s chat on any device while they are blocked. You can unblock them anytime in Settings under Blocked people.';
+
+  @override
+  String get userBlockedSnackbar => 'User blocked';
+
+  @override
+  String get userUnblockedSnackbar => 'User unblocked';
+
+  @override
+  String get projectDetailsTooltipMessages =>
+      'Messages — chat with the other party';
+
+  @override
+  String get projectDetailsTooltipChangeRequests =>
+      'Change requests — scope / revision requests';
+
+  @override
+  String get projectChatHowToHint =>
+      'Tip: press and hold someone else\'s message, then choose Report or Block. To unblock: Settings → Blocked people. Tap (i) for rules and support.';
+
+  @override
+  String get projectChatSafetyTitle => 'Safety in chat';
+
+  @override
+  String get projectChatSafetyBody =>
+      'Harassment, spam, and illegal content are not allowed. Long-press someone else\'s message to report it or block the user. See Terms (Acceptable Use) for full rules.';
+
+  @override
+  String get projectChatOpenTerms => 'Terms & acceptable use';
+
+  @override
+  String get projectChatOpenSupport => 'Contact support';
+
+  @override
+  String get projectChatBlockedTitle => 'Nothing to show here';
+
+  @override
+  String get projectChatHiddenByBlocks =>
+      'Messages from blocked users are hidden. Unblock in Settings if needed.';
+
+  @override
+  String get projectChatEmptyTitle => 'No messages yet';
+
+  @override
+  String get projectChatEmptyMessage =>
+      'No messages have been sent for this project.';
+
+  @override
   String get submit => 'Submit';
 
   @override

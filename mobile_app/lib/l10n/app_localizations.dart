@@ -686,6 +686,186 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get back;
 
+  /// No description provided for @phoneNumberWhyWeCollectHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrators may use this number to contact you about your account when needed—for example if a serious issue is reported—or to thank you and offer support. Full details are in the Privacy Policy.'**
+  String get phoneNumberWhyWeCollectHint;
+
+  /// No description provided for @blockedPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked people'**
+  String get blockedPeople;
+
+  /// No description provided for @blockedPeopleSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage users you blocked from project chat'**
+  String get blockedPeopleSubtitle;
+
+  /// No description provided for @blockedPeopleFooter.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking is saved on your account and applies in project chat everywhere you use the app. For serious abuse, also submit a report so our team can review.'**
+  String get blockedPeopleFooter;
+
+  /// No description provided for @noBlockedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'No blocked users'**
+  String get noBlockedUsers;
+
+  /// No description provided for @unblockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock'**
+  String get unblockUser;
+
+  /// No description provided for @unblockUserConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unblock this user?'**
+  String get unblockUserConfirmTitle;
+
+  /// No description provided for @unblockUserConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will see their messages in project chat again on this device.'**
+  String get unblockUserConfirmBody;
+
+  /// No description provided for @reportMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Report message'**
+  String get reportMessage;
+
+  /// No description provided for @reportMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report to support'**
+  String get reportMessageTitle;
+
+  /// No description provided for @reportMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: describe what is wrong (helps us review faster).'**
+  String get reportMessageHint;
+
+  /// No description provided for @reportMessageSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Report opened in your mail app'**
+  String get reportMessageSent;
+
+  /// No description provided for @reportSubmittedToTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks — your report was sent to our team for review.'**
+  String get reportSubmittedToTeam;
+
+  /// No description provided for @blockSubmitFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not block this user. Check your connection and try again.'**
+  String get blockSubmitFailed;
+
+  /// No description provided for @blockUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Block user'**
+  String get blockUser;
+
+  /// No description provided for @blockUserConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this user?'**
+  String get blockUserConfirmTitle;
+
+  /// No description provided for @blockUserConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You will no longer see their messages in this project’s chat on any device while they are blocked. You can unblock them anytime in Settings under Blocked people.'**
+  String get blockUserConfirmBody;
+
+  /// No description provided for @userBlockedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'User blocked'**
+  String get userBlockedSnackbar;
+
+  /// No description provided for @userUnblockedSnackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'User unblocked'**
+  String get userUnblockedSnackbar;
+
+  /// No description provided for @projectDetailsTooltipMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages — chat with the other party'**
+  String get projectDetailsTooltipMessages;
+
+  /// No description provided for @projectDetailsTooltipChangeRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Change requests — scope / revision requests'**
+  String get projectDetailsTooltipChangeRequests;
+
+  /// No description provided for @projectChatHowToHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: press and hold someone else\'s message, then choose Report or Block. To unblock: Settings → Blocked people. Tap (i) for rules and support.'**
+  String get projectChatHowToHint;
+
+  /// No description provided for @projectChatSafetyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety in chat'**
+  String get projectChatSafetyTitle;
+
+  /// No description provided for @projectChatSafetyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Harassment, spam, and illegal content are not allowed. Long-press someone else\'s message to report it or block the user. See Terms (Acceptable Use) for full rules.'**
+  String get projectChatSafetyBody;
+
+  /// No description provided for @projectChatOpenTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & acceptable use'**
+  String get projectChatOpenTerms;
+
+  /// No description provided for @projectChatOpenSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get projectChatOpenSupport;
+
+  /// No description provided for @projectChatBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to show here'**
+  String get projectChatBlockedTitle;
+
+  /// No description provided for @projectChatHiddenByBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages from blocked users are hidden. Unblock in Settings if needed.'**
+  String get projectChatHiddenByBlocks;
+
+  /// No description provided for @projectChatEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get projectChatEmptyTitle;
+
+  /// No description provided for @projectChatEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages have been sent for this project.'**
+  String get projectChatEmptyMessage;
+
   /// No description provided for @submit.
   ///
   /// In en, this message translates to:

@@ -148,8 +148,9 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
     return buildProjectContent(context, _project!);
   }
 
-  /// Messages icon (chat bubble) with red dot when unread. Same UI; dot visibility from projectUnreadProvider.
-  Widget buildMessagesIconWithUnread(int projectId) {
+  /// Project **Messages** (chat). Distinct from change-requests icon.
+  Widget buildMessagesIconWithUnread(BuildContext context, int projectId) {
+    final l10n = AppLocalizations.of(context)!;
     final unreadAsync = ref.watch(projectUnreadProvider(projectId));
     final unreadCount = unreadAsync.valueOrNull ?? 0;
     final hasUnread = unreadCount > 0;
@@ -170,13 +171,16 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            color: AppColors.accentOrange,
-            iconSize: 20,
-            onPressed: () {
-              context.push('/project/$projectId/messages');
-            },
+          Tooltip(
+            message: l10n.projectDetailsTooltipMessages,
+            child: IconButton(
+              icon: const Icon(Icons.chat_bubble_outline_rounded),
+              color: AppColors.accentOrange,
+              iconSize: 20,
+              onPressed: () {
+                context.push('/project/$projectId/messages');
+              },
+            ),
           ),
           if (hasUnread)
             Positioned(
@@ -196,8 +200,9 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
     );
   }
 
-  /// Change requests icon (chat bubble) with red dot when unread. Same UI; dot from changeRequestsUnreadCountProvider.
-  Widget buildChangeRequestsIconWithUnread(int projectId) {
+  /// **Change requests** — different icon so it is not confused with chat.
+  Widget buildChangeRequestsIconWithUnread(BuildContext context, int projectId) {
+    final l10n = AppLocalizations.of(context)!;
     final unreadAsync = ref.watch(changeRequestsUnreadCountProvider(projectId));
     final unreadCount = unreadAsync.valueOrNull ?? 0;
     final hasUnread = unreadCount > 0;
@@ -219,16 +224,19 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            color: AppColors.accentOrange,
-            iconSize: 20,
-            onPressed: () {
-              final title = project?.title ?? '';
-              context.push(
-                '/project/$projectId/change-requests?title=${Uri.encodeComponent(title)}',
-              );
-            },
+          Tooltip(
+            message: l10n.projectDetailsTooltipChangeRequests,
+            child: IconButton(
+              icon: const Icon(Icons.edit_note_outlined),
+              color: AppColors.accentOrange,
+              iconSize: 22,
+              onPressed: () {
+                final title = project?.title ?? '';
+                context.push(
+                  '/project/$projectId/change-requests?title=${Uri.encodeComponent(title)}',
+                );
+              },
+            ),
           ),
           if (hasUnread)
             Positioned(
@@ -246,6 +254,28 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
         ],
       ),
     );
+  }
+
+  /// Chat (messages) for owner / participating freelancers; change-requests only when assigned as freelancer.
+  Widget? buildProjectHeaderTrailing(BuildContext context, Project project) {
+    final pid = project.id;
+    if (isAdminRole) {
+      return buildMessagesIconWithUnread(context, pid);
+    }
+
+    final widgets = <Widget>[];
+    if (canOpenProjectMessagesFor(project)) {
+      widgets.add(buildMessagesIconWithUnread(context, pid));
+    }
+    if (isFreelancerRole && isAssignedToMe) {
+      if (widgets.isNotEmpty) {
+        widgets.add(const SizedBox(width: 8));
+      }
+      widgets.add(buildChangeRequestsIconWithUnread(context, pid));
+    }
+    if (widgets.isEmpty) return null;
+    if (widgets.length == 1) return widgets.first;
+    return Row(mainAxisSize: MainAxisSize.min, children: widgets);
   }
 
   Widget buildProjectContent(BuildContext context, Project project) {
@@ -328,11 +358,7 @@ extension _ProjectDetailsBuildExtension on _ProjectDetailsScreenState {
               imageUrl: imageUrl,
               durationText: durationText,
               statusBadgeOverride: statusBadgeOverride,
-              headerTrailing: isFreelancerRole && isAssignedToMe
-                  ? buildChangeRequestsIconWithUnread(project.id)
-                  : isAdminRole
-                      ? buildMessagesIconWithUnread(project.id)
-                      : null,
+              headerTrailing: buildProjectHeaderTrailing(context, project),
             ),
           ),
         ],

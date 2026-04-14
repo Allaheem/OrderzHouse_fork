@@ -308,6 +308,107 @@ class AppLocalizationsAr extends AppLocalizations {
   String get back => 'رجوع';
 
   @override
+  String get phoneNumberWhyWeCollectHint =>
+      'قد يستخدم مسؤولو المنصة رقمك للتواصل معك بخصوص حسابك عند الحاجة—مثلاً عند الإبلاغ عن مشكلة خطيرة—أو لشكرك ودعمك. التفاصيل الكاملة في سياسة الخصوصية.';
+
+  @override
+  String get blockedPeople => 'المستخدمون المحظورون';
+
+  @override
+  String get blockedPeopleSubtitle => 'إدارة من حظرتَهم من محادثة المشروع';
+
+  @override
+  String get blockedPeopleFooter =>
+      'الحظر يُحفظ على حسابك ويطبّق في محادثة المشروع في كل الأجهزة. للإساءة الخطيرة، أرسل أيضاً بلاغاً لمراجعته من الفريق.';
+
+  @override
+  String get noBlockedUsers => 'لا يوجد مستخدمون محظورون';
+
+  @override
+  String get unblockUser => 'إلغاء الحظر';
+
+  @override
+  String get unblockUserConfirmTitle => 'إلغاء حظر هذا المستخدم؟';
+
+  @override
+  String get unblockUserConfirmBody =>
+      'ستظهر رسائله مرة أخرى في محادثة المشروع على هذا الجهاز.';
+
+  @override
+  String get reportMessage => 'الإبلاغ عن الرسالة';
+
+  @override
+  String get reportMessageTitle => 'إبلاغ للدعم';
+
+  @override
+  String get reportMessageHint =>
+      'اختياري: صف المشكلة (يساعدنا على المراجعة بسرعة).';
+
+  @override
+  String get reportMessageSent => 'تم فتح التقرير في تطبيق البريد';
+
+  @override
+  String get reportSubmittedToTeam =>
+      'شكراً — تم إرسال بلاغك لفريقنا للمراجعة.';
+
+  @override
+  String get blockSubmitFailed =>
+      'تعذّر حظر المستخدم. تحقق من الاتصال وحاول مرة أخرى.';
+
+  @override
+  String get blockUser => 'حظر المستخدم';
+
+  @override
+  String get blockUserConfirmTitle => 'حظر هذا المستخدم؟';
+
+  @override
+  String get blockUserConfirmBody =>
+      'لن تظهر رسائله في محادثة هذا المشروع على أي جهاز طالما الحظر مفعّل. يمكنك إلغاء الحظر لاحقاً من الإعدادات ضمن المستخدمون المحظورون.';
+
+  @override
+  String get userBlockedSnackbar => 'تم حظر المستخدم';
+
+  @override
+  String get userUnblockedSnackbar => 'تم إلغاء الحظر';
+
+  @override
+  String get projectDetailsTooltipMessages => 'الرسائل — محادثة مع الطرف الآخر';
+
+  @override
+  String get projectDetailsTooltipChangeRequests =>
+      'طلبات التعديل — نطاق العمل أو مراجعات';
+
+  @override
+  String get projectChatHowToHint =>
+      'تلميح: اضغط مطوّلاً على رسالة شخص آخر، ثم اختر إبلاغ أو حظر. لإلغاء الحظر: الإعدادات ← المستخدمون المحظورون. اضغط (i) للقواعد والدعم.';
+
+  @override
+  String get projectChatSafetyTitle => 'الأمان في المحادثة';
+
+  @override
+  String get projectChatSafetyBody =>
+      'يُمنع التحرش والرسائل المزعجة والمحتوى غير القانوني. اضغط مطولاً على رسالة شخص آخر للإبلاغ أو الحظر. راجع الشروط (الاستخدام المقبول) للتفاصيل.';
+
+  @override
+  String get projectChatOpenTerms => 'الشروط والاستخدام المقبول';
+
+  @override
+  String get projectChatOpenSupport => 'التواصل مع الدعم';
+
+  @override
+  String get projectChatBlockedTitle => 'لا يوجد شيء للعرض هنا';
+
+  @override
+  String get projectChatHiddenByBlocks =>
+      'رسائل المستخدمين المحظورين مخفية. يمكنك إلغاء الحظر من الإعدادات عند الحاجة.';
+
+  @override
+  String get projectChatEmptyTitle => 'لا توجد رسائل بعد';
+
+  @override
+  String get projectChatEmptyMessage => 'لم تُرسل أي رسائل لهذا المشروع بعد.';
+
+  @override
   String get submit => 'إرسال';
 
   @override

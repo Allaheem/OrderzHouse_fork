@@ -57,8 +57,9 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
-    // Use English content to match website exactly; wrap in LTR when Arabic so text reads correctly.
-    final content = getPrivacyContent('en');
+    final privacyLang =
+        locale.languageCode.toLowerCase().startsWith('ar') ? 'ar' : 'en';
+    final content = getPrivacyContent(privacyLang);
     final isRtl = locale.languageCode.toLowerCase().startsWith('ar');
 
     final filtered = _query.isEmpty
@@ -257,10 +258,14 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
       ),
     );
 
+    // English policy in an RTL app: force LTR so paragraphs read correctly.
+    // Arabic policy: use normal layout so Arabic sections render RTL.
+    final forceLtrForEnglishPolicy = isRtl && privacyLang == 'en';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: isRtl
+        child: forceLtrForEnglishPolicy
             ? Directionality(
                 textDirection: TextDirection.ltr,
                 child: boundedScroll,

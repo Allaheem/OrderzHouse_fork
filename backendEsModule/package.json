@@ -7,6 +7,7 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "cross-env NODE_ENV=test jest",
+    "migrate:024-moderation": "node migrations/024_moderation_blocks_and_reports.js",
     "seed:tender-vault": "node scripts/seedTenderVaultFakeOrders.mjs",
     "seed:tender-bundle:preview": "node scripts/tender_seed_bundle/tender_vault_fake_seeder.cjs --mode=preview --count=20",
     "seed:tender-bundle:sql": "node scripts/tender_seed_bundle/tender_vault_fake_seeder.cjs --mode=sql --count=1000",

@@ -499,6 +499,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         });
                       },
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        l10n.phoneNumberWhyWeCollectHint,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.45,
+                        ),
+                      ),
+                    ),
 
                     const SizedBox(height: 12),
 

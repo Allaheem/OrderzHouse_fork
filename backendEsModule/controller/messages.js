@@ -1,6 +1,7 @@
 import pool from "../models/db.js";
 import filterMessage from "../middleware/filterMessages.js";
 import { createBulkNotifications, NOTIFICATION_TYPES } from "../services/notificationService.js";
+import { emitToRoomExceptBlockers } from "../services/chatBroadcast.js";
 
 const messageHandler = (socket, io) => {
   socket.on("message", async (data) => {
@@ -52,15 +53,23 @@ const messageHandler = (socket, io) => {
          WHERE project_id = $1 AND freelancer_id != $2`,
         [savedMessage.project_id, savedMessage.sender_id]
       );
-      console.log("savedMessage", savedMessage)
-      const recipientIds = members.map(m => m.user_id);
-      
-      console.log("recipientIds", recipientIds);
-      
+      const recipientIds = members.map((m) => m.user_id);
+
+      let filteredRecipients = recipientIds;
       if (recipientIds.length > 0) {
+        const { rows: blockRows } = await pool.query(
+          `SELECT blocker_user_id FROM user_blocks
+           WHERE blocked_user_id = $1 AND blocker_user_id = ANY($2::int[])`,
+          [savedMessage.sender_id, recipientIds]
+        );
+        const blockedSet = new Set(blockRows.map((r) => r.blocker_user_id));
+        filteredRecipients = recipientIds.filter((id) => !blockedSet.has(id));
+      }
+
+      if (filteredRecipients.length > 0) {
         const notifyMessage = `New message in project chat`;
         await createBulkNotifications(
-          recipientIds,
+          filteredRecipients,
           NOTIFICATION_TYPES.MESSAGE_RECEIVED,
           notifyMessage,
           savedMessage.id,
@@ -68,11 +77,16 @@ const messageHandler = (socket, io) => {
         );
       }
 
-      // ✅ بث الرسالة لكل الموجودين في الغرفة
-      io.to(socket.roomId).emit("message", {
-        ...savedMessage,
-        tempId: data.tempId,
-      });
+      await emitToRoomExceptBlockers(
+        io,
+        socket.roomId,
+        "message",
+        {
+          ...savedMessage,
+          tempId: data.tempId,
+        },
+        savedMessage.sender_id
+      );
 
     } catch (err) {
       console.error("Error handling message:", err);

@@ -26,6 +26,7 @@ import {
   PlaySquare,
   Clock,
   Share2,
+  Flag,
 } from "lucide-react";
 import { logout } from "../../slice/auth/authSlice";
 import API, { clearProactiveRefresh } from "../../api/client.js";
@@ -66,6 +67,7 @@ function getActiveFromPath(pathname) {
     // if (p.startsWith("/learning/courses")) return "courses";
     if (p.startsWith("/learning/categories")) return "categories";
     if (p.startsWith("/operation/verifications")) return "verifications";
+    if (p.startsWith("/operation/content-reports")) return "content-reports";
     if (p.startsWith("/operation/projects")) return "projects";
     if (p.startsWith("/operation/pending-approvals")) return "pending-approvals";
     // if (p.startsWith("/operation/tasks")) return "tasks";
@@ -157,6 +159,12 @@ function getNav(role, navigate, base, onLogout, userData = null) {
         name: "Verifications",
         icon: Shield,
         onClick: () => navigate(`${base}/operation/verifications`),
+      },
+      {
+        id: "content-reports",
+        name: "Content reports",
+        icon: Flag,
+        onClick: () => navigate(`${base}/operation/content-reports`),
       },
       {
         id: "projects",

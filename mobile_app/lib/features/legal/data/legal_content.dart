@@ -81,7 +81,8 @@ const List<LegalSection> privacyPolicyEn = [
     body:
         'We collect the minimum data required to create your account, personalize your experience, and protect the system from abuse. Certain features store preferences locally in your browser.',
     bullets: [
-      'Account data: name, email, role (Admin / Client / Freelancer).',
+      'Account data: name, email, phone number (when you provide it at sign-up), role (Admin / Client / Freelancer).',
+      'Phone number: used by platform administrators to contact you about your account—for example to follow up on serious reported issues, safety or fraud concerns, or to thank you and offer support when appropriate.',
       'Usage data: pages viewed, preferences, diagnostics.',
       'Files: profile images and attachments related to projects.',
     ],
@@ -183,7 +184,8 @@ const List<LegalSection> privacyPolicyAr = [
     body:
         'نجمع الحد الأدنى من البيانات اللازمة لإنشاء حسابك وتخصيص تجربتك وحماية النظام من سوء الاستخدام. بعض الميزات تخزن التفضيلات محلياً في متصفحك.',
     bullets: [
-      'بيانات الحساب: الاسم، البريد الإلكتروني، الدور (مسؤول / عميل / مستقل).',
+      'بيانات الحساب: الاسم، البريد الإلكتروني، رقم الهاتف (عند إدخاله عند التسجيل)، الدور (مسؤول / عميل / مستقل).',
+      'رقم الهاتف: يُستخدم من قبل مسؤولي المنصة للتواصل معك بخصوص حسابك—مثلاً للمتابعة عند الإبلاغ عن مشاكل خطيرة، أو مخاوف تتعلق بالسلامة أو الاحتيال، أو لشكرك وتقديم الدعم عند الاقتضاء.',
       'بيانات الاستخدام: الصفحات المعروضة، التفضيلات، التشخيصات.',
       'الملفات: صور الملف الشخصي والمرفقات المتعلقة بالمشاريع.',
     ],
@@ -294,6 +296,8 @@ const List<LegalSection> termsEn = [
       'No unlawful, harmful, or hateful content or activities.',
       'No intellectual property infringement or spam.',
       'All negotiations and payments must remain inside the Platform. Attempting to circumvent fees may result in account suspension.',
+      'You can report objectionable content or users from project chat; reports are stored for our team and we aim to review serious cases promptly.',
+      'You can block another user from project chat when you share a project; blocks are stored on your account and apply across devices. Manage blocked users in Settings.',
     ],
   ),
   LegalSection(
@@ -405,6 +409,8 @@ const List<LegalSection> termsAr = [
       'لا محتوى أو أنشطة غير قانونية أو ضارة أو تحض على الكراهية.',
       'لا انتهاك للملكية الفكرية أو رسائل مزعجة.',
       'يجب أن تبقى جميع المفاوضات والمدفوعات داخل المنصة. محاولة التحايل على الرسوم قد تؤدي إلى تعليق الحساب.',
+      'يمكنك الإبلاغ عن محتوى أو مستخدمين مخالفين من محادثة المشروع؛ تُخزَّن البلاغات لفريقنا ونسعى لمراجعة الحالات الجادة بسرعة.',
+      'يمكنك حظر مستخدم من محادثة المشروع عند مشاركتكما نفس المشروع؛ يُحفظ الحظر على حسابك ويطبّق على كل الأجهزة. أدر المحظورين من الإعدادات.',
     ],
   ),
   LegalSection(

@@ -25,27 +25,20 @@ class Message {
   });
 
   factory Message.fromJson(Map<String, dynamic> json) {
-    print('🔍 [Message.fromJson] Parsing message JSON: ${json.keys.toList()}');
-
     // Handle sender as object or nested JSON
     MessageSender? senderObj;
     if (json['sender'] != null) {
       if (json['sender'] is Map<String, dynamic>) {
-        print('👤 [Message.fromJson] Parsing sender object: ${json['sender']}');
         senderObj = MessageSender.fromJson(
           json['sender'] as Map<String, dynamic>,
         );
       } else if (json['sender'] is String) {
-        // If sender is a JSON string, parse it
         try {
-          // This case is unlikely but handle it
           senderObj = null;
         } catch (e) {
           senderObj = null;
         }
       }
-    } else {
-      print('⚠️ [Message.fromJson] No sender field found');
     }
 
     // Handle file_urls
@@ -64,9 +57,6 @@ class Message {
     // Handle content field - backend may use 'content' or 'text'
     final contentValue =
         json['content'] ?? json['text'] ?? json['message'] ?? '';
-    print(
-      '💬 [Message.fromJson] Content value: "$contentValue" (type: ${contentValue.runtimeType})',
-    );
 
     // Handle time_sent - backend uses time_sent column
     final timeSentValue =
@@ -74,9 +64,6 @@ class Message {
         json['timeSent'] ??
         json['created_at'] ??
         json['createdAt'];
-    print(
-      '⏰ [Message.fromJson] Time sent value: $timeSentValue (type: ${timeSentValue?.runtimeType})',
-    );
 
     final message = Message(
       id: json['id'] as int,
@@ -87,10 +74,6 @@ class Message {
       fileUrls: fileUrlsList,
       timeSent: _dateTimeFromJson(timeSentValue),
       sender: senderObj,
-    );
-
-    print(
-      '✅ [Message.fromJson] Created message: id=${message.id}, projectId=${message.projectId}, senderId=${message.senderId}, content="${message.content.substring(0, message.content.length > 30 ? 30 : message.content.length)}...", timeSent=${message.timeSent}',
     );
 
     return message;

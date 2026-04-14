@@ -317,6 +317,26 @@ class SettingsScreen extends ConsumerWidget {
                               context.push('/settings/my-content');
                             },
                           ),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.borderLight,
+                            indent: 72,
+                          ),
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.block,
+                            title: l10n.blockedPeople,
+                            subtitle: l10n.blockedPeopleSubtitle,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/settings/blocked-users');
+                            },
+                          ),
                           Divider(
                             height: 1,
                             thickness: 1,

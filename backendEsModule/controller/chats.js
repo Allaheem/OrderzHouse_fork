@@ -6,6 +6,7 @@ import {
   getTaskParticipants,
   isChatAllowed,
 } from "../services/chatParticipantAccess.js";
+import { emitToRoomExceptBlockers } from "../services/chatBroadcast.js";
 
 /*======= Helper Functions =======*/
 // This is a new helper function to get a user's name by their ID.
@@ -79,7 +80,22 @@ export const getMessagesByProjectId = async (req, res) => {
       const participants = await getProjectParticipants(projectId);
       if (!participants.includes(requesterId)) return res.status(403).json({ success: false, message: "Access denied" });
     }
-    const { rows } = await pool.query(`SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender FROM messages m LEFT JOIN users u ON u.id = m.sender_id WHERE m.project_id = $1 ORDER BY m.time_sent ASC`, [projectId]);
+    const isRequesterAdmin = await isAdmin(requesterId);
+    const blockClause = isRequesterAdmin
+      ? ""
+      : ` AND NOT EXISTS (
+          SELECT 1 FROM user_blocks ub
+          WHERE ub.blocker_user_id = $2 AND ub.blocked_user_id = m.sender_id
+        )`;
+    const params = isRequesterAdmin ? [projectId] : [projectId, requesterId];
+    const { rows } = await pool.query(
+      `SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender
+       FROM messages m
+       LEFT JOIN users u ON u.id = m.sender_id
+       WHERE m.project_id = $1${blockClause}
+       ORDER BY m.time_sent ASC`,
+      params
+    );
     return res.status(200).json({ success: true, messages: rows || [] });
   } catch (err) {
     console.error("❌ Error in getMessagesByProjectId:", err.message);
@@ -95,7 +111,22 @@ export const getMessagesByTaskId = async (req, res) => {
       const participants = await getTaskParticipants(taskId);
       if (!participants.includes(requesterId)) return res.status(403).json({ success: false, message: "Access denied" });
     }
-    const { rows } = await pool.query(`SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender FROM messages m LEFT JOIN users u ON u.id = m.sender_id WHERE m.task_id = $1 ORDER BY m.time_sent ASC`, [taskId]);
+    const isRequesterAdmin = await isAdmin(requesterId);
+    const blockClause = isRequesterAdmin
+      ? ""
+      : ` AND NOT EXISTS (
+          SELECT 1 FROM user_blocks ub
+          WHERE ub.blocker_user_id = $2 AND ub.blocked_user_id = m.sender_id
+        )`;
+    const params = isRequesterAdmin ? [taskId] : [taskId, requesterId];
+    const { rows } = await pool.query(
+      `SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender
+       FROM messages m
+       LEFT JOIN users u ON u.id = m.sender_id
+       WHERE m.task_id = $1${blockClause}
+       ORDER BY m.time_sent ASC`,
+      params
+    );
     return res.status(200).json({ success: true, messages: rows || [] });
   } catch (err) {
     console.error("❌ Error in getMessagesByTaskId:", err.message);
@@ -167,16 +198,29 @@ export const createMessage = async (req, res) => {
     const { rows: [fullMessage] } = await pool.query(`SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender FROM messages m LEFT JOIN users u ON u.id = m.sender_id WHERE m.id = $1`, [newMessage.id]);
 
     if (global.io) {
-        global.io.to(project_id ? `project:${project_id}` : `task:${task_id}`).emit("chat:new_message", { message: fullMessage });
+      const roomKey = project_id ? `project:${project_id}` : `task:${task_id}`;
+      await emitToRoomExceptBlockers(
+        global.io,
+        roomKey,
+        "chat:new_message",
+        { message: fullMessage },
+        sender_id
+      );
     }
 
     if (receiver_id) {
-      await NotificationCreators.messageReceived(
-        sender_id,
-        receiver_id,
-        newMessage.id,
-        content
+      const { rows: nb } = await pool.query(
+        `SELECT 1 FROM user_blocks WHERE blocker_user_id = $1 AND blocked_user_id = $2`,
+        [receiver_id, sender_id]
       );
+      if (nb.length === 0) {
+        await NotificationCreators.messageReceived(
+          sender_id,
+          receiver_id,
+          newMessage.id,
+          content
+        );
+      }
     }
 
     return res.status(201).json({ success: true, message: "Message sent", sentMessage: fullMessage });
@@ -223,13 +267,21 @@ export const getUnreadCountByProjectId = async (req, res) => {
       const participants = await getProjectParticipants(projectId);
       if (!participants.includes(userId)) return res.status(403).json({ success: false, message: "Access denied" });
     }
+    const isRequesterAdmin = await isAdmin(userId);
+    const blockClause = isRequesterAdmin
+      ? ""
+      : ` AND NOT EXISTS (
+          SELECT 1 FROM user_blocks ub
+          WHERE ub.blocker_user_id = $2 AND ub.blocked_user_id = m.sender_id
+        )`;
+    const params = isRequesterAdmin ? [projectId, userId] : [projectId, userId];
     const { rows } = await pool.query(
       `SELECT COUNT(*)::int AS count FROM messages m
-       WHERE m.project_id = $1 AND m.time_sent > COALESCE(
+       WHERE m.project_id = $1${blockClause} AND m.time_sent > COALESCE(
          (SELECT pcr.last_read_at FROM project_chat_read pcr WHERE pcr.user_id = $2 AND pcr.project_id = $1),
          '1970-01-01'::timestamptz
        )`,
-      [projectId, userId]
+      params
     );
     const count = rows[0]?.count ?? 0;
     return res.status(200).json({ success: true, count, hasUnread: count > 0 });

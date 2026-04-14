@@ -2,12 +2,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/support_contact.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../data/models/message_model.dart';
+import '../providers/blocked_users_provider.dart';
 import '../providers/messages_provider.dart';
+import '../providers/moderation_repository_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class ProjectMessagesScreen extends ConsumerStatefulWidget {
@@ -41,16 +46,228 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
     }
   }
 
+  String _clip(String text, int max) {
+    final t = text.trim();
+    if (t.length <= max) return t;
+    return '${t.substring(0, max)}…';
+  }
+
+  void _showSafetySheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.projectChatSafetyTitle,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.projectChatSafetyBody,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.push('/terms-conditions');
+                  },
+                  child: Text(l10n.projectChatOpenTerms),
+                ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentOrange,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.push('/support');
+                  },
+                  child: Text(l10n.projectChatOpenSupport),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _reportMessage(Message message) async {
+    final l10n = AppLocalizations.of(context)!;
+    final noteController = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.reportMessageTitle),
+        content: TextField(
+          controller: noteController,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: l10n.reportMessageHint,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.submit),
+          ),
+        ],
+      ),
+    );
+    final noteText = noteController.text;
+    noteController.dispose();
+    if (submitted != true || !mounted) return;
+
+    final repo = ref.read(moderationRepositoryProvider);
+    final apiRes = await repo.submitReport(
+      projectId: widget.projectId,
+      reportedUserId: message.senderId,
+      messageId: message.id,
+      messageExcerpt: _clip(message.content, 2000),
+      note: _clip(noteText, 500),
+    );
+    if (apiRes.success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.reportSubmittedToTeam)),
+        );
+      }
+      return;
+    }
+
+    final subject =
+        '[OrderzHouse] UGC report — project ${widget.projectId}, msg ${message.id}';
+    final body = '''
+Project ID: ${widget.projectId}
+Message ID: ${message.id}
+Reported user ID: ${message.senderId}
+Reported user name: ${message.sender?.fullName ?? ''}
+
+Message:
+${_clip(message.content, 1200)}
+
+Reporter note:
+${_clip(noteText, 500)}
+
+(API error: ${apiRes.message})
+''';
+
+    final uri = supportMailtoUri(subject: subject, body: body);
+    if (await tryLaunchSupportMailto(uri)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.reportMessageSent)),
+        );
+      }
+    } else {
+      await copySupportDraft(subject, body);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.supportEmailDraftCopied)),
+        );
+      }
+    }
+  }
+
+  Future<void> _blockUser(Message message) async {
+    final l10n = AppLocalizations.of(context)!;
+    if (message.senderId <= 0) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.blockUserConfirmTitle),
+        content: Text(l10n.blockUserConfirmBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    final name = message.sender?.fullName ?? '';
+    final blocked = await ref.read(blockedUsersProvider.notifier).block(
+          message.senderId,
+          name,
+          widget.projectId,
+        );
+    if (!mounted) return;
+    if (blocked) {
+      ref.invalidate(projectMessagesProvider(widget.projectId));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.userBlockedSnackbar)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.blockSubmitFailed)),
+      );
+    }
+  }
+
+  void _onOtherUserMessageLongPress(Message message) {
+    final l10n = AppLocalizations.of(context)!;
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: Text(l10n.reportMessage),
+              onTap: () {
+                Navigator.pop(ctx);
+                _reportMessage(message);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block),
+              title: Text(l10n.blockUser),
+              onTap: () {
+                Navigator.pop(ctx);
+                _blockUser(message);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Invalidate provider when screen opens to ensure fresh data (only once)
+    final l10n = AppLocalizations.of(context)!;
+
     if (!_hasInvalidated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.invalidate(projectMessagesProvider(widget.projectId));
         _hasInvalidated = true;
       });
     }
-    // Mark project messages as read when screen opens so red dot disappears immediately
     if (!_hasMarkedAsRead) {
       _hasMarkedAsRead = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,16 +278,16 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
     final messagesAsync = ref.watch(projectMessagesProvider(widget.projectId));
     final authState = ref.watch(authStateProvider);
     final currentUserId = authState.user?.id;
+    final blockedIds = ref.watch(blockedUsersProvider).ids;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // Header
           SafeArea(
             bottom: false,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 boxShadow: [
@@ -81,28 +298,46 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
                   ),
                 ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Back button
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded),
-                    color: AppColors.accentOrange,
-                    onPressed: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go('/client');
-                      }
-                    },
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left_rounded),
+                        color: AppColors.accentOrange,
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/client');
+                          }
+                        },
+                      ),
+                      Expanded(
+                        child: Text(
+                          l10n.messages,
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline_rounded),
+                        color: AppColors.textSecondary,
+                        onPressed: () => _showSafetySheet(context),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  // Title
-                  Expanded(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                     child: Text(
-                      'Messages',
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                      l10n.projectChatHowToHint,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                        height: 1.35,
                       ),
                     ),
                   ),
@@ -110,7 +345,6 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
               ),
             ),
           ),
-          // Messages list
           Expanded(
             child: messagesAsync.when(
               loading: () => const Center(
@@ -126,27 +360,28 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
                     ref.invalidate(projectMessagesProvider(widget.projectId)),
               ),
               data: (messages) {
-                print(
-                  '📱 [ProjectMessagesScreen] Received ${messages.length} messages',
-                );
-
-                // Handle empty list safely
                 if (messages.isEmpty) {
-                  print(
-                    'ℹ️ [ProjectMessagesScreen] Messages list is empty, showing empty state',
-                  );
-                  return const EmptyState(
+                  return EmptyState(
                     icon: Icons.chat_bubble_outline_rounded,
-                    title: 'No messages yet',
-                    message: 'No messages have been sent for this project.',
+                    title: l10n.projectChatEmptyTitle,
+                    message: l10n.projectChatEmptyMessage,
                   );
                 }
 
-                print(
-                  '✅ [ProjectMessagesScreen] Displaying ${messages.length} messages',
-                );
+                final visible = messages.where((m) {
+                  if (currentUserId == null) return true;
+                  if (m.senderId == currentUserId) return true;
+                  return !blockedIds.contains(m.senderId);
+                }).toList();
 
-                // Scroll to bottom when messages load
+                if (visible.isEmpty) {
+                  return EmptyState(
+                    icon: Icons.block,
+                    title: l10n.projectChatBlockedTitle,
+                    message: l10n.projectChatHiddenByBlocks,
+                  );
+                }
+
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   _scrollToBottom();
                 });
@@ -157,13 +392,19 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  itemCount: messages.length,
+                  itemCount: visible.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index];
+                    final message = visible[index];
                     final isCurrentUser =
                         currentUserId != null &&
                         message.senderId == currentUserId;
-                    return _buildMessageBubble(message, isCurrentUser);
+                    return _buildMessageBubble(
+                      message,
+                      isCurrentUser,
+                      onLongPressOther: !isCurrentUser
+                          ? () => _onOtherUserMessageLongPress(message)
+                          : null,
+                    );
                   },
                 );
               },
@@ -174,10 +415,14 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
     );
   }
 
-  Widget _buildMessageBubble(Message message, bool isCurrentUser) {
+  Widget _buildMessageBubble(
+    Message message,
+    bool isCurrentUser, {
+    VoidCallback? onLongPressOther,
+  }) {
     final senderName = message.sender?.fullName ?? 'Unknown';
 
-    return Padding(
+    final bubble = Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: isCurrentUser
@@ -186,7 +431,6 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser) ...[
-            // Avatar (only for other user)
             CircleAvatar(
               radius: 16,
               backgroundColor: AppColors.surfaceVariant,
@@ -195,7 +439,9 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
                   : null,
               child: message.sender?.avatar == null
                   ? Text(
-                      senderName.isNotEmpty ? senderName[0].toUpperCase() : '?',
+                      senderName.isNotEmpty
+                          ? senderName[0].toUpperCase()
+                          : '?',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
@@ -205,7 +451,6 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
             ),
             const SizedBox(width: 8),
           ],
-          // Message bubble
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -262,7 +507,6 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
           ),
           if (isCurrentUser) ...[
             const SizedBox(width: 8),
-            // Avatar (only for current user)
             const CircleAvatar(
               radius: 16,
               backgroundColor: AppColors.surfaceVariant,
@@ -276,5 +520,13 @@ class _ProjectMessagesScreenState extends ConsumerState<ProjectMessagesScreen> {
         ],
       ),
     );
+
+    if (onLongPressOther != null) {
+      return GestureDetector(
+        onLongPress: onLongPressOther,
+        child: bubble,
+      );
+    }
+    return bubble;
   }
 }

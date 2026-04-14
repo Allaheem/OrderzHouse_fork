@@ -45,6 +45,7 @@ import '../../features/auth/presentation/screens/reset_password_otp_screen.dart'
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/common/presentation/screens/language_selection_screen.dart';
+import '../../features/common/presentation/screens/blocked_users_screen.dart';
 import '../../features/messages/presentation/screens/project_messages_screen.dart';
 import '../../features/projects/presentation/screens/change_requests_screen.dart';
 
@@ -382,6 +383,10 @@ final List<RouteBase> _appRoutes = [
   GoRoute(
     path: '/settings/my-content',
     builder: (context, state) => const MyContentScreen(),
+  ),
+  GoRoute(
+    path: '/settings/blocked-users',
+    builder: (context, state) => const BlockedUsersScreen(),
   ),
   GoRoute(path: '/support', builder: (context, state) => const SupportScreen()),
   GoRoute(
