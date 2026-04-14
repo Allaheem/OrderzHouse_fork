@@ -2,6 +2,30 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
+String _paymentChooserBlurb({
+  required bool showAppleOptions,
+  required bool showPayPalOption,
+  required bool applePayConfiguredForSelectedPlan,
+}) {
+  if (!showAppleOptions && !showPayPalOption) {
+    return 'Complete the company subscription form. Your request will be reviewed.';
+  }
+  final parts = <String>[
+    'Use the company form (reviewed by admin).',
+  ];
+  if (showPayPalOption) {
+    parts.add('You can pay with PayPal.');
+  }
+  if (showAppleOptions) {
+    parts.add(
+      applePayConfiguredForSelectedPlan
+          ? 'On iOS you can use the App Store for this plan.'
+          : 'On iOS, App Store appears when this plan has an App Store product ID.',
+    );
+  }
+  return parts.join(' ');
+}
+
 /// Bottom sheet: Subscribe from Company (existing) and optionally App Store (iOS).
 ///
 /// [applePayConfiguredForSelectedPlan] must be true for the Apple button to appear
@@ -10,9 +34,11 @@ void showPaymentMethodChooserSheet({
   required BuildContext context,
   required VoidCallback onSubscribeFromCompany,
   VoidCallback? onPayWithApple,
+  VoidCallback? onPayWithPayPal,
   VoidCallback? onRestoreApplePurchases,
   bool showAppleOptions = false,
   bool applePayConfiguredForSelectedPlan = false,
+  bool showPayPalOption = false,
   String? selectedPlanName,
 }) {
   showModalBottomSheet<void>(
@@ -26,6 +52,9 @@ void showPaymentMethodChooserSheet({
       final showAppleButton = showAppleOptions &&
           applePayConfiguredForSelectedPlan &&
           appleCallback != null;
+      final paypalCallback = onPayWithPayPal;
+      final showPayPalButton =
+          showPayPalOption && paypalCallback != null;
 
       return Padding(
         padding: EdgeInsets.only(
@@ -69,9 +98,12 @@ void showPaymentMethodChooserSheet({
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    showAppleOptions
-                        ? 'Use the company form (reviewed by admin), or pay with the App Store when this plan is linked to an App Store product.'
-                        : 'Complete the company subscription form. Your request will be reviewed.',
+                    _paymentChooserBlurb(
+                      showAppleOptions: showAppleOptions,
+                      showPayPalOption: showPayPalOption,
+                      applePayConfiguredForSelectedPlan:
+                          applePayConfiguredForSelectedPlan,
+                    ),
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -103,6 +135,32 @@ void showPaymentMethodChooserSheet({
                       ),
                     ),
                   ),
+                  if (showPayPalButton) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          paypalCallback();
+                        },
+                        icon: const Icon(Icons.payment_rounded, size: 22),
+                        label: const Text('Pay with PayPal'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF0070BA),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                   if (showAppleOptions && !applePayConfiguredForSelectedPlan) ...[
                     const SizedBox(height: 16),
                     DecoratedBox(

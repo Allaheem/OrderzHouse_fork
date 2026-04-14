@@ -10,9 +10,13 @@ import {
   cancelSubscription
 } from "../controller/plans-subscriptions/adminSubscriptions.js";
 import { authentication } from "../middleware/authentication.js";
-import adminOnly from "../middleware/adminOnly.js"; 
+import adminOnly from "../middleware/adminOnly.js";
+import { getPayPalCheckoutAvailable } from "../controller/plans-subscriptions/paypalCheckoutAvailable.js";
 
 const SubscriptionRouter = express.Router();
+
+/** Same as GET /paypal/checkout-available — for clients on older API deploys that only added subscriptions routes. */
+SubscriptionRouter.get("/paypal-checkout-available", getPayPalCheckoutAvailable);
 
 SubscriptionRouter.get("/admin/all", adminOnly ,getAllSubscriptions);
 SubscriptionRouter.get("/admin/subscriptions", authentication, getAdminSubscriptions);

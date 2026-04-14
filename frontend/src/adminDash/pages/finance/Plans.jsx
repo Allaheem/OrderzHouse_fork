@@ -73,7 +73,16 @@ export default function Plans() {
       }
       setSubscriptionCounts(countMap);
     } catch (err) {
-      dispatch(setError("Failed to load plans"));
+      const detail =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        (typeof err?.code === "string" ? err.code : null);
+      const text =
+        detail && String(detail).trim()
+          ? `Failed to load plans: ${String(detail).trim()}`
+          : "Failed to load plans (is the API running on port 5050?)";
+      dispatch(setError(text));
       console.error(err);
     } finally {
       dispatch(setLoading(false));
@@ -159,19 +168,40 @@ export default function Plans() {
           : PlansAPI.createPlan(payload),
         {
           loading: isEditing ? "Updating plan..." : "Creating plan...",
-          success: async (res) => {
+          // Must not be `async`: react-hot-toast uses the return value as the toast message;
+          // an async function returns a Promise → "Objects are not valid as a React child".
+          success: (res) => {
             if (isEditing) {
               dispatch(updatePlan(res.plan || res));
             } else {
               dispatch(addPlan(res.plan || res));
             }
-            await fetchPlans();
-            setOpen(false);
+            void fetchPlans().then(() => {
+              setOpen(false);
+            });
             return isEditing
               ? "Plan updated successfully"
               : "Plan created successfully";
           },
-          error: "Failed to save plan",
+          error: (err) => {
+            try {
+              const raw =
+                err?.response?.data?.message ??
+                err?.response?.data?.error ??
+                err?.message;
+              if (typeof raw === "string" && raw.trim()) return raw.trim();
+              if (raw != null && typeof raw === "object") {
+                try {
+                  return JSON.stringify(raw);
+                } catch {
+                  return "Failed to save plan";
+                }
+              }
+            } catch {
+              /* ignore */
+            }
+            return "Failed to save plan";
+          },
         },
         { style: { borderRadius: "8px" } }
       );

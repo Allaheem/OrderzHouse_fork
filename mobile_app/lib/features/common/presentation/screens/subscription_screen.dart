@@ -2,7 +2,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -19,6 +21,7 @@ import '../../../../core/utils/safe_url_launch.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../subscriptions/data/repositories/subscription_repository.dart';
 import '../../../subscriptions/presentation/providers/subscription_provider.dart';
 import '../../../subscriptions/presentation/widgets/payment_method_chooser_sheet.dart';
 import '../../../../core/models/plan.dart';
@@ -34,25 +37,82 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   int _selectedTab = 0; // 0 = Plans, 1 = FAQ (UI only)
 
   StreamSubscription<List<PurchaseDetails>>? _iosPurchaseSub;
+  bool _iosPurchaseListenerAttached = false;
   Plan? _pendingApplePlan;
 
-  @override
-  void initState() {
-    super.initState();
-    if (Platform.isIOS) {
-      _iosPurchaseSub = InAppPurchase.instance.purchaseStream.listen(
-        _onIosPurchaseUpdated,
-        onError: (Object e, StackTrace st) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Purchase stream error: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        },
-      );
+  /// Xcode sets these when the app runs on the **iOS Simulator** (not on a physical device).
+  bool _isRunningOnIosSimulator() {
+    if (kIsWeb || !Platform.isIOS) return false;
+    try {
+      final e = Platform.environment;
+      return e['SIMULATOR_DEVICE_NAME'] != null ||
+          e['SIMULATOR_UDID'] != null;
+    } catch (_) {
+      return false;
     }
+  }
+
+  void _showIosSimulatorIapUnavailable() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'App Store billing does not work on the iOS Simulator '
+          '(StoreKit channel fails). Use a real iPhone/iPad, or add a '
+          'StoreKit Configuration in Xcode for simulator testing.',
+          style: TextStyle(height: 1.35),
+        ),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 8),
+      ),
+    );
+  }
+
+  /// StoreKit is flaky on **iOS Simulator** (Pigeon `channel-error`). Attach only when user
+  /// taps Apple Pay / Restore — avoids crashes on screen open and matches real-device flow.
+  void _attachIosPurchaseListenerIfNeeded() {
+    if (!Platform.isIOS || _iosPurchaseListenerAttached) return;
+    if (_isRunningOnIosSimulator()) {
+      return;
+    }
+    runZonedGuarded(
+      () {
+        _iosPurchaseSub = InAppPurchase.instance.purchaseStream.listen(
+          _onIosPurchaseUpdated,
+          onError: (Object e, StackTrace st) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Purchase stream error: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
+        );
+        _iosPurchaseListenerAttached = true;
+      },
+      (Object error, StackTrace stack) {
+        if (!mounted) return;
+        _showStoreKitBridgeErrorSnack(error);
+      },
+    );
+  }
+
+  void _showStoreKitBridgeErrorSnack(Object e) {
+    if (!mounted) return;
+    final isChannel =
+        e is PlatformException && (e.message?.contains('channel') ?? false);
+    final msg = isChannel
+        ? 'App Store billing is not available here (often the iOS Simulator). '
+            'Use a real iPhone/iPad, or add a StoreKit Configuration in Xcode for simulator testing.'
+        : '$e';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 6),
+      ),
+    );
   }
 
   @override
@@ -66,6 +126,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget build(BuildContext context) {
     final plansAsync = ref.watch(plansProvider);
     final authState = ref.watch(authStateProvider);
+    final payPalCheckoutAsync = ref.watch(paypalCheckoutAvailableProvider);
+    final payPalEnabledOnServer = payPalCheckoutAsync.valueOrNull == true;
     final user = authState.user;
 
     return AppScaffold(
@@ -162,7 +224,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   );
                 }
 
-                return _buildPlansContent(plans);
+                return _buildPlansContent(
+                  plans,
+                  payPalEnabledOnServer: payPalEnabledOnServer,
+                );
               },
             ),
           ),
@@ -334,7 +399,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   // D) Big Rounded Container with Plan Rows
-  Widget _buildPlansContent(List<Plan> plans) {
+  Widget _buildPlansContent(
+    List<Plan> plans, {
+    required bool payPalEnabledOnServer,
+  }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
@@ -364,7 +432,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
                   return Column(
                     children: [
-                      _buildPlanRow(plan),
+                      _buildPlanRow(
+                        plan,
+                        payPalEnabledOnServer: payPalEnabledOnServer,
+                      ),
                       if (!isLast) ...[
                         const SizedBox(height: AppSpacing.sm),
                         Divider(
@@ -387,7 +458,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  Future<void> _handlePlanSelection(Plan plan) async {
+  Future<void> _handlePlanSelection(
+    Plan plan, {
+    required bool payPalEnabledOnServer,
+  }) async {
     final authState = ref.read(authStateProvider);
     final user = authState.user;
 
@@ -413,23 +487,193 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       return;
     }
 
+    final repo = ref.read(subscriptionRepositoryProvider);
+    final subStatus = await repo.fetchSubscriptionStatus();
+    if (!mounted) return;
+    if (!subStatus.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            subStatus.errorMessage ??
+                'Could not verify subscription status. Check your connection; '
+                'the server will still validate if you continue.',
+          ),
+          backgroundColor: Colors.orange,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } else if (subStatus.blocksNewPlanPurchase) {
+      await _showAlreadySubscribedDialog(subStatus);
+      return;
+    }
+
     final appleConfigured =
         Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
+
+    // PayPal: `.env` ENABLE_PAYPAL OR `GET /paypal/checkout-available` (PAYPAL_ENABLED on server).
+    final showPayPal = (role == 2 || role == 3) &&
+        (AppConfig.enablePayPalPlanCheckout || payPalEnabledOnServer);
 
     showPaymentMethodChooserSheet(
       context: context,
       showAppleOptions: Platform.isIOS,
       applePayConfiguredForSelectedPlan: appleConfigured,
+      showPayPalOption: showPayPal,
       selectedPlanName: plan.name,
       onPayWithApple:
           appleConfigured ? () => _startApplePurchase(plan) : null,
+      onPayWithPayPal: showPayPal ? () => _startPayPalCheckout(plan) : null,
       onRestoreApplePurchases: Platform.isIOS ? _restoreApplePurchases : null,
       onSubscribeFromCompany: () => _openCompanySubscribeUrl(),
     );
   }
 
+  Future<void> _showAlreadySubscribedDialog(SubscriptionStatusSnapshot s) async {
+    if (!mounted) return;
+    final isPending = s.overallStatus == 'pending_start';
+    final title = isPending
+        ? 'Subscription pending'
+        : 'You already have an active subscription';
+    final lines = <String>[
+      s.statusMessage.trim(),
+      if (s.planName != null && s.planName!.isNotEmpty)
+        'Current plan: ${s.planName!}',
+      if (s.subscriptionRowStatus != null &&
+          s.subscriptionRowStatus!.isNotEmpty)
+        'Status: ${s.subscriptionRowStatus!}',
+      if (s.endDateRaw != null && s.endDateRaw!.isNotEmpty)
+        'End date: ${s.endDateRaw!}',
+      if (s.remainingDays > 0)
+        'About ${s.remainingDays} day(s) left on the current period (estimate).',
+    ];
+    final body = lines.where((e) => e.isNotEmpty).join('\n\n');
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(
+            '$body\n\nYou can subscribe to a different plan after your current subscription ends.',
+            style: const TextStyle(height: 1.35),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startPayPalCheckout(Plan plan) async {
+    final repo = ref.read(subscriptionRepositoryProvider);
+    final created = await repo.createPayPalPlanOrder(planId: plan.id);
+    if (!mounted) return;
+    if (!created.success ||
+        created.orderId == null ||
+        created.approvalUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(created.message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final uri = Uri.tryParse(created.approvalUrl!);
+    if (uri == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid PayPal link from server.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final opened = await launchTrustedHttpUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!mounted) return;
+    if (!opened) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open PayPal. Check your connection.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        title: const Text('PayPal'),
+        content: const Text(
+          'After you approve the payment in PayPal, return here and tap Complete to activate your subscription.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Later'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _completePayPalCapture(created.orderId!);
+            },
+            child: const Text('Complete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _completePayPalCapture(String orderId) async {
+    final repo = ref.read(subscriptionRepositoryProvider);
+    final result = await repo.capturePayPalPlanOrder(orderId: orderId);
+    if (!mounted) return;
+    if (result.success) {
+      await ref.read(authStateProvider.notifier).refreshUser();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.idempotent
+                ? 'Your subscription is already active.'
+                : result.message,
+          ),
+          backgroundColor: AppColors.accentOrange,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
   Future<void> _restoreApplePurchases() async {
     if (!Platform.isIOS) return;
+    if (_isRunningOnIosSimulator()) {
+      _showIosSimulatorIapUnavailable();
+      return;
+    }
+    try {
+      _attachIosPurchaseListenerIfNeeded();
+    } catch (e) {
+      _showStoreKitBridgeErrorSnack(e);
+      return;
+    }
     try {
       await InAppPurchase.instance.restorePurchases();
       if (!mounted) return;
@@ -441,6 +685,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           backgroundColor: AppColors.accentOrange,
         ),
       );
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _showStoreKitBridgeErrorSnack(e);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -465,8 +712,28 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       return;
     }
 
+    if (_isRunningOnIosSimulator()) {
+      _showIosSimulatorIapUnavailable();
+      return;
+    }
+
+    try {
+      _attachIosPurchaseListenerIfNeeded();
+    } catch (e) {
+      _showStoreKitBridgeErrorSnack(e);
+      return;
+    }
+
     final iap = InAppPurchase.instance;
-    if (!await iap.isAvailable()) {
+    final bool storeCanPay;
+    try {
+      storeCanPay = await iap.isAvailable();
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      _showStoreKitBridgeErrorSnack(e);
+      return;
+    }
+    if (!storeCanPay) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -479,7 +746,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
     setState(() => _pendingApplePlan = plan);
 
-    final response = await iap.queryProductDetails({pid});
+    late final ProductDetailsResponse response;
+    try {
+      response = await iap.queryProductDetails({pid});
+    } on PlatformException catch (e) {
+      setState(() => _pendingApplePlan = null);
+      if (!mounted) return;
+      _showStoreKitBridgeErrorSnack(e);
+      return;
+    }
     if (response.error != null ||
         response.productDetails.isEmpty ||
         response.notFoundIDs.isNotEmpty) {
@@ -505,6 +780,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           ),
         );
       }
+    } on PlatformException catch (e) {
+      setState(() => _pendingApplePlan = null);
+      if (!mounted) return;
+      _showStoreKitBridgeErrorSnack(e);
     } catch (e) {
       setState(() => _pendingApplePlan = null);
       if (!mounted) return;
@@ -646,7 +925,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     }
   }
 
-  Widget _buildPlanRow(Plan plan) {
+  Widget _buildPlanRow(
+    Plan plan, {
+    required bool payPalEnabledOnServer,
+  }) {
     final durationLabel = plan.planType == 'monthly'
         ? '${plan.duration} Month'
         : plan.planType == 'yearly'
@@ -654,7 +936,10 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         : plan.planType;
 
     return InkWell(
-      onTap: () => _handlePlanSelection(plan),
+      onTap: () => _handlePlanSelection(
+        plan,
+        payPalEnabledOnServer: payPalEnabledOnServer,
+      ),
       borderRadius: BorderRadius.circular(18),
       child: Opacity(
         opacity: 1.0,

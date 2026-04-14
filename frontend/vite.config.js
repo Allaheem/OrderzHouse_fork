@@ -9,6 +9,8 @@ export default defineConfig({
     // Expose dev server on LAN (e.g. open admin from phone: http://YOUR_IP:5173)
     host: true,
     port: 5173,
+    // Avoid "Blocked request. This host is not allowed" when opening by LAN IP in Safari/Chrome.
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'https://orderzhouse-backend.onrender.com', 

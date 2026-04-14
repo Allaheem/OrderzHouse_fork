@@ -97,7 +97,22 @@ export const getSubscriptionStatus = async (req, res) => {
     // Check if subscription is activated (activated_at IS NOT NULL)
     const isActivated = subscription.activated_at !== null;
 
-    if (!isActivated || subscription.status === "pending_start") {
+    // Cancelled must NOT use the "not activated" branch (would wrongly show 30 days + "first project").
+    if (subscription.status === "cancelled") {
+      const endDate = new Date(subscription.end_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      const diffTime = endDate - today;
+      remainingDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+      statusMessage =
+        remainingDays > 0
+          ? "Cancelled — you can subscribe to a new plan anytime"
+          : "Subscription cancelled";
+    } else if (subscription.status === "expired") {
+      remainingDays = 0;
+      statusMessage = "Subscription expired";
+    } else if (!isActivated || subscription.status === "pending_start") {
       // Not activated yet - show full duration but label as not started
       if (subscription.plan_type === "monthly") {
         remainingDays = subscription.duration * 30; // Convert months to days

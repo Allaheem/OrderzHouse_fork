@@ -68,4 +68,20 @@ class AppConfig {
     }
     return 'https://appointments.battechno.com/survey';
   }
+
+  /// PayPal plan checkout (backend `/paypal/plan/*`).
+  /// Prefer server [`GET /paypal/checkout-available`]; this flag forces the button on without a round-trip.
+  /// Accepts `true`, `1`, or `yes` in `.env` / `--dart-define`.
+  static bool get enablePayPalPlanCheckout {
+    final v = _readEnvValue('ENABLE_PAYPAL');
+    if (v == null || v.isEmpty) return false;
+    switch (v.toLowerCase()) {
+      case 'true':
+      case '1':
+      case 'yes':
+        return true;
+      default:
+        return false;
+    }
+  }
 }

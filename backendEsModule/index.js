@@ -88,6 +88,7 @@ import chatsRouter from "./router/chats.js";
 import moderationRouter from "./router/moderation.js";
 import StripeRouter from "./router/Stripe/stripe.js";
 import webhookRouter from "./router/Stripe/stripeWebhook.js";
+import paypalRouter from "./router/paypal.js";
 import searchRouter from "./router/search.js";
 import referralsRouter from "./router/referrals.js";
 import tenderVaultRouter from "./router/tenderVault.js";
@@ -125,7 +126,8 @@ const allowedOrigins = [
   "https://orderzhouse.com",
   "https://www.orderzhouse.com",
   "http://localhost:5173",
-  "http://localhost:5174"
+  "http://localhost:5174",
+  "http://localhost:5175"
 ].filter(Boolean); // Remove undefined values
 
 /** Admin UI opened from phone/tablet on same Wi‑Fi (http://192.168.x.x:5173) */
@@ -251,6 +253,7 @@ app.use("/chat", chatsRouter);
 app.use("/moderation", moderationRouter);
 app.use("/api", liveScreenRoutes);
 app.use("/stripe", StripeRouter);
+app.use("/paypal", paypalRouter);
 app.use("/search", searchRouter);
 app.use("/referrals", referralsRouter);
 app.use("/tender-vault", tenderVaultRouter);
@@ -298,7 +301,8 @@ if (process.env.NODE_ENV !== "test") {
       }
       throw err;
     });
-    server.listen(port, () => {
+    // Bind all interfaces so phones/tablets on LAN can reach the API (e.g. http://192.168.x.x:5050).
+    server.listen(port, "0.0.0.0", () => {
       const addressInfo = server.address();
       const boundPort =
         typeof addressInfo === "object" && addressInfo
@@ -309,7 +313,7 @@ if (process.env.NODE_ENV !== "test") {
           `ℹ️ Bound on ${boundPort} (preferred was ${primaryPort}). Update backendEsModule/.env: PORT=${boundPort} and APP_API_URL=http://localhost:${boundPort}`
         );
       }
-      console.log(`✅ Server listening at http://localhost:${boundPort}`);
+      console.log(`✅ Server listening at http://0.0.0.0:${boundPort} (LAN + localhost)`);
     });
   };
 
