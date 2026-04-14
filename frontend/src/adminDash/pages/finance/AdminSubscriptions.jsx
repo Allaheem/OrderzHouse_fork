@@ -363,7 +363,7 @@ export default function AdminSubscriptions() {
         <ProjectsHero
           eyebrow="ADMIN"
           title="Subscriptions"
-          subtitle="Manage freelancer subscriptions: assign, activate, and cancel."
+          subtitle="Manage client and freelancer subscriptions: assign, activate, cancel. Apple IAP rows show payment source."
         />
 
         {/* Table */}
@@ -376,13 +376,19 @@ export default function AdminSubscriptions() {
                     #
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                    Freelancer
+                    User
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Role
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Email
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Current Plan
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    Payment
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
                     Status
@@ -401,8 +407,8 @@ export default function AdminSubscriptions() {
               <tbody className="divide-y divide-slate-100">
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-slate-500">
-                      No freelancers found
+                    <td colSpan="10" className="px-4 py-8 text-center text-slate-500">
+                      No clients or freelancers found
                     </td>
                   </tr>
                 ) : (
@@ -426,10 +432,27 @@ export default function AdminSubscriptions() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">
+                          {Number(freelancer.role_id) === 2
+                            ? "Client"
+                            : Number(freelancer.role_id) === 3
+                            ? "Freelancer"
+                            : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600">
                           {freelancer.email}
                         </td>
                         <td className="px-4 py-3 text-sm text-slate-600">
                           {subscription?.plan_name || "No subscription"}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-600 capitalize">
+                          {subscription?.payment_source
+                            ? String(subscription.payment_source).replace(/_/g, " ")
+                            : "—"}
+                          {subscription?.apple_original_transaction_id ? (
+                            <span className="block text-[10px] text-slate-400 font-mono truncate max-w-[140px]">
+                              {subscription.apple_original_transaction_id}
+                            </span>
+                          ) : null}
                         </td>
                         <td className="px-4 py-3">
                           <span

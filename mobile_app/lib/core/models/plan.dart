@@ -59,6 +59,8 @@ class Plan with _$Plan {
     @JsonKey(fromJson: _featuresFromJson)
     @Default([])
     List<String> features, // Features list
+    /// App Store Connect product id (auto-renewable subscription) when using Apple IAP.
+    @JsonKey(name: 'apple_product_id') String? appleProductId,
   }) = _Plan;
 
   factory Plan.fromJson(Map<String, dynamic> json) => _$PlanFromJson(json);

@@ -43,10 +43,10 @@ export const assignSubscriptionToFreelancer = async (req, res) => {
     }
 
     const freelancer = freelancerRows[0];
-    if (Number(freelancer.role_id) !== 3) {
+    if (![2, 3].includes(Number(freelancer.role_id))) {
       return res.status(400).json({
         success: false,
-        message: "User is not a freelancer",
+        message: "User must be a client or freelancer",
       });
     }
 
@@ -136,7 +136,7 @@ export const assignSubscriptionToFreelancer = async (req, res) => {
 };
 
 /**
- * Admin: Get all freelancers with subscription info
+ * Admin: Get clients and freelancers with their latest subscription row
  * GET /admin/subscriptions/freelancers
  */
 export const getFreelancersWithSubscriptions = async (req, res) => {
@@ -147,14 +147,14 @@ export const getFreelancersWithSubscriptions = async (req, res) => {
     if (Number(adminRole) !== 1) {
       return res.status(403).json({
         success: false,
-        message: "Only admins can view freelancers",
+        message: "Only admins can view subscribers",
       });
     }
 
-    // Get all freelancers with their most recent subscription
     const query = `
       SELECT 
         u.id AS freelancer_id,
+        u.role_id,
         u.first_name,
         u.last_name,
         u.email,
@@ -163,6 +163,8 @@ export const getFreelancersWithSubscriptions = async (req, res) => {
         s.status AS subscription_status,
         s.start_date,
         s.end_date,
+        s.payment_source,
+        s.apple_original_transaction_id,
         p.name AS plan_name,
         p.duration AS plan_duration,
         p.plan_type
@@ -175,15 +177,16 @@ export const getFreelancersWithSubscriptions = async (req, res) => {
         LIMIT 1
       ) s ON true
       LEFT JOIN plans p ON p.id = s.plan_id
-      WHERE u.role_id = 3
+      WHERE u.role_id IN (2, 3)
         AND u.is_deleted = false
-      ORDER BY u.id ASC
+      ORDER BY u.role_id DESC, u.id ASC
     `;
 
     const { rows } = await pool.query(query);
 
     const freelancers = rows.map((row) => ({
       id: row.freelancer_id,
+      role_id: row.role_id,
       first_name: row.first_name,
       last_name: row.last_name,
       email: row.email,
@@ -197,6 +200,8 @@ export const getFreelancersWithSubscriptions = async (req, res) => {
             plan_name: row.plan_name,
             plan_duration: row.plan_duration,
             plan_type: row.plan_type,
+            payment_source: row.payment_source,
+            apple_original_transaction_id: row.apple_original_transaction_id,
           }
         : null,
     }));
@@ -242,6 +247,9 @@ export const getAdminSubscriptions = async (req, res) => {
         s.status,
         s.start_date,
         s.end_date,
+        s.payment_source,
+        s.apple_original_transaction_id,
+        u.role_id AS user_role_id,
         u.first_name || ' ' || u.last_name AS freelancer_name,
         u.email AS freelancer_email,
         p.name AS plan_name,

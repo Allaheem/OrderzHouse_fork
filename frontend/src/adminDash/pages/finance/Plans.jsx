@@ -37,6 +37,7 @@ export default function Plans() {
     description: "",
     featuresText: "",
     plan_type: "monthly",
+    apple_product_id: "",
   });
 
   const [subscriptionCounts, setSubscriptionCounts] = useState({});
@@ -95,6 +96,7 @@ export default function Plans() {
       description: "",
       featuresText: "",
       plan_type: "monthly",
+      apple_product_id: "",
     });
     setOpen(true);
   }, []);
@@ -111,6 +113,7 @@ export default function Plans() {
         description: plan.description,
         featuresText: (plan.features ?? []).join("\n"),
         plan_type: plan.plan_type ?? "monthly",
+        apple_product_id: plan.apple_product_id ?? "",
       });
       setOpen(true);
     },
@@ -145,6 +148,7 @@ export default function Plans() {
           .split("\n")
           .map((s) => s.trim())
           .filter(Boolean),
+        apple_product_id: form.apple_product_id?.trim() || null,
       };
 
       const isEditing = editId != null;
@@ -191,6 +195,20 @@ export default function Plans() {
     const unit =
       planType === "yearly" ? "year" : planType === "monthly" ? "month" : "day";
     return `${num} ${num === 1 ? unit : `${unit}s`}`;
+  };
+
+  /** API/DB may return features as array, stringified JSON, or rarely non-array — avoid render crash */
+  const normalizeFeatures = (features) => {
+    if (Array.isArray(features)) return features;
+    if (typeof features === "string" && features.trim()) {
+      try {
+        const parsed = JSON.parse(features);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
   };
 
   // ---------------------------
@@ -298,7 +316,7 @@ export default function Plans() {
                   {p.description}
                 </p>
                 <ul className="space-y-2 text-sm text-slate-700">
-                  {(p.features ?? []).map((f, i) => (
+                  {normalizeFeatures(p.features).map((f, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="text-emerald-500 mt-0.5">✓</span>
                       <span>{f}</span>
@@ -428,6 +446,22 @@ export default function Plans() {
                 <option value="monthly">Monthly</option>
                 <option value="yearly">Yearly</option>
               </select>
+            </Field>
+
+            <Field label="Apple IAP product ID (App Store Connect)">
+              <input
+                type="text"
+                value={form.apple_product_id}
+                onChange={(e) =>
+                  setForm({ ...form, apple_product_id: e.target.value })
+                }
+                placeholder="e.g. com.orderzhouse.subscription.monthly"
+                className="w-full rounded-lg border border-slate-300 focus:ring-2 focus:ring-slate-300 px-3 py-2 text-sm font-mono"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Auto-renewable subscription product id. Leave empty if this plan
+                is company / offline only.
+              </p>
             </Field>
 
             <div className="sticky bottom-0 bg-white pt-4 flex justify-end gap-2.5">

@@ -1,6 +1,7 @@
 import express from "express";
 import { getAllSubscriptions } from "../controller/plans-subscriptions/subscriptions.js"
 import { getSubscriptionStatus } from "../controller/plans-subscriptions/getSubscriptionStatus.js";
+import { verifyAppleReceipt } from "../controller/plans-subscriptions/appleIapVerifyReceipt.js";
 import { 
   assignSubscriptionToFreelancer, 
   getAdminSubscriptions,
@@ -20,5 +21,6 @@ SubscriptionRouter.post("/admin/subscriptions/assign", authentication, assignSub
 SubscriptionRouter.post("/admin/subscriptions/:id/activate", authentication, activateSubscription);
 SubscriptionRouter.post("/admin/subscriptions/:id/cancel", authentication, cancelSubscription);
 SubscriptionRouter.get("/status", authentication, getSubscriptionStatus);
+SubscriptionRouter.post("/apple/verify-receipt", authentication, verifyAppleReceipt);
 
 export default SubscriptionRouter;

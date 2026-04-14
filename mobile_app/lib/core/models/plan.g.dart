@@ -17,6 +17,7 @@ _$PlanImpl _$$PlanImplFromJson(Map<String, dynamic> json) => _$PlanImpl(
   features: json['features'] == null
       ? const []
       : _featuresFromJson(json['features']),
+  appleProductId: json['apple_product_id'] as String?,
 );
 
 Map<String, dynamic> _$$PlanImplToJson(_$PlanImpl instance) =>
@@ -28,4 +29,5 @@ Map<String, dynamic> _$$PlanImplToJson(_$PlanImpl instance) =>
       'duration': instance.duration,
       'plan_type': instance.planType,
       'features': instance.features,
+      'apple_product_id': instance.appleProductId,
     };

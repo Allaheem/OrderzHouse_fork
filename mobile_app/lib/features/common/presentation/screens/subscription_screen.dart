@@ -1,7 +1,11 @@
 // ??? ????????
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -15,6 +19,7 @@ import '../../../../core/utils/safe_url_launch.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../subscriptions/presentation/providers/subscription_provider.dart';
 import '../../../subscriptions/presentation/widgets/payment_method_chooser_sheet.dart';
 import '../../../../core/models/plan.dart';
 
@@ -28,32 +33,40 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   int _selectedTab = 0; // 0 = Plans, 1 = FAQ (UI only)
 
+  StreamSubscription<List<PurchaseDetails>>? _iosPurchaseSub;
+  Plan? _pendingApplePlan;
+
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isIOS) {
+      _iosPurchaseSub = InAppPurchase.instance.purchaseStream.listen(
+        _onIosPurchaseUpdated,
+        onError: (Object e, StackTrace st) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Purchase stream error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pendingApplePlan = null;
+    _iosPurchaseSub?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final plansAsync = ref.watch(plansProvider);
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
-    final isFreelancer = user?.roleId == 3;
-
-    // Guard: Only freelancers can access this screen
-    if (!isFreelancer) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Plans are available for freelancers only.'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
-          context.go(
-            user?.roleId == 2 ? '/client/profile' : '/freelancer/profile',
-          );
-        }
-      });
-      // Return empty widget while redirecting
-      return const SizedBox.shrink();
-    }
 
     return AppScaffold(
       body: Column(
@@ -388,10 +401,214 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       return;
     }
 
+    final role = user.roleId;
+    if (role != 2 && role != 3) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Plans are available for clients and freelancers.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final appleConfigured =
+        Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
+
     showPaymentMethodChooserSheet(
       context: context,
+      showAppleOptions: Platform.isIOS,
+      applePayConfiguredForSelectedPlan: appleConfigured,
+      selectedPlanName: plan.name,
+      onPayWithApple:
+          appleConfigured ? () => _startApplePurchase(plan) : null,
+      onRestoreApplePurchases: Platform.isIOS ? _restoreApplePurchases : null,
       onSubscribeFromCompany: () => _openCompanySubscribeUrl(),
     );
+  }
+
+  Future<void> _restoreApplePurchases() async {
+    if (!Platform.isIOS) return;
+    try {
+      await InAppPurchase.instance.restorePurchases();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'If you have an active subscription, it will sync shortly.',
+          ),
+          backgroundColor: AppColors.accentOrange,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Restore failed: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _startApplePurchase(Plan plan) async {
+    final pid = plan.appleProductId?.trim();
+    if (pid == null || pid.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'This plan is missing an App Store product ID. Use Subscribe from Company or pick another plan.',
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    final iap = InAppPurchase.instance;
+    if (!await iap.isAvailable()) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('App Store purchases are not available on this device.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _pendingApplePlan = plan);
+
+    final response = await iap.queryProductDetails({pid});
+    if (response.error != null ||
+        response.productDetails.isEmpty ||
+        response.notFoundIDs.isNotEmpty) {
+      setState(() => _pendingApplePlan = null);
+      if (!mounted) return;
+      final msg = response.error?.message ?? 'Product not found in App Store.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    final param = PurchaseParam(productDetails: response.productDetails.first);
+    try {
+      final started = await iap.buyNonConsumable(purchaseParam: param);
+      if (!started) {
+        setState(() => _pendingApplePlan = null);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not start purchase. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _pendingApplePlan = null);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Purchase error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _onIosPurchaseUpdated(List<PurchaseDetails> purchases) async {
+    final iap = InAppPurchase.instance;
+    for (final d in purchases) {
+      final pending = _pendingApplePlan;
+      if (pending != null && d.productID != pending.appleProductId) {
+        continue;
+      }
+
+      if (d.status == PurchaseStatus.pending) {
+        continue;
+      }
+
+      if (d.status == PurchaseStatus.error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(d.error?.message ?? 'Purchase failed'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        if (pending != null) {
+          setState(() => _pendingApplePlan = null);
+        }
+        await iap.completePurchase(d);
+        continue;
+      }
+
+      if (d.status == PurchaseStatus.canceled) {
+        if (pending != null) {
+          setState(() => _pendingApplePlan = null);
+        }
+        await iap.completePurchase(d);
+        continue;
+      }
+
+      if (d.status == PurchaseStatus.purchased ||
+          d.status == PurchaseStatus.restored) {
+        final receipt = d.verificationData.serverVerificationData;
+        if (receipt.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Missing receipt data from the store. Try again or use Subscribe from Company.',
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          if (pending != null) {
+            setState(() => _pendingApplePlan = null);
+          }
+          await iap.completePurchase(d);
+          continue;
+        }
+
+        final repo = ref.read(subscriptionRepositoryProvider);
+        final result = await repo.verifyAppleReceipt(
+          receiptDataBase64: receipt,
+          planId: pending?.id,
+        );
+
+        if (result.success) {
+          await ref.read(authStateProvider.notifier).refreshUser();
+          if (pending != null) {
+            setState(() => _pendingApplePlan = null);
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  result.idempotent
+                      ? 'Your subscription is already active.'
+                      : 'Payment successful! Subscription activated.',
+                ),
+                backgroundColor: AppColors.accentOrange,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        }
+        await iap.completePurchase(d);
+      }
+    }
   }
 
   Future<void> _openCompanySubscribeUrl() async {

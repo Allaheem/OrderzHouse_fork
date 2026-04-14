@@ -20,7 +20,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).user;
-    final isFreelancer = user?.roleId == 3;
+    final canManagePlans =
+        user?.roleId == 2 || user?.roleId == 3; // client or freelancer
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -64,7 +65,7 @@ class ProfileScreen extends ConsumerWidget {
                             onEditProfile: () => context.go('/edit-profile'),
                             onSettings: () => context.go('/settings'),
                             onSubscription: () => context.go('/subscription'),
-                            showSubscription: isFreelancer,
+                            showSubscription: canManagePlans,
                             l10n: l10n,
                           ),
                           const SizedBox(height: AppSpacing.xl),
@@ -114,8 +115,8 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppSpacing.xl),
 
-                          // 5) Bottom CTA Card — freelancers only
-                          if (isFreelancer)
+                          // 5) Bottom CTA Card — clients & freelancers
+                          if (canManagePlans)
                             _UpgradeCard(
                               onViewPlans: () => context.go('/subscription'),
                               l10n: l10n,

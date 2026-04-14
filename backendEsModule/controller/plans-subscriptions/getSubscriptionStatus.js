@@ -1,7 +1,7 @@
 import pool from "../../models/db.js";
 
 /**
- * Get current subscription status for a freelancer
+ * Get current subscription status for the logged-in client or freelancer
  * Returns: status, remaining_days, activated_at, yearly_fee_paid
  */
 export const getSubscriptionStatus = async (req, res) => {
@@ -13,9 +13,12 @@ export const getSubscriptionStatus = async (req, res) => {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 
-    // Only freelancers (role_id = 3) can view subscription status
-    if (Number(roleId) !== 3) {
-      return res.status(403).json({ success: false, error: "Forbidden - Freelancers only" });
+    // Clients (2) and freelancers (3) can view their subscription status
+    if (![2, 3].includes(Number(roleId))) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden — subscription status is only for clients and freelancers",
+      });
     }
 
     // Get current subscription (handle missing activated_at column gracefully)

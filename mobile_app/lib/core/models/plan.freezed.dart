@@ -34,6 +34,8 @@ mixin _$Plan {
   String get planType => throw _privateConstructorUsedError; // 'monthly', 'yearly', 'popular'
   @JsonKey(fromJson: _featuresFromJson)
   List<String> get features => throw _privateConstructorUsedError;
+  @JsonKey(name: 'apple_product_id')
+  String? get appleProductId => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -53,6 +55,7 @@ abstract class $PlanCopyWith<$Res> {
     @JsonKey(fromJson: _durationFromJson) int duration,
     @JsonKey(name: 'plan_type') String planType,
     @JsonKey(fromJson: _featuresFromJson) List<String> features,
+    @JsonKey(name: 'apple_product_id') String? appleProductId,
   });
 }
 
@@ -76,6 +79,7 @@ class _$PlanCopyWithImpl<$Res, $Val extends Plan>
     Object? duration = null,
     Object? planType = null,
     Object? features = null,
+    Object? appleProductId = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -107,6 +111,10 @@ class _$PlanCopyWithImpl<$Res, $Val extends Plan>
                 ? _value.features
                 : features // ignore: cast_nullable_to_non_nullable
                       as List<String>,
+            appleProductId: freezed == appleProductId
+                ? _value.appleProductId
+                : appleProductId // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -129,6 +137,7 @@ abstract class _$$PlanImplCopyWith<$Res> implements $PlanCopyWith<$Res> {
     @JsonKey(fromJson: _durationFromJson) int duration,
     @JsonKey(name: 'plan_type') String planType,
     @JsonKey(fromJson: _featuresFromJson) List<String> features,
+    @JsonKey(name: 'apple_product_id') String? appleProductId,
   });
 }
 
@@ -149,6 +158,7 @@ class __$$PlanImplCopyWithImpl<$Res>
     Object? duration = null,
     Object? planType = null,
     Object? features = null,
+    Object? appleProductId = freezed,
   }) {
     return _then(
       _$PlanImpl(
@@ -180,6 +190,10 @@ class __$$PlanImplCopyWithImpl<$Res>
             ? _value._features
             : features // ignore: cast_nullable_to_non_nullable
                   as List<String>,
+        appleProductId: freezed == appleProductId
+            ? _value.appleProductId
+            : appleProductId // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -197,6 +211,7 @@ class _$PlanImpl extends _Plan {
     @JsonKey(name: 'plan_type') required this.planType,
     @JsonKey(fromJson: _featuresFromJson)
     final List<String> features = const [],
+    @JsonKey(name: 'apple_product_id') this.appleProductId,
   }) : _features = features,
        super._();
 
@@ -232,8 +247,12 @@ class _$PlanImpl extends _Plan {
   }
 
   @override
+  @JsonKey(name: 'apple_product_id')
+  final String? appleProductId;
+
+  @override
   String toString() {
-    return 'Plan(id: $id, name: $name, description: $description, price: $price, duration: $duration, planType: $planType, features: $features)';
+    return 'Plan(id: $id, name: $name, description: $description, price: $price, duration: $duration, planType: $planType, features: $features, appleProductId: $appleProductId)';
   }
 
   @override
@@ -250,7 +269,9 @@ class _$PlanImpl extends _Plan {
                 other.duration == duration) &&
             (identical(other.planType, planType) ||
                 other.planType == planType) &&
-            const DeepCollectionEquality().equals(other._features, _features));
+            const DeepCollectionEquality().equals(other._features, _features) &&
+            (identical(other.appleProductId, appleProductId) ||
+                other.appleProductId == appleProductId));
   }
 
   @JsonKey(ignore: true)
@@ -264,6 +285,7 @@ class _$PlanImpl extends _Plan {
     duration,
     planType,
     const DeepCollectionEquality().hash(_features),
+    appleProductId,
   );
 
   @JsonKey(ignore: true)
@@ -287,6 +309,7 @@ abstract class _Plan extends Plan {
     @JsonKey(fromJson: _durationFromJson) required final int duration,
     @JsonKey(name: 'plan_type') required final String planType,
     @JsonKey(fromJson: _featuresFromJson) final List<String> features,
+    @JsonKey(name: 'apple_product_id') final String? appleProductId,
   }) = _$PlanImpl;
   const _Plan._() : super._();
 
@@ -311,6 +334,9 @@ abstract class _Plan extends Plan {
   @override // 'monthly', 'yearly', 'popular'
   @JsonKey(fromJson: _featuresFromJson)
   List<String> get features;
+  @override
+  @JsonKey(name: 'apple_product_id')
+  String? get appleProductId;
   @override
   @JsonKey(ignore: true)
   _$$PlanImplCopyWith<_$PlanImpl> get copyWith =>

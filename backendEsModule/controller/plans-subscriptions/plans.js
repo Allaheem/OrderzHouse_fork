@@ -42,7 +42,7 @@ export const createPlan = async (req, res) => {
   if (req.token.role !== 1)
     return res.status(403).json({ success: false, message: "Admin only" });
 
-  const { name, price, duration, description, features, plan_type } = req.body;
+  const { name, price, duration, description, features, plan_type, apple_product_id } = req.body;
 
   if (!name || !price || !duration)
     return res.status(400).json({
@@ -50,10 +50,15 @@ export const createPlan = async (req, res) => {
       message: "Missing required fields: name, price, duration",
     });
 
+  const applePid =
+    apple_product_id != null && String(apple_product_id).trim() !== ""
+      ? String(apple_product_id).trim()
+      : null;
+
   try {
     const query = `
-      INSERT INTO plans (name, price, duration, description, features, plan_type)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO plans (name, price, duration, description, features, plan_type, apple_product_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
     const { rows } = await pool.query(query, [
@@ -63,6 +68,7 @@ export const createPlan = async (req, res) => {
       description || "",
       features || [],
       plan_type || "monthly",
+      applePid,
     ]);
 
     res.status(201).json({
@@ -83,7 +89,12 @@ export const editPlan = async (req, res) => {
     return res.status(403).json({ success: false, message: "Admin only" });
 
   const { id } = req.params;
-  const { name, price, duration, description, features, plan_type } = req.body;
+  const { name, price, duration, description, features, plan_type, apple_product_id } = req.body;
+
+  const applePid =
+    apple_product_id != null && String(apple_product_id).trim() !== ""
+      ? String(apple_product_id).trim()
+      : null;
 
   try {
     const query = `
@@ -94,8 +105,9 @@ export const editPlan = async (req, res) => {
         duration = $3,
         description = $4,
         features = $5,
-        plan_type = $6
-      WHERE id = $7
+        plan_type = $6,
+        apple_product_id = $7
+      WHERE id = $8
       RETURNING *;
     `;
     const { rows } = await pool.query(query, [
@@ -105,6 +117,7 @@ export const editPlan = async (req, res) => {
       description || "",
       features || [],
       plan_type || "monthly",
+      applePid,
       id,
     ]);
 

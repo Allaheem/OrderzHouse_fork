@@ -12,12 +12,15 @@ export const getAllSubscriptions = async (req, res) => {
          s.id,
          s.status,
          s.created_at,
-         u.id AS user_id,
-         u.name AS user_name,
+         s.payment_source,
+         s.apple_original_transaction_id,
+         s.freelancer_id AS user_id,
+         (u.first_name || ' ' || u.last_name) AS user_name,
          u.email AS user_email,
+         u.role_id AS user_role_id,
          p.name AS plan_name
        FROM subscriptions s
-       LEFT JOIN users u ON s.user_id = u.id
+       LEFT JOIN users u ON s.freelancer_id = u.id
        LEFT JOIN plans p ON s.plan_id = p.id
        ORDER BY s.created_at DESC`
     );
