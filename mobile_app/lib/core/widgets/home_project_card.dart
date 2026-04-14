@@ -7,6 +7,7 @@ import '../theme/app_text_styles.dart';
 import '../config/app_config.dart';
 import '../models/project.dart';
 import '../../l10n/app_localizations.dart';
+import '../ui/screenutil_helpers.dart';
 
 /// Premium horizontal project card for home dashboard
 class HomeProjectCard extends StatelessWidget {
@@ -22,94 +23,180 @@ class HomeProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // Debug log for price display (temporary)
-    _debugPriceDisplay();
+    final cardW = AppContentLayout.homeProjectCardWidth(context);
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 280,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.shadowColorLight,
-              blurRadius: 12,
-              offset: Offset(0, 4),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxH = constraints.maxHeight;
+          final tightHeight = maxH.isFinite;
+
+          final imageHeight = tightHeight
+              ? (maxH * 0.42).clamp(64.0, 100.0)
+              : 100.0;
+
+          final imageSection = ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image/Cover
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-              ),
-              child:
-                  project.coverPic != null &&
-                      project.coverPic!.isNotEmpty &&
-                      AppConfig.baseUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: project.coverPic!.startsWith('http')
-                          ? project.coverPic!
-                          : '${AppConfig.baseUrl}${project.coverPic}',
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => _buildPlaceholder(),
-                    )
-                  : _buildPlaceholder(),
+            child:
+                project.coverPic != null &&
+                    project.coverPic!.isNotEmpty &&
+                    AppConfig.baseUrl.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: project.coverPic!.startsWith('http')
+                        ? project.coverPic!
+                        : '${AppConfig.baseUrl}${project.coverPic}',
+                    height: imageHeight,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorWidget: (context, url, error) =>
+                        _buildPlaceholder(imageHeight),
+                  )
+                : _buildPlaceholder(imageHeight),
+          );
+
+          return Container(
+            width: cardW,
+            height: tightHeight ? maxH : null,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.shadowColorLight,
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  Text(
-                    project.title,
-                    style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  // Budget + Type chips row
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
+            child: tightHeight
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildChip(project.budgetDisplay, AppColors.accentOrange),
-                      _buildChip(_getTypeDisplay(l10n), AppColors.info),
-                      if (_isUrgent()) _buildChip(l10n.urgent, AppColors.error),
+                      SizedBox(
+                        height: imageHeight,
+                        width: double.infinity,
+                        child: imageSection,
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.md,
+                                  AppSpacing.sm,
+                                  AppSpacing.md,
+                                  0,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Text(
+                                    project.title,
+                                    style: AppTextStyles.titleSmall.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.md,
+                                0,
+                                AppSpacing.md,
+                                AppSpacing.md,
+                              ),
+                              child: _buildChipsRow(l10n),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: imageHeight,
+                        width: double.infinity,
+                        child: imageSection,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.sm,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              project.title,
+                              style: AppTextStyles.titleSmall.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            _buildChipsRow(l10n),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder(double height) {
     return Container(
-      height: 100,
+      height: height,
       color: AppColors.surfaceVariant,
       child: const Center(
         child: Icon(
           Icons.work_outline_rounded,
           color: AppColors.iconGray,
           size: 40,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChipsRow(AppLocalizations l10n) {
+    return SizedBox(
+      height: 30,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              _buildChip(project.budgetDisplay, AppColors.accentOrange),
+              const SizedBox(width: AppSpacing.xs),
+              _buildChip(_getTypeDisplay(l10n), AppColors.info),
+              if (_isUrgent()) ...[
+                const SizedBox(width: AppSpacing.xs),
+                _buildChip(l10n.urgent, AppColors.error),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -133,21 +220,10 @@ class HomeProjectCard extends StatelessWidget {
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
-  }
-
-  // Removed _getBudgetDisplay() - now using project.budgetDisplay extension
-  // Debug log for price display (temporary - remove after verification)
-  void _debugPriceDisplay() {
-    print(
-      '🔍 [HomeProjectCard] Project ID: ${project.id}, Title: ${project.title}',
-    );
-    print(
-      '   Raw fields: budget=${project.budget}, budgetMin=${project.budgetMin}, budgetMax=${project.budgetMax}, hourlyRate=${project.hourlyRate}',
-    );
-    print('   Project type: ${project.projectType}');
-    print('   Final display text: ${project.budgetDisplay}');
   }
 
   String _getTypeDisplay(AppLocalizations l10n) {
@@ -164,8 +240,6 @@ class HomeProjectCard extends StatelessWidget {
   }
 
   bool _isUrgent() {
-    // Check if project is urgent based on duration or deadline
-    // For now, simple heuristic: if durationDays < 5, it's urgent
     return (project.durationDays ?? 99) < 5;
   }
 }

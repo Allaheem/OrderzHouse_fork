@@ -1,6 +1,7 @@
 // ??? ????????
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../ui/screenutil_helpers.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_text_styles.dart';
 
@@ -21,7 +22,7 @@ class QuickActionsRow extends StatelessWidget {
           children: [
             for (int i = 0; i < actions.length; i++) ...[
               if (i > 0) const SizedBox(width: AppSpacing.sm),
-              _buildActionItem(actions[i]),
+              _buildActionItem(context, actions[i]),
             ],
           ],
         ),
@@ -29,12 +30,13 @@ class QuickActionsRow extends StatelessWidget {
     );
   }
 
-  Widget _buildActionItem(QuickAction action) {
+  Widget _buildActionItem(BuildContext context, QuickAction action) {
     return SizedBox(
-      width: 64,
+      width: AppContentLayout.quickActionItemWidth(context),
       child: GestureDetector(
         onTap: action.onTap,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 56,
@@ -58,10 +60,11 @@ class QuickActionsRow extends StatelessWidget {
               action.label,
               style: AppTextStyles.bodySmall.copyWith(
                 color: AppColors.textPrimary,
-                fontSize: 11,
+                fontSize: 10,
+                height: 1.2,
               ),
               textAlign: TextAlign.center,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],

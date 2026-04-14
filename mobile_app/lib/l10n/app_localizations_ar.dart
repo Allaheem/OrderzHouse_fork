@@ -158,6 +158,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get typeDeleteToConfirm => 'اكتب DELETE للتأكيد';
 
   @override
+  String get deleteAccountInputHint =>
+      'اضغط هنا واكتب DELETE بالإنجليزي (أحرف كبيرة)';
+
+  @override
+  String get deleteAccountMismatchHint =>
+      'الزر يبقى معطّل حتى يصبح الحقل بالضبط الكلمة الإنجليزية DELETE فقط (بدون حروف أو مسافات زيادة).';
+
+  @override
   String get profile => 'الملف الشخصي';
 
   @override
@@ -454,6 +462,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get somethingWentWrong => 'حدث خطأ ما';
+
+  @override
+  String get supportEmailDraftCopied =>
+      'تعذر فتح تطبيق البريد. تم نسخ رسالتك — الصقها في البريد أو Gmail وأرسلها إلى info@battechno.com';
 
   @override
   String get tryAgain => 'حاول مرة أخرى';

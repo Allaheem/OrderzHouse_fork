@@ -160,6 +160,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get typeDeleteToConfirm => 'Type DELETE to confirm';
 
   @override
+  String get deleteAccountInputHint =>
+      'Tap here and type DELETE (English, all caps)';
+
+  @override
+  String get deleteAccountMismatchHint =>
+      'The button stays off until this field is exactly the English word DELETE (no extra letters or spaces).';
+
+  @override
   String get profile => 'Profile';
 
   @override
@@ -456,6 +464,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get somethingWentWrong => 'Something went wrong';
+
+  @override
+  String get supportEmailDraftCopied =>
+      'Could not open an email app. Your message was copied — paste it into Mail or another email app and send to info@battechno.com.';
 
   @override
   String get tryAgain => 'Try again';

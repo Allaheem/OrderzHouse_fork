@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/profile_field_tile.dart';
 import '../../../../core/widgets/gradient_button.dart';
@@ -339,16 +340,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            // Custom Header
-            SafeArea(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppContentLayout.contentMaxWidth(context),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Custom Header
+                SafeArea(
               bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
+                child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppContentLayout.bodyHorizontalPadding(context),
                   vertical: 12,
                 ),
                 child: Row(
@@ -391,12 +397,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             ),
 
-            // Scrollable content
+            // Scrollable content (align top: avoids huge empty gap above bottom bar on tablets)
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppContentLayout.bodyHorizontalPadding(context),
+                ),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     const SizedBox(height: 24),
 
                     // Avatar Section
@@ -503,7 +515,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     ),
 
                     const SizedBox(height: 24),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -511,8 +524,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             // Bottom Buttons
             Container(
               padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
+                left: AppContentLayout.bodyHorizontalPadding(context),
+                right: AppContentLayout.bodyHorizontalPadding(context),
                 top: 16,
                 bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
               ),
@@ -571,7 +584,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
               ),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

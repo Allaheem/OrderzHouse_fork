@@ -57,6 +57,8 @@
   "confirmDeleteAccount": "هل أنت متأكد أنك تريد حذف حسابك؟",
   "accountDeleted": "تم حذف الحساب بنجاح",
   "typeDeleteToConfirm": "اكتب DELETE للتأكيد",
+  "deleteAccountInputHint": "اضغط هنا واكتب DELETE بالإنجليزي (أحرف كبيرة)",
+  "deleteAccountMismatchHint": "الزر يبقى معطّل حتى يصبح الحقل بالضبط الكلمة الإنجليزية DELETE فقط (بدون حروف أو مسافات زيادة).",
   
   "profile": "الملف الشخصي",
   "editProfile": "تعديل الملف الشخصي",
@@ -162,6 +164,7 @@
   "noDataFound": "لا توجد بيانات",
   "noResultsFound": "لا توجد نتائج",
   "somethingWentWrong": "حدث خطأ ما",
+  "supportEmailDraftCopied": "تعذر فتح تطبيق البريد. تم نسخ رسالتك — الصقها في البريد أو Gmail وأرسلها إلى info@battechno.com",
   "tryAgain": "حاول مرة أخرى",
   "noInternetConnection": "لا يوجد اتصال بالإنترنت",
   "connectionError": "خطأ في الاتصال",

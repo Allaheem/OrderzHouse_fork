@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/models/user.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -38,7 +39,12 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
           child: Scaffold(
             backgroundColor: AppColors.background,
             body: SafeArea(
-              child: Column(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: AppContentLayout.contentMaxWidth(context),
+                  ),
+                  child: Column(
                 children: [
                   // Header
                   Padding(
@@ -125,6 +131,8 @@ class _AcceptTermsScreenState extends ConsumerState<AcceptTermsScreen> {
                     ),
                   ),
                 ],
+                  ),
+                ),
               ),
             ),
           ),

@@ -144,7 +144,7 @@ class DashboardScreen extends ConsumerWidget {
                                   color: Colors.red,
                                   shape: BoxShape.circle,
                                 ),
-                                constraints: const BoxConstraints(
+                                constraints: BoxConstraints(
                                   minWidth: 16,
                                   minHeight: 16,
                                 ),
@@ -279,7 +279,7 @@ class DashboardScreen extends ConsumerWidget {
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return ConstrainedBox(
-                  constraints: const BoxConstraints(
+                  constraints: BoxConstraints(
                     minHeight: 140,
                     maxHeight: 200,
                   ),

@@ -666,7 +666,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                           );
                         },
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: BoxConstraints(),
                       ),
                   ],
                 ),

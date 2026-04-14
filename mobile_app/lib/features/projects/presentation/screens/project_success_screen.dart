@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/whatsapp_launcher.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -203,9 +204,14 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: AppSpacing.xl),
@@ -613,6 +619,8 @@ class _ProjectSuccessScreenState extends ConsumerState<ProjectSuccessScreen> {
                 ),
               ],
             ],
+              ),
+            ),
           ),
         ),
       ),

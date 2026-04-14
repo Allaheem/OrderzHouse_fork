@@ -1,8 +1,10 @@
 // ??? ????????
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -113,6 +115,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(resetPasswordProvider);
     final l10n = AppLocalizations.of(context)!;
+    final heroD = 100.r.clamp(88.0, 112.0);
+    final heroIcon = 50.r.clamp(44.0, 56.0);
 
     return PopScope(
       canPop: false,
@@ -124,7 +128,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background,
         body: SafeArea(
-          child: Column(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppContentLayout.contentMaxWidth(context),
+              ),
+              child: Column(
             children: [
               // Top section with back button
               Padding(
@@ -153,16 +162,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         const SizedBox(height: AppSpacing.xl),
                         // Icon circle
                         Container(
-                          width: 100,
-                          height: 100,
+                          width: heroD,
+                          height: heroD,
                           decoration: const BoxDecoration(
                             color: Color(0xFFFFF0E6),
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.lock_outline_rounded,
-                            size: 50,
-                            color: Color(0xFFFB923C),
+                            size: heroIcon,
+                            color: const Color(0xFFFB923C),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
@@ -260,6 +269,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 ),
               ),
             ],
+              ),
+            ),
           ),
         ),
       ),

@@ -1,6 +1,8 @@
 // ??? ????????
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/ui/screenutil_helpers.dart' show AppContentLayout;
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_radius.dart';
@@ -106,61 +108,76 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 // Dots indicator
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  child: _DotsIndicator(
-                    currentPage: _currentPage,
-                    pageCount: pages.length,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: AppContentLayout.contentMaxWidth(context),
+                      ),
+                      child: _DotsIndicator(
+                        currentPage: _currentPage,
+                        pageCount: pages.length,
+                      ),
+                    ),
                   ),
                 ),
 
                 // Bottom buttons
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Register button (filled)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: PrimaryGradientButton(
-                          onPressed: () {
-                            context.go('/register');
-                          },
-                          label: l10n.register,
-                          height: 56,
-                          borderRadius: AppRadius.lg,
-                        ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: AppContentLayout.contentMaxWidth(context),
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      // Sign in button (outlined)
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            context.go('/login');
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFFB923C),
-                            side: const BorderSide(
-                              color: Color(0xFFFB923C),
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.lg),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Register button (filled)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: PrimaryGradientButton(
+                              onPressed: () {
+                                context.go('/register');
+                              },
+                              label: l10n.register,
+                              height: 56,
+                              borderRadius: AppRadius.lg,
                             ),
                           ),
-                          child: Text(
-                            l10n.signIn,
-                            style: AppTextStyles.labelLarge.copyWith(
-                              color: const Color(0xFFFB923C),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                          const SizedBox(height: AppSpacing.md),
+                          // Sign in button (outlined)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                context.go('/login');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFFB923C),
+                                side: const BorderSide(
+                                  color: Color(0xFFFB923C),
+                                  width: 2,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.lg,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                l10n.signIn,
+                                style: AppTextStyles.labelLarge.copyWith(
+                                  color: const Color(0xFFFB923C),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ],
@@ -227,12 +244,13 @@ class _OnboardingPageContentState extends State<_OnboardingPageContent>
     // Ensure pageIndex is within bounds
     final safeIndex = pageIndex.clamp(0, icons.length - 1);
 
+    final iconSize = 140.r.clamp(110.0, 180.0);
     return Container(
       color: Colors.transparent,
       child: Center(
         child: Icon(
           icons[safeIndex],
-          size: 140,
+          size: iconSize,
           color: Colors.white.withOpacity(0.9),
         ),
       ),
@@ -241,86 +259,94 @@ class _OnboardingPageContentState extends State<_OnboardingPageContent>
 
   @override
   Widget build(BuildContext context) {
+    final illustrationHeight = 320.h.clamp(260.0, 400.0);
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: AppSpacing.xl),
-            // Illustration card with gradient
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                width: double.infinity,
-                height: 320,
-                margin: const EdgeInsets.only(bottom: AppSpacing.xl),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(32),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFFB923C), Color(0xFFEF4444)],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(
-                        255,
-                        251,
-                        119,
-                        141,
-                      ).withOpacity(0.3),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                      spreadRadius: 0,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppContentLayout.contentMaxWidth(context),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(height: AppSpacing.xl),
+                // Illustration card with gradient
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    width: double.infinity,
+                    height: illustrationHeight,
+                    margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFFB923C), Color(0xFFEF4444)],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color.fromARGB(
+                            255,
+                            251,
+                            119,
+                            141,
+                          ).withOpacity(0.3),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                          spreadRadius: 0,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(32),
-                  child: _buildIllustrationPlaceholder(widget.pageIndex),
-                ),
-              ),
-            ),
-
-            // Title with animation
-            SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  widget.page.title,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.displayMedium.copyWith(
-                    color: const Color(0xFF1A1A1A),
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: _buildIllustrationPlaceholder(widget.pageIndex),
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: AppSpacing.lg),
-
-            // Description with animation
-            SlideTransition(
-              position: _slideAnimation,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  widget.page.description,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: const Color(0xFF6B7280),
-                    height: 1.6,
-                    letterSpacing: 0.2,
+                // Title with animation
+                SlideTransition(
+                  position: _slideAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Text(
+                      widget.page.title,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.displayMedium.copyWith(
+                        color: const Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: AppSpacing.xxl),
-          ],
+                const SizedBox(height: AppSpacing.lg),
+
+                // Description with animation
+                SlideTransition(
+                  position: _slideAnimation,
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: Text(
+                      widget.page.description,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        color: const Color(0xFF6B7280),
+                        height: 1.6,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xxl),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -340,12 +366,15 @@ class _DotsIndicator extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(pageCount, (index) {
         final isActive = index == currentPage;
+        final activeW = 24.w.clamp(20.0, 32.0);
+        final inactiveW = 8.w.clamp(6.0, 12.0);
+        final dotH = 8.h.clamp(7.0, 10.0);
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 24 : 8,
-          height: 8,
+          margin: EdgeInsets.symmetric(horizontal: 4.w),
+          width: isActive ? activeW : inactiveW,
+          height: dotH,
           decoration: BoxDecoration(
             color: isActive
                 ? const Color(0xFFFB923C)

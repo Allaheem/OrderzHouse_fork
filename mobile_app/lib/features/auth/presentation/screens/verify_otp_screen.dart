@@ -8,7 +8,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../providers/auth_provider.dart';
 
 class VerifyOtpScreen extends ConsumerStatefulWidget {
@@ -147,6 +149,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final l10n = AppLocalizations.of(context)!;
+    final heroD = 100.r.clamp(88.0, 112.0);
+    final heroIcon = 50.r.clamp(44.0, 56.0);
 
     return PopScope(
       canPop: false, // Handle back button ourselves
@@ -158,7 +162,12 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
       child: Scaffold(
         backgroundColor: AppColors.background, // Pure white
         body: SafeArea(
-          child: Column(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: AppContentLayout.contentMaxWidth(context),
+              ),
+              child: Column(
             children: [
               // Top section with back button and progress indicator
               Padding(
@@ -177,14 +186,14 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     // Progress indicator (3 bars)
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _ProgressBar(isActive: true),
-                        SizedBox(width: 8),
-                        _ProgressBar(isActive: true),
-                        SizedBox(width: 8),
-                        _ProgressBar(isActive: false),
+                        const _ProgressBar(isActive: true),
+                        SizedBox(width: 8.w),
+                        const _ProgressBar(isActive: true),
+                        SizedBox(width: 8.w),
+                        const _ProgressBar(isActive: false),
                       ],
                     ),
                   ],
@@ -202,15 +211,15 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                       const SizedBox(height: AppSpacing.xxl),
                       // Center circle with icon
                       Container(
-                        width: 100,
-                        height: 100,
+                        width: heroD,
+                        height: heroD,
                         decoration: const BoxDecoration(
                           color: Color(0xFFF8E9E9), // Light pink
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.send_rounded,
-                          size: 50,
+                          size: heroIcon,
                           color: AppColors.primary, // Coral-red
                         ),
                       ),
@@ -300,6 +309,8 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
                 ),
               ),
             ],
+              ),
+            ),
           ),
         ),
       ),
@@ -315,8 +326,9 @@ class _ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = isActive ? 40.w.clamp(36.0, 48.0) : 20.w.clamp(18.0, 28.0);
     return Container(
-      width: isActive ? 40 : 20,
+      width: w,
       height: 4,
       decoration: BoxDecoration(
         color: isActive ? AppColors.primary : AppColors.border,
@@ -340,9 +352,10 @@ class _OtpInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final box = 50.w.clamp(48.0, 58.0);
     return Container(
-      width: 50,
-      height: 50,
+      width: box,
+      height: box,
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,

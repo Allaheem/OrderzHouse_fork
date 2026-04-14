@@ -2,7 +2,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -114,69 +116,81 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final emailIconSize = 64.r.clamp(56.0, 80.0);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Verify Email')),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.email, size: 64, color: AppColors.primary),
-              const SizedBox(height: AppSpacing.lg),
-              Text('Verify Your Email', style: AppTextStyles.headlineLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'We sent a verification code to\n${widget.email}',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.email,
+                    size: emailIconSize,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('Verify Your Email', style: AppTextStyles.headlineLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'We sent a verification code to\n${widget.email}',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Check your spam folder if you don\'t see it.',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  AppTextField(
+                    label: 'Enter OTP',
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    validator: Validators.required,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  PrimaryGradientButton(
+                    label: 'Verify',
+                    onPressed: authState.isLoading ? null : _handleVerify,
+                    isLoading: authState.isLoading,
+                    width: double.infinity,
+                    height: 54,
+                    borderRadius: 999,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextButton(
+                    onPressed: (_resendCooldownSeconds > 0 || _isResending)
+                        ? null
+                        : _handleResend,
+                    child: _isResending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            _resendCooldownSeconds > 0
+                                ? 'Resend code ($_resendCooldownSeconds s)'
+                                : 'Resend code',
+                          ),
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                'Check your spam folder if you don\'t see it.',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              AppTextField(
-                label: 'Enter OTP',
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                validator: Validators.required,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              PrimaryGradientButton(
-                label: 'Verify',
-                onPressed: authState.isLoading ? null : _handleVerify,
-                isLoading: authState.isLoading,
-                width: double.infinity,
-                height: 54,
-                borderRadius: 999,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextButton(
-                onPressed: (_resendCooldownSeconds > 0 || _isResending)
-                    ? null
-                    : _handleResend,
-                child: _isResending
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        _resendCooldownSeconds > 0
-                            ? 'Resend code ($_resendCooldownSeconds s)'
-                            : 'Resend code',
-                      ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

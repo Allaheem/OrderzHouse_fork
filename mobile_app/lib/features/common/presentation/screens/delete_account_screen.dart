@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -71,7 +72,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     setState(() => _isDeleting = true);
 
     try {
-      print('🔍 [DeleteAccountScreen] Calling deleteAccount API...');
       final success = await ref
           .read(authStateProvider.notifier)
           .deleteAccount(reason: 'Deleted by user via app');
@@ -79,7 +79,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       if (!mounted) return;
 
       if (success) {
-        print('✅ [DeleteAccountScreen] Account deleted successfully');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -92,7 +91,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           context.go('/login');
         }
       } else {
-        print('❌ [DeleteAccountScreen] Failed to delete account');
         setState(() => _isDeleting = false);
         final error = ref.read(authStateProvider).error;
         if (mounted) {
@@ -105,7 +103,6 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
         }
       }
     } catch (e) {
-      print('❌ [DeleteAccountScreen] Exception: $e');
       if (mounted) {
         setState(() => _isDeleting = false);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -125,13 +122,18 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            AppHeader(title: l10n.deleteAccount, onBack: _handleBack),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Column(
+              children: [
+                // Header
+                AppHeader(title: l10n.deleteAccount, onBack: _handleBack),
 
-            // Content
-            Expanded(
+                // Content
+                Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
@@ -168,6 +170,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
               ),
             ),
           ],
+            ),
+          ),
         ),
       ),
     );
@@ -365,7 +369,7 @@ class _ConfirmationCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
-              hintText: 'DELETE',
+              hintText: l10n.deleteAccountInputHint,
               hintStyle: AppTextStyles.bodyLarge.copyWith(
                 color: AppColors.textTertiary,
               ),
@@ -391,6 +395,17 @@ class _ConfirmationCard extends StatelessWidget {
             ),
             textCapitalization: TextCapitalization.characters,
           ),
+          if (controller.text.trim().isNotEmpty &&
+              controller.text.trim().toUpperCase() != 'DELETE') ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l10n.deleteAccountMismatchHint,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.error,
+                height: 1.35,
+              ),
+            ),
+          ],
         ],
       ),
     );

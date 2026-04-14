@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -64,44 +65,51 @@ class TermsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded, size: 28),
-                    color: AppColors.accentOrange,
-                    onPressed: () => _handleBack(context),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
-                  Expanded(
-                    child: Text(
-                      l10n.termsAndConditions,
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left_rounded, size: 28),
+                        color: AppColors.accentOrange,
+                        onPressed: () => _handleBack(context),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
+                      Expanded(
+                        child: Text(
+                          l10n.termsAndConditions,
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
                   ),
-                  const SizedBox(width: 48),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: isRtl
+                      ? Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: scrollContent,
+                        )
+                      : scrollContent,
+                ),
+              ],
             ),
-            Expanded(
-              child: isRtl
-                  ? Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: scrollContent,
-                    )
-                  : scrollContent,
-            ),
-          ],
+          ),
         ),
       ),
     );

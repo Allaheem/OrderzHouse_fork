@@ -22,6 +22,7 @@ import '../../../common/presentation/providers/my_projects_filters_provider.dart
 import '../../../common/presentation/widgets/projects_filter_bottom_sheet.dart';
 import '../widgets/freelancer_project_card.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 
 class FreelancerProjectsScreen extends ConsumerStatefulWidget {
   const FreelancerProjectsScreen({super.key});
@@ -485,13 +486,15 @@ class _FreelancerProjectsScreenState
 
   // 4) Projects Grid (clean list - actions moved to Project Details)
   Widget _buildProjectsGrid(BuildContext context, List<Project> projects) {
+    final n = AppContentLayout.myProjectsCrossAxisCount(context);
+    final ar = AppContentLayout.myProjectsGridChildAspectRatio(context, n);
     return GridView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: n,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.75, // Matching Explore grid
+        childAspectRatio: ar,
       ),
       itemCount: projects.length,
       itemBuilder: (context, index) {
@@ -545,13 +548,15 @@ class _LoadingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final n = AppContentLayout.myProjectsCrossAxisCount(context);
+    final ar = AppContentLayout.myProjectsGridChildAspectRatio(context, n);
     return GridView.builder(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: n,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 0.75, // Matching Explore grid
+        childAspectRatio: ar,
       ),
       itemCount: 6,
       itemBuilder: (context, index) {

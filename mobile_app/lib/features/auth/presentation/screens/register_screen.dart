@@ -6,7 +6,9 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/utils/validators.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/models/category.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../providers/auth_provider.dart';
@@ -274,223 +276,264 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final l10n = AppLocalizations.of(context)!;
+    final heroD = 100.r.clamp(88.0, 112.0);
+    final heroIcon = 50.r.clamp(44.0, 56.0);
 
     return Scaffold(
       backgroundColor: AppColors.background, // Pure white
       body: SafeArea(
-        child: Column(
-          children: [
-            // Step indicator at top
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: SizedBox(
+              width: double.infinity,
               child: Column(
                 children: [
-                  // Step text (dynamic based on role)
-                  Text(
-                    'Step ${_currentStep + 1} of $_totalSteps',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: const Color(0xFF8A8A95), // Muted gray
+                  // Step indicator at top
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        // Step text (dynamic based on role)
+                        Text(
+                          'Step ${_currentStep + 1} of $_totalSteps',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: const Color(0xFF8A8A95), // Muted gray
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        // Progress bars (dynamic count)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(_totalSteps, (index) {
+                            final isActive = index <= _currentStep;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Container(
+                                width: isActive ? 40 : 20,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? const Color(0xFFFB923C)
+                                      : const Color(
+                                          0xFFE8E8EE,
+                                        ), // Orange active, light gray inactive
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  // Progress bars (dynamic count)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_totalSteps, (index) {
-                      final isActive = index <= _currentStep;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          width: isActive ? 40 : 20,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: isActive
-                                ? const Color(0xFFFB923C)
-                                : const Color(
-                                    0xFFE8E8EE,
-                                  ), // Orange active, light gray inactive
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ],
-              ),
-            ),
-            // Form content (scrollable)
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: AppSpacing.xl),
-                      // Top circle with icon
-                      Center(
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(
-                              255,
-                              255,
-                              215,
-                              182,
-                            ), // Light pink
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.send_rounded,
-                            size: 50,
-                            color: Color(0xFFEF4444), // Coral-red
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      // Title
-                      Text(
-                        l10n.signUp,
-                        style: AppTextStyles.displayMedium.copyWith(
-                          color: const Color(0xFF0B0B0F), // Near-black primary
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Subtitle
-                      Text(
-                        _getStepSubtitle(l10n),
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: const Color(0xFF8A8A95), // Neutral gray
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.xxl),
-                      // Step content
-                      _buildStepContent(),
-                      const SizedBox(height: AppSpacing.xl),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Bottom buttons (pinned)
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // "Already have an account? Sign In" link
-                  InkWell(
-                    onTap: () {
-                      context.go('/login');
-                    },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
+                  // Form content (scrollable)
+                  Expanded(
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
+                        horizontal: AppSpacing.lg,
                       ),
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            'Already have an account? ',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: const Color(0xFF8A8A95), // Neutral gray
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: AppSpacing.xl),
+                            // Top circle with icon
+                            Center(
+                              child: Container(
+                                width: heroD,
+                                height: heroD,
+                                decoration: BoxDecoration(
+                                  color: const Color.fromARGB(
+                                    255,
+                                    255,
+                                    215,
+                                    182,
+                                  ), // Light pink
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.send_rounded,
+                                  size: heroIcon,
+                                  color: const Color(0xFFEF4444), // Coral-red
+                                ),
+                              ),
                             ),
-                          ),
-                          Text(
-                            l10n.login,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: const Color(0xFFFB923C), // Red accent
-                              fontWeight: FontWeight.w600,
+                            const SizedBox(height: AppSpacing.xl),
+                            // Title
+                            Text(
+                              l10n.signUp,
+                              style: AppTextStyles.displayMedium.copyWith(
+                                color: const Color(
+                                  0xFF0B0B0F,
+                                ), // Near-black primary
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: AppSpacing.sm),
+                            // Subtitle
+                            Text(
+                              _getStepSubtitle(l10n),
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: const Color(0xFF8A8A95), // Neutral gray
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.xxl),
+                            // Step content
+                            _buildStepContent(),
+                            const SizedBox(height: AppSpacing.xl),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  // Buttons row
-                  Row(
-                    children: [
-                      // Back button (show on steps > 0)
-                      if (_currentStep > 0)
-                        Expanded(
-                          child: SizedBox(
-                            height: 52,
-                            child: OutlinedButton(
-                              onPressed: _previousStep,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(
-                                  0xFFFB923C,
-                                ), // Red accent
-                                side: const BorderSide(
-                                  color: Color(0xFFFB923C), // Orange accent
-                                  width: 2,
+                  // Bottom buttons (pinned)
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // "Already have an account? Sign In" link
+                        InkWell(
+                          onTap: () {
+                            context.go('/login');
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  'Already have an account? ',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: const Color(
+                                      0xFF8A8A95,
+                                    ), // Neutral gray
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(26),
+                                Text(
+                                  l10n.login,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: const Color(
+                                      0xFFFB923C,
+                                    ), // Red accent
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                l10n.back,
-                                style: AppTextStyles.labelLarge.copyWith(
-                                  color: const Color(0xFFFB923C), // Red accent
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              ],
                             ),
                           ),
                         ),
-                      if (_currentStep > 0)
-                        const SizedBox(width: AppSpacing.md),
-                      // Next/Sign Up button
-                      Expanded(
-                        flex: _currentStep > 0 ? 1 : 1,
-                        child: GradientButton(
-                          onPressed: authState.isLoading
-                              ? null
-                              : (_currentStep == _totalSteps - 1
-                                    ? _handleRegister
-                                    : _nextStep),
-                          label: _currentStep == _totalSteps - 1
-                              ? l10n.signUp
-                              : l10n.next,
-                          isLoading: authState.isLoading,
-                          height: 52,
-                          borderRadius: 30, // Pill shape
+                        const SizedBox(height: AppSpacing.md),
+                        // Buttons row
+                        Row(
+                          children: [
+                            // Back button (show on steps > 0)
+                            if (_currentStep > 0)
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: _previousStep,
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFFFB923C),
+                                    minimumSize: const Size(0, 52),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.md,
+                                      vertical: 12,
+                                    ),
+                                    side: const BorderSide(
+                                      color: Color(0xFFFB923C),
+                                      width: 2,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(26),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.arrow_back_ios_rounded,
+                                        size: 16,
+                                        color: Color(0xFFFB923C),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Flexible(
+                                        child: Text(
+                                          l10n.back,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          textAlign: TextAlign.center,
+                                          style: AppTextStyles.labelLarge
+                                              .copyWith(
+                                                color: const Color(0xFFFB923C),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            if (_currentStep > 0)
+                              const SizedBox(width: AppSpacing.md),
+                            // Next/Sign Up button
+                            Expanded(
+                              flex: _currentStep > 0 ? 1 : 1,
+                              child: GradientButton(
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : (_currentStep == _totalSteps - 1
+                                          ? _handleRegister
+                                          : _nextStep),
+                                label: _currentStep == _totalSteps - 1
+                                    ? l10n.signUp
+                                    : l10n.next,
+                                isLoading: authState.isLoading,
+                                height: 52,
+                                borderRadius: 30, // Pill shape
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -805,12 +848,13 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = 28.r.clamp(24.0, 32.0);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(17),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 120, maxHeight: 130),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        // Do not cap maxHeight: parent Row can pass ~100px on wide layouts; min>max caused overflow.
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.white, // White background
           borderRadius: BorderRadius.circular(17),
@@ -847,7 +891,7 @@ class _RoleCard extends StatelessWidget {
             // Icon
             Icon(
               icon,
-              size: 28,
+              size: iconSize,
               color: isSelected
                   ? const Color(0xFFFB923C)
                   : const Color(
@@ -859,7 +903,6 @@ class _RoleCard extends StatelessWidget {
             Text(
               role,
               style: AppTextStyles.bodyMedium.copyWith(
-                fontSize: 14.5,
                 color: isSelected
                     ? const Color(0xFF0B0B0F)
                     : const Color(

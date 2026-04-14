@@ -24,73 +24,72 @@ class AppHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final safeTop = MediaQuery.of(context).padding.top;
-
+    // One SafeArea for the status bar; do not also reserve [padding.top] inside a
+    // fixed height (breaks when a parent SafeArea zeros out top padding — row gets ~40px).
     return SafeArea(
       bottom: false,
-      child: Container(
-        height: 56 + safeTop,
-        padding: EdgeInsets.only(top: safeTop),
+      child: Material(
         color: AppColors.background,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              // Back button in circle
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.borderLight, width: 1),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadowColorLight,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: SizedBox(
+            height: kToolbarHeight,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Back button in circle
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.borderLight, width: 1),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadowColorLight,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                    color: AppColors.textPrimary,
+                    onPressed:
+                        onBack ??
+                        () {
+                          // Safe back navigation
+                          if (GoRouter.of(context).canPop()) {
+                            context.pop();
+                          } else {
+                            // Fallback: navigate to profile
+                            context.go('/client/profile');
+                          }
+                        },
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.chevron_left_rounded, size: 22),
-                  color: AppColors.textPrimary,
-                  onPressed:
-                      onBack ??
-                      () {
-                        // Safe back navigation
-                        if (GoRouter.of(context).canPop()) {
-                          context.pop();
-                        } else {
-                          // Fallback: navigate to profile
-                          context.go('/client/profile');
-                        }
-                      },
-                  padding: EdgeInsets.zero,
+
+                // Spacer to center title
+                const Spacer(),
+
+                // Centered title
+                Text(
+                  title,
+                  style: AppTextStyles.headlineSmall.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
 
-              // Spacer to center title
-              const Spacer(),
+                // Spacer to balance
+                const Spacer(),
 
-              // Centered title
-              Text(
-                title,
-                style: AppTextStyles.headlineSmall.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-
-              // Spacer to balance
-              const Spacer(),
-
-              // Right placeholder to keep title centered
-              if (showRightPlaceholder) const SizedBox(width: 40),
-            ],
+                // Right placeholder to keep title centered
+                if (showRightPlaceholder) const SizedBox(width: 40),
+              ],
+            ),
           ),
         ),
       ),

@@ -28,6 +28,14 @@ class AuthInterceptor extends Interceptor {
   }
 }
 
+String _dioPayloadSummary(dynamic data) {
+  if (data == null) return 'empty';
+  if (data is String) return 'String(len=${data.length})';
+  if (data is Map) return 'Map(keys=${data.length})';
+  if (data is List) return 'List(len=${data.length})';
+  return data.runtimeType.toString();
+}
+
 class LoggingInterceptor extends Interceptor {
   /// Never log bodies/headers in release — even if ENV=development in a bundled .env.
   bool get _shouldLog => kDebugMode;
@@ -60,7 +68,9 @@ class LoggingInterceptor extends Interceptor {
       }
       if (options.data != null) {
         // ignore: avoid_print
-        print('REQUEST[${options.method}] => Data: ${options.data}');
+        print(
+          'REQUEST[${options.method}] => Data: ${_dioPayloadSummary(options.data)}',
+        );
       }
     }
     handler.next(options);
@@ -79,7 +89,9 @@ class LoggingInterceptor extends Interceptor {
       );
       if (response.data != null) {
         // ignore: avoid_print
-        print('RESPONSE[${response.statusCode}] => Data: ${response.data}');
+        print(
+          'RESPONSE[${response.statusCode}] => Data: ${_dioPayloadSummary(response.data)}',
+        );
       }
     }
     handler.next(response);
@@ -119,7 +131,9 @@ class LoggingInterceptor extends Interceptor {
           // ignore: avoid_print
           print('ERROR => Status Code: ${err.response?.statusCode}');
           // ignore: avoid_print
-          print('ERROR => Response Data: ${err.response?.data}');
+          print(
+            'ERROR => Response Data: ${_dioPayloadSummary(err.response?.data)}',
+          );
         }
         // ignore: avoid_print
         print('ERROR => Stack Trace: ${err.stackTrace}');

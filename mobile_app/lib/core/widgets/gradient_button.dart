@@ -36,8 +36,15 @@ class PrimaryGradientButton extends StatelessWidget {
     final bool enabled = isEnabled && !isLoading && onPressed != null;
     final double radius = borderRadius ?? AppRadius.lg;
 
+    final bool fullWidth = width != null;
+    // Full-width: never force a fixed outer height — SizedBox(height: …)+Ink clips text on iPad / large text scale.
+    final verticalPad = fullWidth
+        ? 14.0
+        : ((height - 24) / 2).clamp(6.0, 14.0);
+
     final buttonWidget = Material(
       color: Colors.transparent,
+      clipBehavior: Clip.none,
       child: Ink(
         decoration: BoxDecoration(
           gradient: enabled ? AppGradients.primaryButtonGradient : null,
@@ -49,8 +56,8 @@ class PrimaryGradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
           child: Padding(
             padding: EdgeInsets.symmetric(
-              vertical: height < 48 ? 8 : 14,
-              horizontal: width == null ? AppSpacing.xl : AppSpacing.md,
+              vertical: verticalPad,
+              horizontal: fullWidth ? AppSpacing.md : AppSpacing.xl,
             ),
             child: isLoading
                 ? const Center(
@@ -90,12 +97,16 @@ class PrimaryGradientButton extends StatelessWidget {
     );
 
     if (width == null) {
-      // For pill buttons (no fixed width), return intrinsic size
-      return SizedBox(height: height, child: buttonWidget);
+      // Pill: minimum touch height; intrinsic height can exceed [height] so label
+      // is not clipped (e.g. large text / iPad) when used in Rows without [width].
+      return ConstrainedBox(
+        constraints: BoxConstraints(minHeight: height),
+        child: buttonWidget,
+      );
     }
 
-    // For full-width buttons, wrap in SizedBox
-    return SizedBox(width: width, height: height, child: buttonWidget);
+    // Full width: width only — height is intrinsic (padding + label); avoids vertical clip.
+    return SizedBox(width: width, child: buttonWidget);
   }
 }
 

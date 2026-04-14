@@ -41,7 +41,7 @@ class ClientProjectCard extends StatelessWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Image
@@ -105,85 +105,77 @@ class ClientProjectCard extends StatelessWidget {
               ),
             ),
 
-            // Content section (flexible so it fits all screen sizes)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    // Title and Price row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            project.title,
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: const Color(0xFF111827),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              height: 1.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          project.budgetDisplay,
-                          style: AppTextStyles.labelMedium.copyWith(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          project.title,
+                          style: AppTextStyles.titleMedium.copyWith(
                             color: const Color(0xFF111827),
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            height: 1.2,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    // Description (1-2 lines)
-                    Flexible(
-                      child: Text(
-                        project.description,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontSize: 11,
-                          height: 1.3,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        project.budgetDisplay,
+                        style: AppTextStyles.labelMedium.copyWith(
+                          color: const Color(0xFF111827),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    project.description,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: const Color(0xFF6B7280),
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        project.status.toUpperCase(),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10,
+                        ),
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    // Status badge (single line, ellipsis for long statuses e.g. PENDING_ADMIN_APPROVAL)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE5E7EB).withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          project.status.toUpperCase(),
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: const Color(0xFF6B7280),
-                            fontWeight: FontWeight.w500,
-                            fontSize: 10,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

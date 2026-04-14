@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
+import '../ui/screenutil_helpers.dart';
 
 /// Navigation item for bottom navigation bar
 class NavItem {
@@ -25,9 +26,6 @@ class AppBottomNavBar extends StatelessWidget {
   static Color get inactiveColor => Colors.grey.shade400;
   static const Color barBackground = Colors.white;
 
-  static const double baseHeight = 64.0;
-  static const double labelFontSize = 11.5;
-
   const AppBottomNavBar({
     super.key,
     required this.currentIndex,
@@ -38,6 +36,7 @@ class AppBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final baseHeight = AppContentLayout.bottomNavBarHeight(context);
     final totalHeight = baseHeight + bottomPadding;
 
     return Container(
@@ -103,6 +102,8 @@ class _NavItemWidget extends StatelessWidget {
     final color = isSelected
         ? AppBottomNavBar.activeColor
         : AppBottomNavBar.inactiveColor;
+    final iconSize = AppContentLayout.bottomNavIconSize(context);
+    final labelSize = AppContentLayout.bottomNavLabelFontSize(context);
 
     return InkWell(
       onTap: onTap,
@@ -114,13 +115,17 @@ class _NavItemWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(item.icon, color: color, size: 26),
+            Icon(
+              item.icon,
+              color: color,
+              size: iconSize,
+            ),
             const SizedBox(height: 4),
             Text(
               item.title,
               style: TextStyle(
                 color: color,
-                fontSize: AppBottomNavBar.labelFontSize,
+                fontSize: labelSize,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 letterSpacing: 0.05,
                 height: 1.0,

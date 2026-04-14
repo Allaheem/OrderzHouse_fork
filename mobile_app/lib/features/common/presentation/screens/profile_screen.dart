@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import 'package:OrderzHouse/features/auth/presentation/providers/auth_provider.dart';
@@ -25,98 +27,109 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            // Standard AppBar/Header (like My Projects)
-            _ProfileTopBar(l10n: l10n),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            // Without this, [Column] stays only as wide as its children and looks
+            // "phone-narrow" centered on iPad despite a large [maxWidth].
+            child: SizedBox(
+              width: double.infinity,
+              child: Column(
+                children: [
+                  // Standard AppBar/Header (like My Projects)
+                  _ProfileTopBar(l10n: l10n),
 
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  top: 18,
-                  left: 20,
-                  right: 20,
-                  bottom: 24,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1) Top Profile Header
-                    _ProfileHeader(user: user),
-                    const SizedBox(height: 18),
-
-                    // 2) Stats Row - Dynamic stats from user's projects
-                    _StatsRow(l10n: l10n),
-                    const SizedBox(height: 18),
-
-                    // 3) Settings List Card (original items)
-                    _SettingsListCard(
-                      onEditProfile: () => context.go('/edit-profile'),
-                      onSettings: () => context.go('/settings'),
-                      onSubscription: () => context.go('/subscription'),
-                      showSubscription: isFreelancer,
-                      l10n: l10n,
-                    ),
-                    const SizedBox(height: 18),
-
-                    // 3.5) Help & Legal List Card
-                    _HelpLegalListCard(
-                      onHelp: () => context.push('/help-faq'),
-                      onPrivacy: () => context.push('/privacy-policy'),
-                      onTerms: () => context.push('/terms-conditions'),
-                      l10n: l10n,
-                    ),
-                    const SizedBox(height: 18),
-
-                    // 4) Logout Card (separate card, red accent)
-                    _LogoutCard(
-                      l10n: l10n,
-                      onLogout: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(l10n.logoutConfirmTitle),
-                            content: Text(l10n.logoutConfirmMessage),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(l10n.cancel),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(l10n.logout),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true && context.mounted) {
-                          await ref.read(authStateProvider.notifier).logout();
-                          if (context.mounted) {
-                            context.go('/login');
-                          }
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 18),
-
-                    // 5) Bottom CTA Card (View Plans / Buy Package) - Only for freelancers
-                    if (isFreelancer)
-                      _UpgradeCard(
-                        onViewPlans: () => context.go('/subscription'),
-                        l10n: l10n,
+                  // Scrollable content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.only(
+                        top: AppSpacing.md,
+                        left: AppContentLayout.bodyHorizontalPadding(context),
+                        right: AppContentLayout.bodyHorizontalPadding(context),
+                        bottom:
+                            MediaQuery.paddingOf(context).bottom +
+                            AppSpacing.xl,
                       ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // 1–2) Header + stats (grouped card on tablet, like home density)
+                          _ProfileIdentityBlock(user: user, l10n: l10n),
+                          const SizedBox(height: AppSpacing.xl),
 
-                    // Bottom padding for safe area
-                    SizedBox(
-                      height: MediaQuery.of(context).padding.bottom + 24,
+                          // 3) Settings List Card (original items)
+                          _SettingsListCard(
+                            onEditProfile: () => context.go('/edit-profile'),
+                            onSettings: () => context.go('/settings'),
+                            onSubscription: () => context.go('/subscription'),
+                            showSubscription: isFreelancer,
+                            l10n: l10n,
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // 3.5) Help & Legal List Card
+                          _HelpLegalListCard(
+                            onHelp: () => context.push('/help-faq'),
+                            onPrivacy: () => context.push('/privacy-policy'),
+                            onTerms: () => context.push('/terms-conditions'),
+                            l10n: l10n,
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // 4) Logout Card (separate card, red accent)
+                          _LogoutCard(
+                            l10n: l10n,
+                            onLogout: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text(l10n.logoutConfirmTitle),
+                                  content: Text(l10n.logoutConfirmMessage),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: Text(l10n.cancel),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: Text(l10n.logout),
+                                    ),
+                                  ],
+                                ),
+                              );
+
+                              if (confirm == true && context.mounted) {
+                                await ref
+                                    .read(authStateProvider.notifier)
+                                    .logout();
+                                if (context.mounted) {
+                                  context.go('/login');
+                                }
+                              }
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+
+                          // 5) Bottom CTA Card — freelancers only
+                          if (isFreelancer)
+                            _UpgradeCard(
+                              onViewPlans: () => context.go('/subscription'),
+                              l10n: l10n,
+                            ),
+
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -131,8 +144,9 @@ class _ProfileTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hx = AppContentLayout.bodyHorizontalPadding(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: hx, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -182,6 +196,46 @@ class _ProfileTopBar extends StatelessWidget {
           const SizedBox(width: 40), // Balance the left button
         ],
       ),
+    );
+  }
+}
+
+/// Avatar + stats: on iPad/tablet, one surface card matches home “filled” sections.
+class _ProfileIdentityBlock extends ConsumerWidget {
+  final User? user;
+  final AppLocalizations l10n;
+
+  const _ProfileIdentityBlock({required this.user, required this.l10n});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inner = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ProfileHeader(user: user),
+        const SizedBox(height: AppSpacing.lg),
+        _StatsRow(l10n: l10n),
+      ],
+    );
+    if (!AppContentLayout.useFullWidthBody(context)) {
+      return inner;
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowColorLight,
+            blurRadius: 12,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: inner,
     );
   }
 }
@@ -629,17 +683,12 @@ class _UpgradeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Button (Full Width)
-          SizedBox(
-            width: double.infinity, // ✅ Full width button
-            height: 48,
-            child: PrimaryGradientButton(
-              onPressed: onViewPlans,
-              label: l10n.viewPlans,
-              height: 48,
-              borderRadius: 30,
-              width: double.infinity, // ✅ Explicit width for button
-            ),
+          PrimaryGradientButton(
+            onPressed: onViewPlans,
+            label: l10n.viewPlans,
+            height: 56,
+            borderRadius: 30,
+            width: double.infinity,
           ),
         ],
       ),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -206,31 +207,41 @@ class _SecurityCenterScreenState extends ConsumerState<SecurityCenterScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            AppHeader(title: l10n.security, onBack: () => _handleBack(context)),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  children: [
-                    _TwoFactorCard(
-                      enabled: twoFactorOn,
-                      busy: _busy,
-                      onEnable: () => _onEnable2FA(l10n),
-                      onDisable: () => _onDisable2FA(l10n),
-                      l10n: l10n,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _ChangePasswordCard(
-                      onTap: () => context.push('/change-password'),
-                      l10n: l10n,
-                    ),
-                  ],
-                ),
-              ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
             ),
-          ],
+            child: Column(
+              children: [
+                AppHeader(
+                  title: l10n.security,
+                  onBack: () => _handleBack(context),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        _TwoFactorCard(
+                          enabled: twoFactorOn,
+                          busy: _busy,
+                          onEnable: () => _onEnable2FA(l10n),
+                          onDisable: () => _onDisable2FA(l10n),
+                          l10n: l10n,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _ChangePasswordCard(
+                          onTap: () => context.push('/change-password'),
+                          l10n: l10n,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

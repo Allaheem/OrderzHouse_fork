@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -233,152 +234,163 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              // Header
-              AppHeader(title: l10n.changePassword, onBack: _handleBack),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // Header
+                  AppHeader(title: l10n.changePassword, onBack: _handleBack),
 
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: AppSpacing.md),
+                  // Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: AppSpacing.md),
 
-                      // Current Password
-                      _buildPasswordField(
-                        controller: _currentPasswordController,
-                        focusNode: _currentPasswordFocusNode,
-                        label: l10n.currentPassword,
-                        obscureText: _obscureCurrentPassword,
-                        errorText: _validationErrors['currentPassword'],
-                        onVisibilityToggle: () {
-                          setState(() {
-                            _obscureCurrentPassword = !_obscureCurrentPassword;
-                          });
-                        },
-                        onChanged: () {
-                          setState(() {
-                            _validationErrors.remove('currentPassword');
-                          });
-                        },
+                          // Current Password
+                          _buildPasswordField(
+                            controller: _currentPasswordController,
+                            focusNode: _currentPasswordFocusNode,
+                            label: l10n.currentPassword,
+                            obscureText: _obscureCurrentPassword,
+                            errorText: _validationErrors['currentPassword'],
+                            onVisibilityToggle: () {
+                              setState(() {
+                                _obscureCurrentPassword =
+                                    !_obscureCurrentPassword;
+                              });
+                            },
+                            onChanged: () {
+                              setState(() {
+                                _validationErrors.remove('currentPassword');
+                              });
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // New Password
+                          _buildPasswordField(
+                            controller: _newPasswordController,
+                            focusNode: _newPasswordFocusNode,
+                            label: l10n.newPassword,
+                            obscureText: _obscureNewPassword,
+                            errorText: _validationErrors['newPassword'],
+                            onVisibilityToggle: () {
+                              setState(() {
+                                _obscureNewPassword = !_obscureNewPassword;
+                              });
+                            },
+                            onChanged: () {
+                              setState(() {
+                                _validationErrors.remove('newPassword');
+                                if (_confirmPasswordController.text.isEmpty) {
+                                  _validationErrors.remove('confirmPassword');
+                                }
+                              });
+                            },
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Confirm New Password
+                          _buildPasswordField(
+                            controller: _confirmPasswordController,
+                            focusNode: _confirmPasswordFocusNode,
+                            label: l10n.confirmNewPassword,
+                            obscureText: _obscureConfirmPassword,
+                            errorText: _validationErrors['confirmPassword'],
+                            onVisibilityToggle: () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              });
+                            },
+                            onChanged: () {
+                              setState(() {
+                                _validationErrors.remove('confirmPassword');
+                              });
+                            },
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // New Password
-                      _buildPasswordField(
-                        controller: _newPasswordController,
-                        focusNode: _newPasswordFocusNode,
-                        label: l10n.newPassword,
-                        obscureText: _obscureNewPassword,
-                        errorText: _validationErrors['newPassword'],
-                        onVisibilityToggle: () {
-                          setState(() {
-                            _obscureNewPassword = !_obscureNewPassword;
-                          });
-                        },
-                        onChanged: () {
-                          setState(() {
-                            _validationErrors.remove('newPassword');
-                            // Also clear confirm password error if new password changes
-                            if (_confirmPasswordController.text.isEmpty) {
-                              _validationErrors.remove('confirmPassword');
-                            }
-                          });
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Confirm New Password
-                      _buildPasswordField(
-                        controller: _confirmPasswordController,
-                        focusNode: _confirmPasswordFocusNode,
-                        label: l10n.confirmNewPassword,
-                        obscureText: _obscureConfirmPassword,
-                        errorText: _validationErrors['confirmPassword'],
-                        onVisibilityToggle: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
-                        onChanged: () {
-                          setState(() {
-                            _validationErrors.remove('confirmPassword');
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Bottom Buttons
-              Container(
-                padding: EdgeInsets.only(
-                  left: AppSpacing.lg,
-                  right: AppSpacing.lg,
-                  top: AppSpacing.md,
-                  bottom: AppSpacing.lg + MediaQuery.of(context).padding.bottom,
-                ),
-                decoration: const BoxDecoration(
-                  color: AppColors.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadowColorLight,
-                      blurRadius: 8,
-                      offset: Offset(0, -2),
                     ),
-                  ],
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: Row(
-                    children: [
-                      // Cancel Button
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _isLoading ? null : _handleCancel,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: AppColors.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            side: const BorderSide(
-                              color: AppColors.border,
-                              width: 1.5,
-                            ),
-                          ),
-                          child: Text(
-                            l10n.cancel,
-                            style: AppTextStyles.labelLarge.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(width: AppSpacing.md),
-
-                      // Save Button
-                      Expanded(
-                        child: PrimaryGradientButton(
-                          onPressed: _isLoading ? null : _handleSave,
-                          label: l10n.save,
-                          isLoading: _isLoading,
-                          height: 52,
-                          borderRadius: 18,
-                        ),
-                      ),
-                    ],
                   ),
-                ),
+
+                  // Bottom Buttons
+                  Container(
+                    padding: EdgeInsets.only(
+                      left: AppSpacing.lg,
+                      right: AppSpacing.lg,
+                      top: AppSpacing.md,
+                      bottom:
+                          AppSpacing.lg + MediaQuery.of(context).padding.bottom,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: AppColors.surface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowColorLight,
+                          blurRadius: 8,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: SafeArea(
+                      top: false,
+                      child: Row(
+                        children: [
+                          // Cancel Button
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _isLoading ? null : _handleCancel,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                backgroundColor: AppColors.surface,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                side: const BorderSide(
+                                  color: AppColors.border,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                l10n.cancel,
+                                style: AppTextStyles.labelLarge.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: AppSpacing.md),
+
+                          // Save Button
+                          Expanded(
+                            child: PrimaryGradientButton(
+                              onPressed: _isLoading ? null : _handleSave,
+                              label: l10n.save,
+                              isLoading: _isLoading,
+                              height: 52,
+                              borderRadius: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

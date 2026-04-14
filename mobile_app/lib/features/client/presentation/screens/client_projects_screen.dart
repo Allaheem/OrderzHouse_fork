@@ -23,6 +23,7 @@ import '../../../common/presentation/providers/my_projects_filters_provider.dart
 import '../../../common/presentation/widgets/projects_filter_bottom_sheet.dart';
 import '../widgets/client_project_card.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 
 class ClientProjectsScreen extends ConsumerStatefulWidget {
   const ClientProjectsScreen({super.key});
@@ -517,21 +518,15 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
     );
   }
 
-  // 4) Projects Grid (responsive aspect ratio to avoid overflow on small screens)
+  // 4) Projects Grid (responsive columns + aspect — avoids sky-tall cards on iPad)
   Widget _buildProjectsGrid(
     BuildContext context,
     List<Project> projects, {
     double bottomPadding = 0,
   }) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    const crossAxisCount = 2;
-    const horizontalPadding =
-        AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
-    final cellWidth = (screenWidth - horizontalPadding) / crossAxisCount;
-    const imageHeight = 120.0;
-    const minContentHeight = 90.0;
-    const minCellHeight = imageHeight + minContentHeight;
-    final aspectRatio = cellWidth / minCellHeight;
+    final crossAxisCount = AppContentLayout.myProjectsCrossAxisCount(context);
+    final aspectRatio =
+        AppContentLayout.myProjectsGridChildAspectRatio(context, crossAxisCount);
     return GridView.builder(
       padding: EdgeInsets.only(
         top: AppSpacing.lg,
@@ -543,7 +538,7 @@ class _ClientProjectsScreenState extends ConsumerState<ClientProjectsScreen> {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: aspectRatio.clamp(0.68, 0.78),
+        childAspectRatio: aspectRatio,
       ),
       itemCount: projects.length,
       itemBuilder: (context, index) {
@@ -599,15 +594,9 @@ class _LoadingGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    const crossAxisCount = 2;
-    const horizontalPadding =
-        AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
-    final cellWidth = (screenWidth - horizontalPadding) / crossAxisCount;
-    const imageHeight = 120.0;
-    const minContentHeight = 90.0;
-    const minCellHeight = imageHeight + minContentHeight;
-    final aspectRatio = (cellWidth / minCellHeight).clamp(0.68, 0.78);
+    final crossAxisCount = AppContentLayout.myProjectsCrossAxisCount(context);
+    final aspectRatio =
+        AppContentLayout.myProjectsGridChildAspectRatio(context, crossAxisCount);
     return GridView.builder(
       padding: EdgeInsets.only(
         top: AppSpacing.lg,

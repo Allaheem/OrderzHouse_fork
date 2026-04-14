@@ -51,6 +51,11 @@
 	<string>OrderzHouse needs access to your photo library so you can choose images for project covers and other uploads you start in the app.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Required so canLaunchUrl / mailto works (iOS blocks scheme checks otherwise). -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>mailto</string>
+	</array>
 	<!-- Expose app Documents (OrderzHouse/) in Files app + allow opening saved downloads -->
 	<key>UIFileSharingEnabled</key>
 	<true/>

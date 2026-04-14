@@ -42,9 +42,9 @@ class HomeHeroCardV2 extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       child: Container(
         width: double.infinity,
+        clipBehavior: Clip.none,
         constraints: const BoxConstraints(
-          minHeight: 190,
-          // No maxHeight - let content define height
+          minHeight: 200,
         ),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -185,12 +185,11 @@ class HomeHeroCardV2 extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
 
-                  // CTA Button (WHITE to contrast with gradient)
+                  // CTA: avoid fixed outer height clipping Material text/padding.
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
                     child: ElevatedButton(
                       onPressed: onCtaTap,
                       style: ElevatedButton.styleFrom(
@@ -198,12 +197,14 @@ class HomeHeroCardV2 extends StatelessWidget {
                         foregroundColor: AppColors.textPrimary,
                         elevation: 0,
                         shadowColor: Colors.black.withOpacity(0.1),
+                        minimumSize: const Size(double.infinity, 52),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(22),
                         ),
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
+                          vertical: 12,
                         ),
                       ),
                       child: Row(

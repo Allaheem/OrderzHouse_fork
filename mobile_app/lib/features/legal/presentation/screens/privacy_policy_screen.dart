@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -246,15 +247,25 @@ class _PrivacyPolicyScreenState extends ConsumerState<PrivacyPolicyScreen> {
         ),
       ],
     );
+
+    final boundedScroll = Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: AppContentLayout.contentMaxWidth(context),
+        ),
+        child: scrollContent,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: isRtl
             ? Directionality(
                 textDirection: TextDirection.ltr,
-                child: scrollContent,
+                child: boundedScroll,
               )
-            : scrollContent,
+            : boundedScroll,
       ),
     );
   }

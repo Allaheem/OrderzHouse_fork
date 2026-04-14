@@ -392,6 +392,18 @@ abstract class AppLocalizations {
   /// **'Type DELETE to confirm'**
   String get typeDeleteToConfirm;
 
+  /// No description provided for @deleteAccountInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap here and type DELETE (English, all caps)'**
+  String get deleteAccountInputHint;
+
+  /// No description provided for @deleteAccountMismatchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The button stays off until this field is exactly the English word DELETE (no extra letters or spaces).'**
+  String get deleteAccountMismatchHint;
+
   /// No description provided for @profile.
   ///
   /// In en, this message translates to:
@@ -985,6 +997,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong'**
   String get somethingWentWrong;
+
+  /// No description provided for @supportEmailDraftCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open an email app. Your message was copied — paste it into Mail or another email app and send to info@battechno.com.'**
+  String get supportEmailDraftCopied;
 
   /// No description provided for @tryAgain.
   ///

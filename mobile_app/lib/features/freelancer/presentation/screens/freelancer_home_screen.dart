@@ -13,6 +13,7 @@ import '../../../../core/widgets/home_hero_card_v2.dart';
 import '../../../../core/widgets/quick_actions_row.dart';
 import '../../../../core/widgets/home_project_card.dart';
 import '../../../../core/widgets/section_title_row.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
 import '../../../../core/models/project.dart';
 import '../../../common/presentation/screens/payments_screen.dart';
@@ -343,7 +344,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
     AppLocalizations l10n,
   ) {
     return workspaceAsync.when(
-      loading: () => _buildLoadingSkeleton(),
+      loading: () => _buildLoadingSkeleton(context),
       error: (err, stack) => _buildWorkspaceErrorState(context, ref, l10n),
       data: (projects) {
         if (projects.isEmpty) {
@@ -351,7 +352,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
         }
 
         return SizedBox(
-          height: 220,
+          height: AppContentLayout.homeHorizontalRailHeight(context),
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             scrollDirection: Axis.horizontal,
@@ -482,7 +483,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
     AppLocalizations l10n,
   ) {
     return projectsAsync.when(
-      loading: () => _buildLoadingSkeleton(),
+      loading: () => _buildLoadingSkeleton(context),
       error: (err, stack) => _buildErrorState(context, l10n),
       data: (projects) {
         if (projects.isEmpty) {
@@ -490,7 +491,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
         }
 
         return SizedBox(
-          height: 220,
+          height: AppContentLayout.homeHorizontalRailHeight(context),
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             scrollDirection: Axis.horizontal,
@@ -511,9 +512,9 @@ class FreelancerHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoadingSkeleton() {
+  Widget _buildLoadingSkeleton(BuildContext context) {
     return SizedBox(
-      height: 220,
+      height: AppContentLayout.homeHorizontalRailHeight(context),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
         scrollDirection: Axis.horizontal,
@@ -521,7 +522,7 @@ class FreelancerHomeScreen extends ConsumerWidget {
         separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
         itemBuilder: (context, index) {
           return Container(
-            width: 280,
+            width: AppContentLayout.homeProjectCardWidth(context),
             decoration: BoxDecoration(
               color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(18),

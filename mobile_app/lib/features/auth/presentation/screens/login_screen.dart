@@ -6,6 +6,8 @@ import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/models/user.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/gradient_button.dart';
@@ -77,15 +79,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final heroD = 100.r.clamp(88.0, 112.0);
+            final heroIcon = 50.r.clamp(44.0, 56.0);
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                    maxWidth: AppContentLayout.contentMaxWidth(context),
+                  ),
+                  child: IntrinsicHeight(
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -93,8 +101,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         // Top circle with icon
                         Center(
                           child: Container(
-                            width: 100,
-                            height: 100,
+                            width: heroD,
+                            height: heroD,
                             decoration: const BoxDecoration(
                               color: Color.fromARGB(
                                 255,
@@ -104,10 +112,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ), // Light pink
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.send_rounded,
-                              size: 50,
-                              color: Color(0xFFEF4444), // Coral-red
+                              size: heroIcon,
+                              color: const Color(0xFFEF4444), // Coral-red
                             ),
                           ),
                         ),
@@ -229,6 +237,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
               ),
+            ),
             );
           },
         ),

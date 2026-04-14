@@ -57,6 +57,8 @@
   "confirmDeleteAccount": "Are you sure you want to delete your account?",
   "accountDeleted": "Account deleted successfully",
   "typeDeleteToConfirm": "Type DELETE to confirm",
+  "deleteAccountInputHint": "Tap here and type DELETE (English, all caps)",
+  "deleteAccountMismatchHint": "The button stays off until this field is exactly the English word DELETE (no extra letters or spaces).",
   
   "profile": "Profile",
   "editProfile": "Edit Profile",
@@ -162,6 +164,7 @@
   "noDataFound": "No data found",
   "noResultsFound": "No results found",
   "somethingWentWrong": "Something went wrong",
+  "supportEmailDraftCopied": "Could not open an email app. Your message was copied — paste it into Mail or another email app and send to info@battechno.com.",
   "tryAgain": "Try again",
   "noInternetConnection": "No internet connection",
   "connectionError": "Connection error",

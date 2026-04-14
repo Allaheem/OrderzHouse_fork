@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -19,6 +20,8 @@ class SupportScreen extends ConsumerStatefulWidget {
 }
 
 class _SupportScreenState extends ConsumerState<SupportScreen> {
+  static const String _supportEmail = 'info@battechno.com';
+
   final _formKey = GlobalKey<FormState>();
   final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
@@ -43,8 +46,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
   Future<void> _copyEmail() async {
     final l10n = AppLocalizations.of(context)!;
-    const email = 'info@battechno.com';
-    await Clipboard.setData(const ClipboardData(text: email));
+    await Clipboard.setData(const ClipboardData(text: _supportEmail));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -55,16 +57,57 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     }
   }
 
+  Uri _supportMailtoUri({required String subject, required String body}) {
+    return Uri(
+      scheme: 'mailto',
+      path: _supportEmail,
+      queryParameters: <String, String>{
+        'subject': subject,
+        if (body.isNotEmpty) 'body': body,
+      },
+    );
+  }
+
+  /// iOS/Android differ on which [LaunchMode] succeeds for `mailto:`; simulator often has no Mail.
+  Future<bool> _tryLaunchMailto(Uri uri) async {
+    for (final mode in [
+      LaunchMode.platformDefault,
+      LaunchMode.externalApplication,
+    ]) {
+      try {
+        if (await launchUrl(uri, mode: mode)) {
+          return true;
+        }
+      } catch (_) {
+        // Try next mode or clipboard fallback.
+      }
+    }
+    return false;
+  }
+
+  Future<void> _copySupportDraft(String subject, String body) async {
+    final draft = 'To: $_supportEmail\nSubject: $subject\n\n$body';
+    await Clipboard.setData(ClipboardData(text: draft));
+  }
+
   Future<void> _openMailto() async {
     final l10n = AppLocalizations.of(context)!;
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: 'info@battechno.com',
-      query: 'subject=Support Request',
-    );
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
-    } else {
+    const subject = 'Support Request';
+    final uri = _supportMailtoUri(subject: subject, body: '');
+    try {
+      if (await _tryLaunchMailto(uri)) {
+        return;
+      }
+      await _copySupportDraft(subject, '');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.supportEmailDraftCopied),
+          duration: const Duration(seconds: 6),
+          backgroundColor: const Color(0xFF374151),
+        ),
+      );
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -81,16 +124,11 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
 
     try {
       final subjectLabel = _getSelectedLabel(l10n);
-      final subject = Uri.encodeComponent(
-        '[OrderzHouse] $subjectLabel',
-      );
-      final body = Uri.encodeComponent(_messageController.text.trim());
-      final mailto = Uri.parse(
-        'mailto:info@battechno.com?subject=$subject&body=$body',
-      );
+      final subject = '[OrderzHouse] $subjectLabel';
+      final body = _messageController.text.trim();
+      final mailto = _supportMailtoUri(subject: subject, body: body);
 
-      if (await canLaunchUrl(mailto)) {
-        await launchUrl(mailto);
+      if (await _tryLaunchMailto(mailto)) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -100,11 +138,14 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
           ),
         );
         _messageController.clear();
-      } else if (mounted) {
+      } else {
+        await _copySupportDraft(subject, body);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.somethingWentWrong),
-            backgroundColor: AppColors.error,
+            content: Text(l10n.supportEmailDraftCopied),
+            duration: const Duration(seconds: 6),
+            backgroundColor: const Color(0xFF374151),
           ),
         );
       }
@@ -150,91 +191,98 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            AppHeader(title: l10n.support, onBack: _handleBack),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Column(
+              children: [
+                // Header
+                AppHeader(title: l10n.support, onBack: _handleBack),
 
-            // Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Support Card
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.borderLight),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: AppColors.shadowColorLight,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Support Card
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.borderLight),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: AppColors.shadowColorLight,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.howCanWeHelp,
-                              style: AppTextStyles.headlineSmall.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.howCanWeHelp,
+                                  style: AppTextStyles.headlineSmall.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  l10n.supportSubtitle,
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              l10n.supportSubtitle,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
 
-                      // Email Support Card
-                      _EmailSupportCard(
-                        onCopy: _copyEmail,
-                        onOpenMailto: _openMailto,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
+                          // Email Support Card
+                          _EmailSupportCard(
+                            onCopy: _copyEmail,
+                            onOpenMailto: _openMailto,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
 
-                      // In-app Form Card
-                      _InAppFormCard(
-                        selectedSubject: _getSelectedLabel(l10n),
-                        subjects: subjects,
-                        messageController: _messageController,
-                        onSubjectChanged: (value) {
-                          setState(() => _selectedSubjectKey = value!);
-                        },
-                        l10n: l10n,
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
+                          // In-app Form Card
+                          _InAppFormCard(
+                            selectedSubject: _getSelectedLabel(l10n),
+                            subjects: subjects,
+                            messageController: _messageController,
+                            onSubjectChanged: (value) {
+                              setState(() => _selectedSubjectKey = value!);
+                            },
+                            l10n: l10n,
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
 
-                      // Send Button
-                      PrimaryGradientButton(
-                        onPressed: _isSending ? null : _handleSend,
-                        label: l10n.submit,
-                        isLoading: _isSending,
-                        height: 54,
-                        borderRadius: 16,
+                          // Send Button
+                          PrimaryGradientButton(
+                            onPressed: _isSending ? null : _handleSend,
+                            label: l10n.submit,
+                            isLoading: _isSending,
+                            height: 54,
+                            borderRadius: 16,
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

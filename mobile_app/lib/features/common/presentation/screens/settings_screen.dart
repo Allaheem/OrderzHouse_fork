@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/providers/locale_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
@@ -21,349 +23,351 @@ class SettingsScreen extends ConsumerWidget {
     final user = authState.user;
     final currentLocale = ref.watch(localeProvider);
     final l10n = AppLocalizations.of(context)!;
+    final hx = AppContentLayout.bodyHorizontalPadding(context);
+    final bottomPad = MediaQuery.paddingOf(context).bottom + AppSpacing.xl;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Custom Header
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Row(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(hx, AppSpacing.md, hx, bottomPad),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Back button in circle
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          // Back button in circle
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.border,
+                                width: 1,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: AppColors.shadowColorLight,
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.chevron_left_rounded),
+                              color: AppColors.textPrimary,
+                              onPressed: () {
+                                // Safe back navigation
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  // Fallback: navigate to profile/home based on role
+                                  final userRoleId = user?.roleId ?? 0;
+                                  if (userRoleId == 2) {
+                                    context.go('/client/profile');
+                                  } else if (userRoleId == 3) {
+                                    context.go('/freelancer/profile');
+                                  } else {
+                                    context.go('/client/profile');
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+                          const Spacer(),
+                          // Title
+                          Text(
+                            l10n.settings,
+                            style: AppTextStyles.headlineSmall.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          const SizedBox(width: 40), // Balance the back button
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Settings Card
                     Container(
-                      width: 40,
-                      height: 40,
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: AppColors.border, width: 1),
                         boxShadow: const [
                           BoxShadow(
                             color: AppColors.shadowColorLight,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: IconButton(
-                        icon: const Icon(Icons.chevron_left_rounded),
-                        color: AppColors.textPrimary,
-                        onPressed: () {
-                          // Safe back navigation
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            // Fallback: navigate to profile/home based on role
-                            final userRoleId = user?.roleId ?? 0;
-                            if (userRoleId == 2) {
-                              context.go('/client/profile');
-                            } else if (userRoleId == 3) {
-                              context.go('/freelancer/profile');
-                            } else {
-                              context.go('/client/profile');
-                            }
-                          }
-                        },
+                      child: Column(
+                        children: [
+                          // Language Setting
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.language_rounded,
+                            title: l10n.language,
+                            subtitle: currentLocale.languageCode == 'ar'
+                                ? 'العربية'
+                                : 'English',
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/settings/language');
+                            },
+                          ),
+
+                          // Divider
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.borderLight,
+                            indent: 72,
+                          ),
+
+                          // Notifications Setting
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.notifications_outlined,
+                            title: l10n.notifications,
+                            subtitle: l10n.notificationsSubtitle,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/settings/notifications');
+                            },
+                          ),
+
+                          // Divider
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.borderLight,
+                            indent: 72,
+                          ),
+
+                          // Security Center — مخفي حسب الطلب
+                          // _buildSettingTile(
+                          //   context: context,
+                          //   icon: Icons.security_outlined,
+                          //   title: l10n.security,
+                          //   subtitle: l10n.securitySubtitle,
+                          //   trailing: const Icon(
+                          //     Icons.chevron_right_rounded,
+                          //     color: AppColors.iconGray,
+                          //     size: 24,
+                          //   ),
+                          //   onTap: () {
+                          //     context.push('/settings/security');
+                          //   },
+                          // ),
+                          // const Divider(
+                          //   height: 1,
+                          //   thickness: 1,
+                          //   color: AppColors.borderLight,
+                          //   indent: 72,
+                          // ),
+
+                          // Change Password Setting
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.lock_outline_rounded,
+                            title: l10n.changePassword,
+                            subtitle: l10n.changePasswordSubtitle,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/change-password');
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    // Title
-                    Text(
-                      l10n.settings,
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Legal & Help Section
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border, width: 1),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.shadowColorLight,
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.privacy_tip_outlined,
+                            title: l10n.privacyPolicy,
+                            subtitle: null,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/privacy-policy');
+                            },
+                          ),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.borderLight,
+                            indent: 72,
+                          ),
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.description_outlined,
+                            title: l10n.termsAndConditions,
+                            subtitle: null,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/terms-conditions');
+                            },
+                          ),
+                          const Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: AppColors.borderLight,
+                            indent: 72,
+                          ),
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.help_outline_rounded,
+                            title: l10n.helpFaq,
+                            subtitle: null,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/help-faq');
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    const SizedBox(width: 40), // Balance the back button
+
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Account & Security Section
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.border, width: 1),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.shadowColorLight,
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.folder_outlined,
+                            title: l10n.myContent,
+                            subtitle: l10n.myContentSubtitle,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/settings/my-content');
+                            },
+                          ),
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: Colors.grey.shade200,
+                            indent: 72,
+                          ),
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.help_outline_rounded,
+                            title: l10n.support,
+                            subtitle: l10n.supportSubtitle,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/support');
+                            },
+                          ),
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: Colors.grey.shade200,
+                            indent: 72,
+                          ),
+                          _buildSettingTile(
+                            context: context,
+                            icon: Icons.delete_outline_rounded,
+                            title: l10n.deleteAccount,
+                            subtitle: l10n.deleteAccountSubtitle,
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.iconGray,
+                              size: 24,
+                            ),
+                            onTap: () {
+                              context.push('/settings/delete-account');
+                            },
+                            isDeleteAccount: true,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.xl),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Settings Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border, width: 1),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadowColorLight,
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // Language Setting
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.language_rounded,
-                      title: l10n.language,
-                      subtitle: currentLocale.languageCode == 'ar'
-                          ? 'العربية'
-                          : 'English',
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/settings/language');
-                      },
-                    ),
-
-                    // Divider
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.borderLight,
-                      indent: 72,
-                    ),
-
-                    // Notifications Setting
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.notifications_outlined,
-                      title: l10n.notifications,
-                      subtitle: l10n.notificationsSubtitle,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/settings/notifications');
-                      },
-                    ),
-
-                    // Divider
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.borderLight,
-                      indent: 72,
-                    ),
-
-                    // Security Center — مخفي حسب الطلب
-                    // _buildSettingTile(
-                    //   context: context,
-                    //   icon: Icons.security_outlined,
-                    //   title: l10n.security,
-                    //   subtitle: l10n.securitySubtitle,
-                    //   trailing: const Icon(
-                    //     Icons.chevron_right_rounded,
-                    //     color: AppColors.iconGray,
-                    //     size: 24,
-                    //   ),
-                    //   onTap: () {
-                    //     context.push('/settings/security');
-                    //   },
-                    // ),
-                    // const Divider(
-                    //   height: 1,
-                    //   thickness: 1,
-                    //   color: AppColors.borderLight,
-                    //   indent: 72,
-                    // ),
-
-                    // Change Password Setting
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.lock_outline_rounded,
-                      title: l10n.changePassword,
-                      subtitle: l10n.changePasswordSubtitle,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/change-password');
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Legal & Help Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border, width: 1),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadowColorLight,
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.privacy_tip_outlined,
-                      title: l10n.privacyPolicy,
-                      subtitle: null,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/privacy-policy');
-                      },
-                    ),
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.borderLight,
-                      indent: 72,
-                    ),
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.description_outlined,
-                      title: l10n.termsAndConditions,
-                      subtitle: null,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/terms-conditions');
-                      },
-                    ),
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: AppColors.borderLight,
-                      indent: 72,
-                    ),
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.help_outline_rounded,
-                      title: l10n.helpFaq,
-                      subtitle: null,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/help-faq');
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Account & Security Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border, width: 1),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.shadowColorLight,
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.folder_outlined,
-                      title: l10n.myContent,
-                      subtitle: l10n.myContentSubtitle,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/settings/my-content');
-                      },
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Colors.grey.shade200,
-                      indent: 72,
-                    ),
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.help_outline_rounded,
-                      title: l10n.support,
-                      subtitle: l10n.supportSubtitle,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/support');
-                      },
-                    ),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Colors.grey.shade200,
-                      indent: 72,
-                    ),
-                    _buildSettingTile(
-                      context: context,
-                      icon: Icons.delete_outline_rounded,
-                      title: l10n.deleteAccount,
-                      subtitle: l10n.deleteAccountSubtitle,
-                      trailing: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.iconGray,
-                        size: 24,
-                      ),
-                      onTap: () {
-                        context.push('/settings/delete-account');
-                      },
-                      isDeleteAccount: true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-          ],
+          ),
         ),
       ),
     );

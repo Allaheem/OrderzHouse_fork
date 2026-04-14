@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -118,12 +119,17 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            AppHeader(title: l10n.helpFaq, onBack: _handleBack),
-            // Search Bar
-            Padding(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Column(
+              children: [
+                // Header
+                AppHeader(title: l10n.helpFaq, onBack: _handleBack),
+                // Search Bar
+                Padding(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: TextField(
                 controller: _searchController,
@@ -160,11 +166,11 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                     vertical: AppSpacing.md,
                   ),
                 ),
+                ),
               ),
-            ),
 
-            // FAQ List
-            Expanded(
+                // FAQ List
+                Expanded(
               child: filteredFaqs.isEmpty
                   ? Center(
                       child: Column(
@@ -203,25 +209,28 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                         );
                       },
                     ),
-            ),
+                ),
 
-            // Contact Support Button
-            Padding(
-              padding: EdgeInsets.only(
-                left: AppSpacing.lg,
-                right: AppSpacing.lg,
-                top: AppSpacing.md,
-                bottom: AppSpacing.lg + MediaQuery.of(context).padding.bottom,
-              ),
-              child: PrimaryGradientButton(
-                onPressed: _isLoading ? null : _handleContactSupport,
-                label: l10n.contactSupport,
-                isLoading: _isLoading,
-                height: 54,
-                borderRadius: 17,
-              ),
+                // Contact Support Button
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.lg,
+                    right: AppSpacing.lg,
+                    top: AppSpacing.md,
+                    bottom:
+                        AppSpacing.lg + MediaQuery.of(context).padding.bottom,
+                  ),
+                  child: PrimaryGradientButton(
+                    onPressed: _isLoading ? null : _handleContactSupport,
+                    label: l10n.contactSupport,
+                    isLoading: _isLoading,
+                    height: 54,
+                    borderRadius: 17,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

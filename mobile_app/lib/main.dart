@@ -62,7 +62,8 @@ void main() async {
         }),
   );
 
-  // Step 8: Run app (only once)
+  // Step 8: Run app (only once). Real device size / pixel ratio are available after the
+  // first frame via MediaQuery; ScreenUtilInit below rescales from designSize on each build.
   runApp(const ProviderScope(child: OrderzHouse()));
 }
 
@@ -74,6 +75,9 @@ class OrderzHouse extends ConsumerWidget {
     // Watch locale for automatic updates
     final locale = ref.watch(localeProvider);
 
+    // Baseline design (phone); .w / .h / .sp scale from this. splitScreenMode helps iPad
+    // split view & foldables. Layout that must follow window width should use
+    // MediaQuery / LayoutBuilder / AppContentLayout (see core/ui/screenutil_helpers.dart).
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       minTextAdapt: true,

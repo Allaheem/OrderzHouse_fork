@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/utils/safe_url_launch.dart';
 
 /// Survey / offline subscription flow (same as web: opens external survey URL).
@@ -28,28 +29,35 @@ class AccountSurveyScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text(
-                'You will be redirected to complete the subscription survey with your company.',
-                style: TextStyle(fontSize: 16, height: 1.4),
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () => _openSurvey(context, uri),
-                icon: const Icon(Icons.open_in_browser),
-                label: const Text('Open Survey'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'You will be redirected to complete the subscription survey with your company.',
+                    style: TextStyle(fontSize: 16, height: 1.4),
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () => _openSurvey(context, uri),
+                    icon: const Icon(Icons.open_in_browser),
+                    label: const Text('Open Survey'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

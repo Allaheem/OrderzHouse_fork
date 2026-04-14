@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/providers/locale_provider.dart';
@@ -29,69 +30,78 @@ class TermsConditionsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header: back + title
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded, size: 28),
-                    color: AppColors.accentOrange,
-                    onPressed: () => _handleBack(context),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: AppContentLayout.contentMaxWidth(context),
+            ),
+            child: Column(
+              children: [
+                // Header: back + title
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
-                  Expanded(
-                    child: Text(
-                      l10n.termsAndConditions,
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left_rounded, size: 28),
+                        color: AppColors.accentOrange,
+                        onPressed: () => _handleBack(context),
                       ),
-                      textAlign: TextAlign.center,
+                      Expanded(
+                        child: Text(
+                          l10n.termsAndConditions,
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                ),
+                // Last updated (optional row)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                  child: Text(
+                    '${l10n.lastUpdated}: ${content.lastUpdated}',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
                     ),
                   ),
-                  const SizedBox(width: 48),
-                ],
-              ),
-            ),
-            // Last updated (optional row)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text(
-                '${l10n.lastUpdated}: ${content.lastUpdated}',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textTertiary,
                 ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            // Scrollable accordion
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.lg + 24 + MediaQuery.of(context).padding.bottom,
-                ),
-                itemCount: content.sections.length,
-                itemBuilder: (context, index) {
-                  final section = content.sections[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: _TermsSectionTile(
-                      section: section,
-                      number: index + 1,
+                const SizedBox(height: AppSpacing.sm),
+                // Scrollable accordion
+                Expanded(
+                  child: ListView.builder(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.lg +
+                          24 +
+                          MediaQuery.of(context).padding.bottom,
                     ),
-                  );
-                },
-              ),
+                    itemCount: content.sections.length,
+                    itemBuilder: (context, index) {
+                      final section = content.sections[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: _TermsSectionTile(
+                          section: section,
+                          number: index + 1,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
