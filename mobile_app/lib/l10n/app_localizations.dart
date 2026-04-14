@@ -635,8 +635,44 @@ abstract class AppLocalizations {
   /// No description provided for @adminMobileHomeBody.
   ///
   /// In en, this message translates to:
-  /// **'This app is for clients and freelancers. Use the web admin dashboard for full management. Here you can browse the marketplace, open payments, and your profile.'**
+  /// **'Browse the marketplace, payments, and profile below. For the same admin tools as the website (plans, users, approvals, analytics, …), open a shortcut — it opens inside the app.'**
   String get adminMobileHomeBody;
+
+  /// No description provided for @adminFullDashboardCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Below is the same admin website as on desktop—sign in here if needed. Use the menu button to jump to a section or reload.'**
+  String get adminFullDashboardCaption;
+
+  /// No description provided for @adminWebJumpToSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to section'**
+  String get adminWebJumpToSection;
+
+  /// No description provided for @adminWebReloadPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload page'**
+  String get adminWebReloadPage;
+
+  /// No description provided for @adminWebDashboardSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin dashboard'**
+  String get adminWebDashboardSectionTitle;
+
+  /// No description provided for @adminWebDashboardSectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs here in the app (same website as desktop). Sign in with your admin account when the login screen appears.'**
+  String get adminWebDashboardSectionHint;
+
+  /// No description provided for @adminWebLaunchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link'**
+  String get adminWebLaunchFailed;
 
   /// No description provided for @save.
   ///

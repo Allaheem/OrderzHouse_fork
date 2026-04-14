@@ -281,7 +281,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adminMobileHomeBody =>
-      'هذا التطبيق مخصص للعملاء والفريلانسر. لإدارة المشاريع والموافقات الكاملة استخدم لوحة الإدارة على الويب. من هنا يمكنك استكشاف السوق والمدفوعات والملف الشخصي.';
+      'استخدم أدناه الاستكشاف والمدفوعات والملف الشخصي. لنفس أدوات الأدمن كالموقع (الخطط، المستخدمون، الموافقات، التحليلات…) اختر اختصاراً — يفتح داخل التطبيق.';
+
+  @override
+  String get adminFullDashboardCaption =>
+      'أدناه نفس لوحة الأدمن كسطح المكتب—سجّل الدخول هنا إذا لزم. استخدم زر القائمة للانتقال لقسم أو لتحديث الصفحة.';
+
+  @override
+  String get adminWebJumpToSection => 'انتقل إلى قسم';
+
+  @override
+  String get adminWebReloadPage => 'تحديث الصفحة';
+
+  @override
+  String get adminWebDashboardSectionTitle => 'لوحة الإدارة';
+
+  @override
+  String get adminWebDashboardSectionHint =>
+      'يعمل هنا داخل التطبيق (نفس موقع سطح المكتب). سجّل دخول الأدمن عندما تظهر شاشة تسجيل الدخول.';
+
+  @override
+  String get adminWebLaunchFailed => 'تعذّر فتح الرابط';
 
   @override
   String get save => 'حفظ';

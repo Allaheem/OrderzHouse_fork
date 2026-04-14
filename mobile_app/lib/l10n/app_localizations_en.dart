@@ -283,7 +283,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adminMobileHomeBody =>
-      'This app is for clients and freelancers. Use the web admin dashboard for full management. Here you can browse the marketplace, open payments, and your profile.';
+      'Browse the marketplace, payments, and profile below. For the same admin tools as the website (plans, users, approvals, analytics, …), open a shortcut — it opens inside the app.';
+
+  @override
+  String get adminFullDashboardCaption =>
+      'Below is the same admin website as on desktop—sign in here if needed. Use the menu button to jump to a section or reload.';
+
+  @override
+  String get adminWebJumpToSection => 'Jump to section';
+
+  @override
+  String get adminWebReloadPage => 'Reload page';
+
+  @override
+  String get adminWebDashboardSectionTitle => 'Admin dashboard';
+
+  @override
+  String get adminWebDashboardSectionHint =>
+      'Runs here in the app (same website as desktop). Sign in with your admin account when the login screen appears.';
+
+  @override
+  String get adminWebLaunchFailed => 'Could not open the link';
 
   @override
   String get save => 'Save';

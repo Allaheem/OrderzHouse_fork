@@ -16,6 +16,7 @@ import '../../features/freelancer/presentation/screens/freelancer_projects_scree
 import '../../features/client/presentation/screens/client_home_screen.dart';
 import '../../features/client/presentation/screens/client_projects_screen.dart';
 import '../../features/admin/presentation/screens/admin_home_screen.dart';
+import '../../features/admin/presentation/screens/admin_webview_screen.dart';
 import '../../features/common/presentation/screens/explore_projects_screen.dart';
 import '../../features/common/presentation/screens/project_details_screen.dart';
 import '../../features/common/presentation/screens/applicants_screen.dart';
@@ -196,7 +197,7 @@ final List<RouteBase> _appRoutes = [
       ),
     ],
   ),
-  // Admin (mobile: browse + profile only; full tools stay on web dashboard)
+  // Admin: in-app explore/payments/profile + web shortcuts on AdminHomeScreen
   GoRoute(
     path: '/admin',
     builder: (context, state) => const AdminHomeScreen(),
@@ -218,6 +219,21 @@ final List<RouteBase> _appRoutes = [
         path: 'notifications',
         name: 'adminNotifications',
         builder: (context, state) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: 'web-console',
+        builder: (context, state) {
+          final extra = state.extra;
+          if (extra is AdminWebViewParams) {
+            return AdminWebViewScreen(params: extra);
+          }
+          return Scaffold(
+            appBar: AppBar(title: const Text('Admin')),
+            body: const Center(
+              child: Text('Could not open this page. Go back and try again.'),
+            ),
+          );
+        },
       ),
     ],
   ),

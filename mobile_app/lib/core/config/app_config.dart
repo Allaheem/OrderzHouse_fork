@@ -37,6 +37,16 @@ class AppConfig {
     return _releaseDefaultApiUrl;
   }
 
+  /// Public website origin for “open admin in browser” shortcuts (no trailing slash).
+  /// Example: https://orderzhouse.com — override with `ADMIN_WEB_URL` in `.env`.
+  static String get adminWebOrigin {
+    final raw = _readEnvValue('ADMIN_WEB_URL');
+    if (raw != null && raw.trim().isNotEmpty) {
+      return raw.trim().replaceAll(RegExp(r'/+$'), '');
+    }
+    return 'https://orderzhouse.com';
+  }
+
   static String get environment {
     final configuredEnv = _readEnvValue('ENV');
     if (configuredEnv != null) {
