@@ -1,4 +1,5 @@
 // ??? ????????
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
@@ -83,5 +84,25 @@ class AppConfig {
       default:
         return false;
     }
+  }
+
+  /// Non-release builds only: show the PayPal button when the API points at a **local/LAN** dev server,
+  /// so you do not need `ENABLE_PAYPAL=true` or `GET /paypal/checkout-available` during local testing.
+  /// Release/App Store builds ignore this (still require explicit flag or server).
+  static bool get showPayPalButtonForLocalDev {
+    if (kReleaseMode) return false;
+    final u = baseUrl.toLowerCase();
+    if (u.contains('127.0.0.1') ||
+        u.contains('localhost') ||
+        u.contains('10.0.2.2')) {
+      return true;
+    }
+    if (RegExp(r'^https?://192\.168\.\d{1,3}\.\d{1,3}').hasMatch(u)) {
+      return true;
+    }
+    if (RegExp(r'^https?://10\.\d{1,3}\.\d{1,3}\.\d{1,3}').hasMatch(u)) {
+      return true;
+    }
+    return false;
   }
 }

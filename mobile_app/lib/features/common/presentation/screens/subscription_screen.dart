@@ -510,9 +510,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final appleConfigured =
         Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
 
-    // PayPal: `.env` ENABLE_PAYPAL OR `GET /paypal/checkout-available` (PAYPAL_ENABLED on server).
+    // PayPal: ENABLE_PAYPAL, server probe, or (debug only) local/LAN API — see AppConfig.showPayPalButtonForLocalDev.
     final showPayPal = (role == 2 || role == 3) &&
-        (AppConfig.enablePayPalPlanCheckout || payPalEnabledOnServer);
+        (AppConfig.enablePayPalPlanCheckout ||
+            payPalEnabledOnServer ||
+            AppConfig.showPayPalButtonForLocalDev);
 
     showPaymentMethodChooserSheet(
       context: context,
