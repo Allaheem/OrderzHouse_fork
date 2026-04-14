@@ -28,6 +28,11 @@ const getAdminIds = async () => {
   return rows.map(r => r.id);
 };
 
+/** True when `user_blocks` is missing (code deployed before migration 024). */
+function userBlocksTableMissing(err) {
+  return err?.code === "42P01" && /user_blocks/i.test(String(err.message || ""));
+}
+
 const getSystemSenderId = async () => {
   const { rows } = await pool.query(`SELECT id FROM users WHERE role_id = 1 AND is_deleted = false ORDER BY id ASC LIMIT 1`);
   return rows[0]?.id || null;
@@ -98,6 +103,21 @@ export const getMessagesByProjectId = async (req, res) => {
     );
     return res.status(200).json({ success: true, messages: rows || [] });
   } catch (err) {
+    if (userBlocksTableMissing(err)) {
+      try {
+        const { rows } = await pool.query(
+          `SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender
+           FROM messages m
+           LEFT JOIN users u ON u.id = m.sender_id
+           WHERE m.project_id = $1
+           ORDER BY m.time_sent ASC`,
+          [projectId]
+        );
+        return res.status(200).json({ success: true, messages: rows || [] });
+      } catch (e2) {
+        console.error("❌ Error in getMessagesByProjectId (fallback):", e2.message);
+      }
+    }
     console.error("❌ Error in getMessagesByProjectId:", err.message);
     return res.status(500).json({ success: false, message: "Server error" });
   }
@@ -129,6 +149,21 @@ export const getMessagesByTaskId = async (req, res) => {
     );
     return res.status(200).json({ success: true, messages: rows || [] });
   } catch (err) {
+    if (userBlocksTableMissing(err)) {
+      try {
+        const { rows } = await pool.query(
+          `SELECT m.*, json_build_object('id', u.id, 'first_name', u.first_name, 'last_name', u.last_name, 'avatar', u.profile_pic_url) AS sender
+           FROM messages m
+           LEFT JOIN users u ON u.id = m.sender_id
+           WHERE m.task_id = $1
+           ORDER BY m.time_sent ASC`,
+          [taskId]
+        );
+        return res.status(200).json({ success: true, messages: rows || [] });
+      } catch (e2) {
+        console.error("❌ Error in getMessagesByTaskId (fallback):", e2.message);
+      }
+    }
     console.error("❌ Error in getMessagesByTaskId:", err.message);
     return res.status(500).json({ success: false, message: "Server error" });
   }
@@ -209,11 +244,18 @@ export const createMessage = async (req, res) => {
     }
 
     if (receiver_id) {
-      const { rows: nb } = await pool.query(
-        `SELECT 1 FROM user_blocks WHERE blocker_user_id = $1 AND blocked_user_id = $2`,
-        [receiver_id, sender_id]
-      );
-      if (nb.length === 0) {
+      let skipNotify = false;
+      try {
+        const { rows: nb } = await pool.query(
+          `SELECT 1 FROM user_blocks WHERE blocker_user_id = $1 AND blocked_user_id = $2`,
+          [receiver_id, sender_id]
+        );
+        skipNotify = nb.length > 0;
+      } catch (nbErr) {
+        if (!userBlocksTableMissing(nbErr)) throw nbErr;
+        // Table missing (pre-migration): deliver notification as before.
+      }
+      if (!skipNotify) {
         await NotificationCreators.messageReceived(
           sender_id,
           receiver_id,
@@ -286,6 +328,25 @@ export const getUnreadCountByProjectId = async (req, res) => {
     const count = rows[0]?.count ?? 0;
     return res.status(200).json({ success: true, count, hasUnread: count > 0 });
   } catch (err) {
+    if (userBlocksTableMissing(err) && !(await isAdmin(userId))) {
+      try {
+        const { rows } = await pool.query(
+          `SELECT COUNT(*)::int AS count FROM messages m
+           WHERE m.project_id = $1 AND m.time_sent > COALESCE(
+             (SELECT pcr.last_read_at FROM project_chat_read pcr WHERE pcr.user_id = $2 AND pcr.project_id = $1),
+             '1970-01-01'::timestamptz
+           )`,
+          [projectId, userId]
+        );
+        const count = rows[0]?.count ?? 0;
+        return res.status(200).json({ success: true, count, hasUnread: count > 0 });
+      } catch (e2) {
+        if (e2.code === "42P01") {
+          return res.status(200).json({ success: true, count: 0, hasUnread: false });
+        }
+        console.error("❌ Error in getUnreadCountByProjectId (fallback):", e2.message);
+      }
+    }
     if (err.code === "42P01") return res.status(200).json({ success: true, count: 0, hasUnread: false });
     console.error("❌ Error in getUnreadCountByProjectId:", err.message);
     return res.status(500).json({ success: false, message: "Server error", count: 0 });

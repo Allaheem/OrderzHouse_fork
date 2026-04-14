@@ -57,13 +57,24 @@ const messageHandler = (socket, io) => {
 
       let filteredRecipients = recipientIds;
       if (recipientIds.length > 0) {
-        const { rows: blockRows } = await pool.query(
-          `SELECT blocker_user_id FROM user_blocks
-           WHERE blocked_user_id = $1 AND blocker_user_id = ANY($2::int[])`,
-          [savedMessage.sender_id, recipientIds]
-        );
-        const blockedSet = new Set(blockRows.map((r) => r.blocker_user_id));
-        filteredRecipients = recipientIds.filter((id) => !blockedSet.has(id));
+        try {
+          const { rows: blockRows } = await pool.query(
+            `SELECT blocker_user_id FROM user_blocks
+             WHERE blocked_user_id = $1 AND blocker_user_id = ANY($2::int[])`,
+            [savedMessage.sender_id, recipientIds]
+          );
+          const blockedSet = new Set(blockRows.map((r) => r.blocker_user_id));
+          filteredRecipients = recipientIds.filter((id) => !blockedSet.has(id));
+        } catch (blockErr) {
+          if (
+            blockErr?.code === "42P01" &&
+            /user_blocks/i.test(String(blockErr.message || ""))
+          ) {
+            filteredRecipients = recipientIds;
+          } else {
+            throw blockErr;
+          }
+        }
       }
 
       if (filteredRecipients.length > 0) {
