@@ -27,6 +27,114 @@ class AuthInterceptor extends Interceptor {
   }
 }
 
+/// Runs **after** [ErrorInterceptor] in the interceptor list so Dio invokes this
+/// **before** [ErrorInterceptor] on errors. Refreshes access token once, then retries.
+class AuthRefreshInterceptor extends Interceptor {
+  AuthRefreshInterceptor(this._dio);
+
+  final Dio _dio;
+
+  static const String _extraRefreshAttempted = '_authRefreshRetried';
+
+  static String? _authorizationHeader(RequestOptions ro) {
+    final headers = ro.headers;
+    final auth = headers['Authorization'] ?? headers['authorization'];
+    if (auth == null) return null;
+    if (auth is List) {
+      return auth.isEmpty ? null : auth.first.toString();
+    }
+    return auth.toString();
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    final ro = err.requestOptions;
+
+    if (ro.extra[_extraRefreshAttempted] == true) {
+      handler.next(err);
+      return;
+    }
+    if (ro.extra[AuthInterceptor.extraSkipAuth] == true) {
+      handler.next(err);
+      return;
+    }
+
+    final path = ro.uri.path;
+    if (path.contains('/users/refresh') ||
+        path.endsWith('/users/login') ||
+        path.contains('/users/verify-otp')) {
+      handler.next(err);
+      return;
+    }
+
+    final auth = _authorizationHeader(ro);
+    if (auth == null || auth.isEmpty || !auth.startsWith('Bearer ')) {
+      handler.next(err);
+      return;
+    }
+
+    final code = err.response?.statusCode;
+    if (code != 401 && code != 403) {
+      handler.next(err);
+      return;
+    }
+
+    String msg = '';
+    final data = err.response?.data;
+    if (data is Map) {
+      final m = data['message'] ?? data['error'];
+      msg = m == null ? '' : m.toString().toLowerCase();
+    }
+
+    final bool looksLikeTokenProblem = code == 401 ||
+        (code == 403 &&
+            (msg.contains('token') ||
+                msg.contains('expired') ||
+                msg.contains('invalid')));
+
+    if (!looksLikeTokenProblem) {
+      handler.next(err);
+      return;
+    }
+
+    final refresh = await SecureStore.readRefreshToken();
+    if (refresh == null || refresh.isEmpty) {
+      handler.next(err);
+      return;
+    }
+
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/users/refresh',
+        data: {'refreshToken': refresh},
+        options: Options(
+          extra: {AuthInterceptor.extraSkipAuth: true},
+        ),
+      );
+
+      final newToken = res.data?['token'] as String?;
+      if (newToken == null || newToken.isEmpty) {
+        handler.next(err);
+        return;
+      }
+
+      await SecureStore.saveAccessToken(newToken);
+      final newRt = res.data?['refreshToken'] as String?;
+      if (newRt != null && newRt.isNotEmpty) {
+        await SecureStore.saveRefreshToken(newRt);
+      }
+
+      ro.headers['Authorization'] = 'Bearer $newToken';
+      ro.extra[_extraRefreshAttempted] = true;
+
+      final response = await _dio.fetch(ro);
+      handler.resolve(response);
+    } catch (_) {
+      handler.next(err);
+    }
+  }
+}
+
 class LoggingInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {

@@ -683,6 +683,7 @@ const login = async (req, res) => {
         success: true,
         message: "Login successful",
         token,
+        ...(refreshToken ? { refreshToken } : {}),
         userInfo: {
           id: user.id,
           username: user.username,
@@ -784,6 +785,7 @@ const verifyOTP = async (req, res) => {
       success: true,
       message: "Login successful",
       token,
+      ...(refreshToken ? { refreshToken } : {}),
       userInfo: {
         id: user.id,
         username: user.username,
@@ -1124,6 +1126,7 @@ const verifyAndRegister = async (req, res) => {
       success: true,
       message: "Account created successfully",
       token,
+      ...(refreshToken ? { refreshToken } : {}),
       userInfo: {
         id: user.id,
         username: user.username,
@@ -1860,8 +1863,14 @@ const getDeactivatedUsers = async (req, res) => {
 ========================================= */
 const refreshToken = async (req, res) => {
   try {
-    const token = req.cookies?.refreshToken;
-    
+    const bodyRt =
+      typeof req.body?.refreshToken === "string"
+        ? req.body.refreshToken.trim()
+        : typeof req.body?.refresh_token === "string"
+          ? req.body.refresh_token.trim()
+          : "";
+    const token = req.cookies?.refreshToken || bodyRt || null;
+
     // Enhanced debugging for production issues
     if (!token) {
       const debugInfo = process.env.NODE_ENV === "development" ? {
@@ -1905,7 +1914,10 @@ const refreshToken = async (req, res) => {
       console.log("✅ Token refreshed successfully for user:", decoded.userId);
     }
     
-    return res.status(200).json({ token: newAccessToken });
+    return res.status(200).json({
+      token: newAccessToken,
+      ...(newRefreshToken ? { refreshToken: newRefreshToken } : {}),
+    });
   } catch (err) {
     const errorMessage = err.name === "TokenExpiredError" 
       ? "Refresh token expired" 

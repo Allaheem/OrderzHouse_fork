@@ -31,6 +31,7 @@ class DioClient {
       AuthInterceptor(),
       LoggingInterceptor(),
       ErrorInterceptor(),
+      AuthRefreshInterceptor(dio),
       RetryInterceptor(),
     ]);
 
