@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/models/project.dart';
 import '../../../../core/models/category.dart';
 import '../../../../core/models/user.dart';

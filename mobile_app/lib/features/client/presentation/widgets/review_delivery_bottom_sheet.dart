@@ -558,4 +558,25 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
     return '${(bytes / 1024 / 1024).toStringAsFixed(1)} MB';
   }
+
+  Future<void> safeLaunchExternalUrl(
+    BuildContext context,
+    String rawUrl, {
+    required String fallbackMessage,
+  }) async {
+    final uri = Uri.tryParse(rawUrl.trim());
+    if (uri == null) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(fallbackMessage)),
+      );
+      return;
+    }
+
+    final launched = await launchTrustedHttpUrl(uri);
+    if (launched || !context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(fallbackMessage)),
+    );
+  }
 }

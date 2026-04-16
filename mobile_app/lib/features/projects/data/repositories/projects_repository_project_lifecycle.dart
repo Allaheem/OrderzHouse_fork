@@ -105,7 +105,7 @@ class ProjectsRepositoryProjectLifecycle {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects');
       }
 
       return ApiResponse(
@@ -176,7 +176,7 @@ class ProjectsRepositoryProjectLifecycle {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/files: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/files');
       }
 
       return ApiResponse(
@@ -233,7 +233,7 @@ class ProjectsRepositoryProjectLifecycle {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/success/$projectId: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/success/$projectId');
       }
       return ApiResponse(
         success: false,
@@ -291,7 +291,7 @@ class ProjectsRepositoryProjectLifecycle {
     } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog(
-          '❌ UNEXPECTED ERROR => /projects/$projectId/offline-payment: $e',
+          '❌ UNEXPECTED ERROR => /projects/$projectId/offline-payment',
         );
       }
       return ApiResponse(

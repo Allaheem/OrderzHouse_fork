@@ -74,7 +74,7 @@ class ProjectsRepositoryChangesDelivery {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/request-changes: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/request-changes');
       }
 
       return ApiResponse(
@@ -164,7 +164,7 @@ class ProjectsRepositoryChangesDelivery {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/change-requests: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/change-requests');
       }
 
       return ApiResponse(
@@ -256,7 +256,7 @@ class ProjectsRepositoryChangesDelivery {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/deliver: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/deliver');
       }
 
       return ApiResponse(
@@ -348,7 +348,7 @@ class ProjectsRepositoryChangesDelivery {
       );
     } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/approve: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/approve');
       }
 
       return ApiResponse(
