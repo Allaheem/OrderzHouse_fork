@@ -128,5 +128,5 @@ const authSocket = async (socket, next) => {
   }
 };
 
-export { authentication, authSocket };
+export { authentication, authSocket, normalizeTokenPayload };
 export default authentication;

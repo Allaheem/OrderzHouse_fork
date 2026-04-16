@@ -27,11 +27,14 @@ class DioClient {
       ),
     );
 
+    // Dio runs `onError` in interceptor **registration order** (first added runs first).
+    // [AuthRefreshInterceptor] must be registered before [ErrorInterceptor] so we
+    // refresh + retry before clearing the session on 401.
     dio.interceptors.addAll([
       AuthInterceptor(),
       LoggingInterceptor(),
-      ErrorInterceptor(),
       AuthRefreshInterceptor(dio),
+      ErrorInterceptor(),
       RetryInterceptor(),
     ]);
 

@@ -18,6 +18,7 @@ import { Readable } from "stream";
 import dotenv from "dotenv";
 import { generateOtp, hashOtp, verifyOtp } from "../services/otpService.js";
 import { sendEmail } from "../utils/mailer.js";
+import { normalizeTokenPayload } from "../middleware/authentication.js";
 
 dotenv.config();
 
@@ -1889,7 +1890,15 @@ const refreshToken = async (req, res) => {
       });
     }
     
-    const decoded = verifyRefreshToken(token);
+    const decodedRaw = verifyRefreshToken(token);
+    const decoded = normalizeTokenPayload(decodedRaw);
+    if (decoded == null || decoded.userId === undefined || decoded.userId === null) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token payload",
+      });
+    }
+
     const newAccessToken = issueAccessToken({
       userId: decoded.userId,
       role: decoded.role,
@@ -1898,7 +1907,7 @@ const refreshToken = async (req, res) => {
       is_deleted: decoded.is_deleted,
       is_two_factor_enabled: decoded.is_two_factor_enabled,
     });
-    
+
     // Set new refresh token cookie (rotate on each refresh for security)
     const newRefreshToken = issueRefreshToken({
       userId: decoded.userId,

@@ -4,6 +4,7 @@ import '../storage/secure_store.dart';
 import '../storage/app_prefs.dart';
 import '../session/auth_api_binding.dart';
 import '../session/auth_session_events.dart';
+import 'token_refresh_coordinator.dart';
 class AuthInterceptor extends Interceptor {
   /// Set on [Options.extra] for public routes (login, forgot password, etc.)
   /// so we never attach a stale session token to unauthenticated endpoints.
@@ -27,8 +28,8 @@ class AuthInterceptor extends Interceptor {
   }
 }
 
-/// Runs **after** [ErrorInterceptor] in the interceptor list so Dio invokes this
-/// **before** [ErrorInterceptor] on errors. Refreshes access token once, then retries.
+/// Must be registered **before** [ErrorInterceptor]: Dio runs `onError` callbacks in
+/// interceptor list order, so we refresh and retry before the session is cleared on 401.
 class AuthRefreshInterceptor extends Interceptor {
   AuthRefreshInterceptor(this._dio);
 
@@ -97,36 +98,21 @@ class AuthRefreshInterceptor extends Interceptor {
       return;
     }
 
-    final refresh = await SecureStore.readRefreshToken();
-    if (refresh == null || refresh.isEmpty) {
+    final refreshed = await TokenRefreshCoordinator.refresh(_dio);
+    if (!refreshed) {
+      handler.next(err);
+      return;
+    }
+
+    final newToken = await SecureStore.readAccessToken();
+    if (newToken == null || newToken.isEmpty) {
       handler.next(err);
       return;
     }
 
     try {
-      final res = await _dio.post<Map<String, dynamic>>(
-        '/users/refresh',
-        data: {'refreshToken': refresh},
-        options: Options(
-          extra: {AuthInterceptor.extraSkipAuth: true},
-        ),
-      );
-
-      final newToken = res.data?['token'] as String?;
-      if (newToken == null || newToken.isEmpty) {
-        handler.next(err);
-        return;
-      }
-
-      await SecureStore.saveAccessToken(newToken);
-      final newRt = res.data?['refreshToken'] as String?;
-      if (newRt != null && newRt.isNotEmpty) {
-        await SecureStore.saveRefreshToken(newRt);
-      }
-
       ro.headers['Authorization'] = 'Bearer $newToken';
       ro.extra[_extraRefreshAttempted] = true;
-
       final response = await _dio.fetch(ro);
       handler.resolve(response);
     } catch (_) {

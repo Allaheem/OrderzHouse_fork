@@ -6,10 +6,12 @@ import pool from "../../models/db.js";
  */
 export const getSubscriptionStatus = async (req, res) => {
   try {
-    const freelancerId = req.token?.userId;
-    const roleId = req.token?.role || req.token?.roleId;
+    const freelancerId =
+      req.token?.userId ?? req.token?.user_id ?? req.token?.id;
+    const roleId = req.token?.role ?? req.token?.roleId ?? req.token?.role_id;
 
-    if (!freelancerId) {
+    // Use nullish checks only — `!freelancerId` wrongly rejected numeric id `0`.
+    if (freelancerId === undefined || freelancerId === null) {
       return res.status(401).json({ success: false, error: "Unauthorized" });
     }
 

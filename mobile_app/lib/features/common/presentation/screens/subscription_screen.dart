@@ -20,6 +20,8 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/utils/safe_url_launch.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/storage/secure_store.dart';
+import '../../../../core/network/dio_client.dart';
+import '../../../../core/network/token_refresh_coordinator.dart';
 import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscriptions/data/repositories/subscription_repository.dart';
@@ -37,6 +39,9 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   int _selectedTab = 0; // 0 = Plans, 1 = FAQ (UI only)
+
+  /// One-shot: refresh access token before subscription/PayPal calls if JWT is near expiry.
+  bool _didProactiveTokenRefresh = false;
 
   StreamSubscription<List<PurchaseDetails>>? _iosPurchaseSub;
   bool _iosPurchaseListenerAttached = false;
@@ -126,6 +131,18 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     _pendingApplePlan = null;
     _iosPurchaseSub?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didProactiveTokenRefresh) return;
+    _didProactiveTokenRefresh = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(
+        TokenRefreshCoordinator.refreshIfExpiringSoon(DioClient.instance),
+      );
+    });
   }
 
   @override
