@@ -31,7 +31,7 @@ class ModerationRepository {
       return ApiResponse(
         success: false,
         data: const [],
-        message: e.toString(),
+        message: 'Failed to load blocks',
       );
     }
   }
@@ -54,7 +54,11 @@ class ModerationRepository {
             e.response?.data?['message'] as String? ?? 'Failed to block user',
       );
     } catch (e) {
-      return ApiResponse(success: false, data: null, message: e.toString());
+      return const ApiResponse(
+        success: false,
+        data: null,
+        message: 'Failed to block user',
+      );
     }
   }
 
@@ -70,7 +74,11 @@ class ModerationRepository {
             e.response?.data?['message'] as String? ?? 'Failed to unblock',
       );
     } catch (e) {
-      return ApiResponse(success: false, data: null, message: e.toString());
+      return const ApiResponse(
+        success: false,
+        data: null,
+        message: 'Failed to unblock',
+      );
     }
   }
 
@@ -102,7 +110,11 @@ class ModerationRepository {
             e.response?.data?['message'] as String? ?? 'Failed to submit report',
       );
     } catch (e) {
-      return ApiResponse(success: false, data: null, message: e.toString());
+      return const ApiResponse(
+        success: false,
+        data: null,
+        message: 'Failed to submit report',
+      );
     }
   }
 }

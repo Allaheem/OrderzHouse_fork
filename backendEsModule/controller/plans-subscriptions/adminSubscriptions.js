@@ -130,7 +130,6 @@ export const assignSubscriptionToFreelancer = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to assign subscription",
-      error: err.message,
     });
   }
 };
@@ -216,7 +215,6 @@ export const getFreelancersWithSubscriptions = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch freelancers",
-      error: err.message,
     });
   }
 };
@@ -282,7 +280,6 @@ export const getAdminSubscriptions = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch subscriptions",
-      error: err.message,
     });
   }
 };
@@ -390,7 +387,6 @@ export const activateSubscription = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to activate subscription",
-      error: err.message,
     });
   }
 };
@@ -462,7 +458,6 @@ export const cancelSubscription = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to cancel subscription",
-      error: err.message,
     });
   }
 };

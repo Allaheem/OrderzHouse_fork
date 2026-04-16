@@ -31,7 +31,6 @@ export const sendOfferApi = async (projectId, payload, token) => {
     if (data?.success) return data;
     throw new Error(data?.message || "Failed to send offer");
   } catch (err) {
-    console.error("sendOfferApi error:", err.response?.data || err.message);
     throw new Error(err.response?.data?.message || err.message || "Failed to send offer");
   }
 };
@@ -56,8 +55,7 @@ export const getOffersForMyProjectsApi = async (token) => {
     const { data } = await API.get("/offers/my-projects/offers", authHeaders(token));
     if (data?.success) return data.data || data.offers || [];
     throw new Error(data?.message || "Failed to fetch offers for my projects");
-  } catch (err) {
-    console.error("getOffersForMyProjectsApi error:", err.response?.data || err.message);
+  } catch (_) {
     return [];
   }
 };
@@ -72,8 +70,7 @@ export const getOffersForProjectApi = async (projectId, token) => {
     const { data } = await API.get(`/offers/project/${projectId}/offers`, authHeaders(token));
     if (data?.success) return data.data || data.offers || [];
     throw new Error(data?.message || 'Failed to fetch offers for project');
-  } catch (err) {
-    console.error('getOffersForProjectApi error:', err.response?.data || err.message);
+  } catch (_) {
     return [];
   }
 };

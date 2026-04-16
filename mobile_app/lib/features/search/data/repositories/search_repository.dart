@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../../core/models/search_result.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/models/project.dart';
 import '../../../../core/models/category.dart';
 
@@ -15,23 +14,7 @@ class SearchRepository {
   /// Response: { success: true, projects: [...], categories: [...] }
   Future<ApiResponse<SearchResult>> search(String query) async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /search');
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => Query: q=$query');
-      }
-
       final response = await _dio.get('/search', queryParameters: {'q': query});
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /search');
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
-        );
-      }
 
       final data = response.data as Map<String, dynamic>;
 
@@ -44,11 +27,7 @@ class SearchRepository {
               .map((item) {
                 try {
                   return Project.fromJson(item as Map<String, dynamic>);
-                } catch (e) {
-                  if (AppConfig.isDevelopment) {
-                    // ignore: avoid_print
-                    print('⚠️ Failed to parse project: $e');
-                  }
+                } catch (_) {
                   return null;
                 }
               })
@@ -64,11 +43,7 @@ class SearchRepository {
               .map((item) {
                 try {
                   return Category.fromJson(item as Map<String, dynamic>);
-                } catch (e) {
-                  if (AppConfig.isDevelopment) {
-                    // ignore: avoid_print
-                    print('⚠️ Failed to parse category: $e');
-                  }
+                } catch (_) {
                   return null;
                 }
               })
@@ -89,33 +64,17 @@ class SearchRepository {
         message: data['message'] as String? ?? 'Search failed',
       );
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /search');
-        // ignore: avoid_print
-        print('❌ ERROR => Message: ${e.message}');
-        if (e.response != null) {
-          // ignore: avoid_print
-          print('❌ ERROR => Response Data: ${e.response?.data}');
-        }
-      }
-
       return ApiResponse(
         success: false,
         data: SearchResult.empty(),
         message: e.response?.data?['message'] as String? ?? 'Failed to search',
         error: e.response?.data as Map<String, dynamic>?,
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /search: $e');
-      }
-
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: SearchResult.empty(),
-        message: 'Failed to search: ${e.toString()}',
+        message: 'Failed to search',
       );
     }
   }

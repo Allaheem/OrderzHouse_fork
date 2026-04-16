@@ -907,7 +907,7 @@ const requestSignupOtp = async (req, res) => {
     await pool.query(
       `INSERT INTO signup_otps (email, otp, otp_hash, expires_at) VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO UPDATE SET otp = $2, otp_hash = $3, expires_at = $4`,
-      [emailLower, otp, otpHash, expiresAt]
+      [emailLower, null, otpHash, expiresAt]
     );
 
     // Send OTP email using Resend
@@ -1113,15 +1113,10 @@ const verifyAndRegister = async (req, res) => {
     await pool.query("DELETE FROM signup_otps WHERE email = $1", [emailLower]);
     await client.query("COMMIT");
 
-    const tokenPayload = {
-      userId: user.id,
-      role: user.role_id,
-      is_verified: user.email_verified,
-      username: user.username,
-      is_deleted: user.is_deleted,
-      is_two_factor_enabled: user.is_two_factor_enabled,
-    };
-    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const tokenPayload = buildTokenPayload(user);
+    const token = issueAccessToken(tokenPayload);
+    const refreshToken = issueRefreshToken(tokenPayload);
+    setRefreshTokenCookie(res, refreshToken);
     const { CURRENT_TERMS_VERSION } = await import("../config/terms.js");
     const mustAcceptTerms = true; // New user has not accepted terms yet
 

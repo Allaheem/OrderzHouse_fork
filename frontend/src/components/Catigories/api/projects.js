@@ -2,7 +2,7 @@ import API from "../../../api/client.js";
 import store from "../../../store/store";
 
 const getAuthToken = () => {
-  return store?.getState()?.auth?.token || localStorage.getItem("token") || null;
+  return store?.getState()?.auth?.token || null;
 };
 
 const getAuthHeaders = () => {
@@ -30,8 +30,7 @@ export const fetchAuthProjectsByCategory = async (categoryId, options = {}) => {
       };
     }
     throw new Error(data.message || "Failed to fetch projects");
-  } catch (err) {
-    console.error("fetchAuthProjectsByCategory error:", err);
+  } catch (_) {
     return { projects: [], pagination: null };
   }
 };
@@ -56,8 +55,7 @@ export const fetchAuthProjectsBySubCategory = async (
       };
     }
     throw new Error(data.message || "Failed to fetch projects");
-  } catch (err) {
-    console.error("fetchAuthProjectsBySubCategory error:", err);
+  } catch (_) {
     return { projects: [], pagination: null };
   }
 };
@@ -82,8 +80,7 @@ export const fetchAuthProjectsBySubSubCategory = async (
       };
     }
     throw new Error(data.message || "Failed to fetch projects");
-  } catch (err) {
-    console.error("fetchAuthProjectsBySubSubCategory error:", err);
+  } catch (_) {
     return { projects: [], pagination: null };
   }
 };
@@ -112,8 +109,7 @@ export const fetchProjectsBySubSubCategory = async (subSubCategoryId) => {
     );
     if (data.success) return data.projects;
     throw new Error(data.message || "Failed to fetch projects");
-  } catch (err) {
-    console.error("fetchProjectsBySubSubCategory error:", err);
+  } catch (_) {
     return [];
   }
 };
@@ -163,7 +159,6 @@ export const getProjectByIdApi = async (projectId, token) => {
     if (!data.success) throw new Error(data.message || "Failed to fetch project");
     return data.project;
   } catch (err) {
-    console.error("Get project by ID error:", err.response?.data || err.message);
     throw err.response?.data || err;
   }
 };
@@ -183,8 +178,7 @@ export const getProjectFilesApi = async (projectId) => {
       return data.files;
     }
     throw new Error(data.message || "Failed to fetch project files");
-  } catch (err) {
-    console.error("getProjectFilesApi error:", err.response?.data || err.message);
+  } catch (_) {
     return [];
   }
 };
@@ -205,7 +199,7 @@ export const getAssignmentForFreelancerApi = async (projectId) => {
     return null; 
   } catch (err) {
     if (err.response?.status === 404) return null;
-    console.error("getAssignmentForFreelancerApi error:", err.response?.data || err.message);
+    
     throw new Error(err.response?.data?.message || err.message || "Failed to fetch assignment");
   }
 };
@@ -244,8 +238,7 @@ export const checkIfAssignedApi = async (projectId, token) => {
 
     if (data.success) return data.is_assigned;
     return false;
-  } catch (err) {
-    console.error("checkIfAssignedApi error:", err.response?.data || err.message);
+  } catch (_) {
     return false;
   }
 };
@@ -258,10 +251,8 @@ export const getMyAppliedProjectIds = async () => {
   if (!token) return new Set();
 
   try {
-    // Use the existing endpoint that returns applications for user's projects
-    // We'll extract project IDs from it
-    const { data } = await axios.get(
-      `${API_BASE}/applications/my-projects`,
+    const { data } = await API.get(
+      "/projects/applications/my-projects",
       getAuthHeaders()
     );
 
@@ -275,11 +266,7 @@ export const getMyAppliedProjectIds = async () => {
       return projectIds;
     }
     return new Set();
-  } catch (err) {
-    // If endpoint doesn't work or user is not a client, try alternative approach
-    // For freelancers, we need to query assignments differently
-    // For now, return empty set and let individual checks happen
-    console.warn("getMyAppliedProjectIds: Could not fetch applications", err.response?.data || err.message);
+  } catch (_) {
     return new Set();
   }
 };

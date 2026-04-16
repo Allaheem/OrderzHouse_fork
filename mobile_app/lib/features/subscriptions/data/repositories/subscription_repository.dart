@@ -28,8 +28,10 @@ class SubscriptionRepository {
       return SubscriptionStatusSnapshot.failure(
         msg ?? e.message ?? 'Network error',
       );
-    } catch (e) {
-      return SubscriptionStatusSnapshot.failure(e.toString());
+    } catch (_) {
+      return SubscriptionStatusSnapshot.failure(
+        'Could not load subscription status. Please try again.',
+      );
     }
   }
 
@@ -105,7 +107,7 @@ class SubscriptionRepository {
     } catch (e) {
       return AppleReceiptVerifyResult(
         success: false,
-        message: e.toString(),
+        message: 'Could not verify App Store receipt. Please try again.',
         idempotent: false,
       );
     }
@@ -136,10 +138,10 @@ class SubscriptionRepository {
         orderId: null,
         approvalUrl: null,
       );
-    } catch (e) {
+    } catch (_) {
       return PayPalPlanOrderResult(
         success: false,
-        message: e.toString(),
+        message: 'Could not create PayPal order. Please try again.',
         orderId: null,
         approvalUrl: null,
       );
@@ -172,7 +174,7 @@ class SubscriptionRepository {
     } catch (e) {
       return PayPalCaptureResult(
         success: false,
-        message: e.toString(),
+        message: 'Could not complete PayPal payment. Please try again.',
         idempotent: false,
       );
     }

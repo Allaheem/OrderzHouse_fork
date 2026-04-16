@@ -108,9 +108,6 @@ export const getTenderVaultProjects = async (req, res) => {
       return r;
     });
 
-    // Temporary debug (remove after testing)
-    console.log("TenderVault LIST sample metadata type:", typeof parsedRows[0]?.metadata);
-
     // Get total count
     let countQuery = `
       SELECT COUNT(*) as total
@@ -431,7 +428,7 @@ export const createTenderVaultProject = async (req, res) => {
     
     return res.status(500).json({
       success: false,
-      message: err.message || "Failed to create tender vault project",
+      message: "Failed to create tender vault project",
     });
   }
 };

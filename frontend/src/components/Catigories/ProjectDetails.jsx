@@ -202,24 +202,18 @@ export default function ProjectDetails({ mode: propMode }) {
   const readOnly = !!location.state?.readOnly;
   const roleLabel = location.state?.role || "guest";
   const { userData, token: reduxToken } = useSelector((s) => s?.auth || {}) || {};
-  const token = reduxToken ?? (typeof window !== "undefined" ? localStorage.getItem("accessToken") : null);
+  const token = reduxToken || null;
 
   const roleIdFromRedux =
     userData?.role_id ?? userData?.roleId ?? userData?.role ?? null;
-  const roleId =
-    (typeof roleIdFromRedux === "number" ? roleIdFromRedux : null) ??
-    (typeof window !== "undefined" &&
-    /^\d+$/.test(localStorage.getItem("role") || "")
-      ? Number(localStorage.getItem("role"))
-      : null);
+  const roleId = typeof roleIdFromRedux === "number" ? roleIdFromRedux : null;
 
   const isClient = roleId === 2;
   const isFreelancer = roleId === 3;
   const isStaff = roleId === 1;
   const currentUserId =
     userData?.id ??
-    userData?.userId ??
-    (typeof window !== "undefined" ? localStorage.getItem("userId") : null);
+    userData?.userId;
 
   const isPaymentRoute = id === "payment-cancel" || id === "payment-success";
 
@@ -257,7 +251,7 @@ export default function ProjectDetails({ mode: propMode }) {
 
   (async () => {
     try {
-      const authToken = reduxToken ?? (typeof window !== "undefined" ? localStorage.getItem("accessToken") : null);
+      const authToken = reduxToken || null;
       if (!authToken) return;
 
       const projectType = item?.project_type ?? item?.type;
@@ -281,8 +275,7 @@ export default function ProjectDetails({ mode: propMode }) {
         const isAssigned = await checkIfAssignedApi(id);
         setHasApplied(!!isAssigned);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (_) {
     }
   })();
 }, [id, isFreelancer, mode, item, reduxToken, currentUserId]);
@@ -347,7 +340,6 @@ export default function ProjectDetails({ mode: propMode }) {
       setHasApplied(true);
       setOfferAmount("");
     } catch (err) {
-      console.error(err);
       toast.error(err?.message || "Failed to apply to project.");
     } finally {
       setBusy(false);

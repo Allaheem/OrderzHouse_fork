@@ -5,6 +5,16 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { ArrowLeft, BookOpen, Download, Clock, DollarSign, AlertCircle, Lock } from 'lucide-react';
 
+const isSafeMaterialUrl = (value) => {
+  if (!value || typeof value !== 'string') return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
 const CourseDetail = () => {
   const { id } = useParams();
   const { token, userData } = useSelector((state) => state.auth);
@@ -165,15 +175,26 @@ const CourseDetail = () => {
                           <p className="text-sm text-gray-500">Type: {material.file_type || 'N/A'}</p>
                         </div>
                       </div>
-                      <a
-                        href={material.file_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 transition-colors"
-                        title="Download Material"
-                      >
-                        <Download className="w-5 h-5" />
-                      </a>
+                      {isSafeMaterialUrl(material.file_url) ? (
+                        <a
+                          href={material.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                          title="Download Material"
+                        >
+                          <Download className="w-5 h-5" />
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toast.error('Material link is unavailable')}
+                          className="text-gray-400 cursor-not-allowed"
+                          title="Unavailable material link"
+                        >
+                          <Download className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))

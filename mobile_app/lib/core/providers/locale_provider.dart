@@ -27,8 +27,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
       if (savedLocale != null) {
         state = Locale(savedLocale);
       }
-    } catch (e) {
-      debugPrint('Error loading saved locale: $e');
+    } catch (_) {
     }
   }
 
@@ -40,8 +39,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
 
     try {
       await AppPrefs.setLanguageCode(locale.languageCode);
-    } catch (e) {
-      debugPrint('Error saving locale: $e');
+    } catch (_) {
     }
   }
 

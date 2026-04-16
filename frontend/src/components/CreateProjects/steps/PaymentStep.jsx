@@ -34,7 +34,6 @@ export default function PaymentStep({
     if (projectData.project_type === "bidding" && onSubmit && !isSubmitting) {
       // Bidding projects should not go through payment step
       // Automatically submit the project creation
-      console.log("[PaymentStep] Bidding project detected, skipping payment and submitting directly");
       onSubmit();
     }
   }, [projectData.project_type]); // Only depend on project_type to avoid re-triggering

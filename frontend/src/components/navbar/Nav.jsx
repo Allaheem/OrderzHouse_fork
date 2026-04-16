@@ -90,8 +90,7 @@ export default function Header() {
         params: { limit: 10, unreadOnly: false },
       });
       if (data.success) setNotifications(data.notifications);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
+    } catch (_) {
     }
   };
 
@@ -103,8 +102,7 @@ export default function Header() {
         params: { unreadOnly: true },
       });
       if (data.success) setUnreadCount(data.count);
-    } catch (error) {
-      console.error("Error fetching notification count:", error);
+    } catch (_) {
     }
   };
 
@@ -120,8 +118,7 @@ export default function Header() {
         list.map((n) => (n.id === id ? { ...n, read_status: true } : n))
       );
       if (wasUnread) setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
+    } catch (_) {
     }
   };
 
@@ -136,8 +133,7 @@ export default function Header() {
         list.map((n) => ({ ...n, read_status: true }))
       );
       setUnreadCount(0);
-    } catch (error) {
-      console.error("Error marking all as read:", error);
+    } catch (_) {
     }
   };
 
@@ -172,7 +168,6 @@ export default function Header() {
         fetchUnreadCount();
       })
       .catch((error) => {
-        console.error("Error fetching user data:", error);
         const code = error.response?.data?.code;
         const status = error.response?.status;
         // عدم إظهار لوحة قبول الشروط تلقائياً — المستخدم يبقى في الصفحة الحالية

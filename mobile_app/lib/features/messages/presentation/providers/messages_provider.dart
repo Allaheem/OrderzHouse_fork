@@ -18,31 +18,17 @@ final projectMessagesProvider = FutureProvider.autoDispose.family<List<Message>,
   // Watch userId to auto-invalidate when user changes
   final userId = ref.watch(authStateProvider.select((state) => state.userId));
 
-  print(
-    '🔄 [projectMessagesProvider] Fetching messages for projectId: $projectId, userId: $userId',
-  );
-
   // Guard against logged out state
   if (userId == null) {
-    print(
-      '⚠️ [projectMessagesProvider] User not logged in, returning empty list',
-    );
     return [];
   }
 
   final repository = ref.read(messagesRepositoryProvider);
   final response = await repository.getProjectMessages(projectId);
 
-  print(
-    '📥 [projectMessagesProvider] Response: success=${response.success}, data length=${response.data?.length ?? 0}',
-  );
-
   if (response.success && response.data != null) {
-    final messages = response.data!;
-    print('✅ [projectMessagesProvider] Returning ${messages.length} messages');
-    return messages;
+    return response.data!;
   } else {
-    print('❌ [projectMessagesProvider] Error: ${response.message}');
     throw Exception(response.message ?? 'Failed to fetch messages');
   }
 });

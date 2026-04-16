@@ -479,16 +479,30 @@ export const NotificationCreators = {
      PROJECTS (CREATE + INVITES + APPLY)
   ============================ */
 
-  projectCreated: async (projectId, projectTitle, clientId, categoryId = null) => {
-    // notify admins
-    const admins = await getAdmins();
-    await createBulkNotifications(
-      admins,
-      NOTIFICATION_TYPES.PROJECT_CREATED,
-      `🆕 New project created: "${safeText(projectTitle)}"`,
-      projectId,
-      "project"
-    );
+  projectCreated: async (
+    projectId,
+    projectTitle,
+    clientId,
+    categoryId = null,
+    options = {}
+  ) => {
+    const notifyAdmins = options.notifyAdmins !== false;
+    const notifyFreelancers = options.notifyFreelancers !== false;
+
+    if (notifyAdmins) {
+      const admins = await getAdmins();
+      await createBulkNotifications(
+        admins,
+        NOTIFICATION_TYPES.PROJECT_CREATED,
+        `🆕 New project created: "${safeText(projectTitle)}"`,
+        projectId,
+        "project"
+      );
+    }
+
+    if (!notifyFreelancers) {
+      return;
+    }
 
     // notify freelancers in same category (if exists)
     const cat = toInt(categoryId);

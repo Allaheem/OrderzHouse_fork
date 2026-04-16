@@ -37,7 +37,10 @@ export function issueAccessToken(payload) {
  * Issue long-lived refresh token (default 30d). Uses REFRESH_TOKEN_SECRET.
  */
 export function issueRefreshToken(payload) {
-  const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+  const secret = process.env.REFRESH_TOKEN_SECRET;
+  if (!secret) {
+    throw new Error("REFRESH_TOKEN_SECRET is required to issue refresh tokens");
+  }
   return jwt.sign(payload, secret, { expiresIn: getRefreshExpiresIn() });
 }
 
@@ -45,7 +48,10 @@ export function issueRefreshToken(payload) {
  * Verify refresh token. Returns decoded payload or throws.
  */
 export function verifyRefreshToken(token) {
-  const secret = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
+  const secret = process.env.REFRESH_TOKEN_SECRET;
+  if (!secret) {
+    throw new Error("REFRESH_TOKEN_SECRET is required to verify refresh tokens");
+  }
   return jwt.verify(token, secret);
 }
 

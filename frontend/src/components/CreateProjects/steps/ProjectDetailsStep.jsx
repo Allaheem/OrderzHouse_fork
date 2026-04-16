@@ -62,8 +62,7 @@ export default function ProjectDetailsStep({
   useEffect(() => {
     fetchCategories()
       .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error("Failed to fetch categories:", err);
+      .catch(() => {
         setCategories([]);
       });
   }, []);
@@ -81,8 +80,7 @@ export default function ProjectDetailsStep({
 
     fetchSubSubCategoriesByCategoryId(idAsNumber)
       .then((data) => setSubSubCategories(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error("Failed to fetch sub-sub-categories:", err);
+      .catch(() => {
         setSubSubCategories([]);
       });
 

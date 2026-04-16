@@ -68,7 +68,6 @@ export const getAssignmentForFreelancer = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error",
-      error: err.message,
     });
   }
 };
@@ -104,7 +103,6 @@ export const checkIfAssigned = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error",
-      error: err.message,
     });
   }
 };

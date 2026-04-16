@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../../core/models/category.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/config/app_config.dart';
 
 class CategoriesRepository {
   CategoriesRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
@@ -15,51 +14,10 @@ class CategoriesRepository {
   /// Response: { success: true, data: [...] }
   Future<ApiResponse<List<Category>>> fetchExploreCategories() async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /category');
-      }
-
       final response = await _dio.get('/category');
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /category');
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
-        );
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars',
-        );
-      }
 
       return _parseCategoriesResponse(response);
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /category',
-        );
-        // ignore: avoid_print
-        print('❌ ERROR => Type: ${e.type}');
-        // ignore: avoid_print
-        print('❌ ERROR => Final URL: ${e.requestOptions.uri}');
-        // ignore: avoid_print
-        print('❌ ERROR => Message: ${e.message}');
-        if (e.error != null) {
-          // ignore: avoid_print
-          print('❌ ERROR => Error: ${e.error}');
-        }
-        if (e.response != null) {
-          // ignore: avoid_print
-          print('❌ ERROR => Status Code: ${e.response?.statusCode}');
-          // ignore: avoid_print
-          print('❌ ERROR => Response Data: ${e.response?.data}');
-        }
-      }
-
       return ApiResponse(
         success: false,
         data: [],
@@ -68,16 +26,11 @@ class CategoriesRepository {
             ? e.response?.data as Map<String, dynamic>
             : null,
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /category: $e');
-      }
-
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch categories: ${e.toString()}',
+        message: 'Failed to fetch categories',
       );
     }
   }
@@ -99,20 +52,11 @@ class CategoriesRepository {
     }
 
     if (categoriesList == null || categoriesList.isEmpty) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('⚠️ RESPONSE: No categories found in response');
-      }
       return const ApiResponse(
         success: true,
         data: [],
         message: 'No categories available',
       );
-    }
-
-    if (AppConfig.isDevelopment) {
-      // ignore: avoid_print
-      print('📊 Categories raw count: ${categoriesList.length}');
     }
 
     final categories = <Category>[];
@@ -121,24 +65,9 @@ class CategoriesRepository {
         final json = categoriesList[i] as Map<String, dynamic>;
         final category = Category.fromJson(json);
         categories.add(category);
-      } catch (e) {
-        if (AppConfig.isDevelopment) {
-          // ignore: avoid_print
-          print('⚠️ Failed to parse category at index $i: $e');
-          // ignore: avoid_print
-          print('⚠️ Category data: ${categoriesList[i]}');
-        }
+      } catch (_) {
         // Skip invalid categories but continue processing others
       }
-    }
-
-    if (AppConfig.isDevelopment) {
-      // ignore: avoid_print
-      print(
-        '✅ Parsed ${categories.length}/${categoriesList.length} categories successfully',
-      );
-      // ignore: avoid_print
-      print('📊 Categories final count: ${categories.length}');
     }
 
     return ApiResponse(
@@ -181,11 +110,11 @@ class CategoriesRepository {
             _extractErrorMessage(e.response?.data) ??
             'Failed to fetch sub-categories',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch sub-categories: ${e.toString()}',
+        message: 'Failed to fetch sub-categories',
       );
     }
   }
@@ -226,11 +155,11 @@ class CategoriesRepository {
             _extractErrorMessage(e.response?.data) ??
             'Failed to fetch sub-sub-categories',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch sub-sub-categories: ${e.toString()}',
+        message: 'Failed to fetch sub-sub-categories',
       );
     }
   }
@@ -270,11 +199,11 @@ class CategoriesRepository {
             _extractErrorMessage(e.response?.data) ??
             'Failed to fetch sub-sub-categories',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch sub-sub-categories: ${e.toString()}',
+        message: 'Failed to fetch sub-sub-categories',
       );
     }
   }

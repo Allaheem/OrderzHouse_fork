@@ -84,12 +84,9 @@ function SectionCard({ title, actionLabel, children, className = "" }) {
       <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-slate-800">{title}</h2>
         {actionLabel && (
-          <a
-            href="#"
-            className="text-xs font-semibold text-slate-500 hover:text-orange-600 transition"
-          >
+          <span className="text-xs font-semibold text-slate-500">
             {actionLabel}
-          </a>
+          </span>
         )}
       </div>
       <div className="p-4 flex-1 min-h-0">{children}</div>

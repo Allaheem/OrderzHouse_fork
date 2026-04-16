@@ -134,8 +134,7 @@ export default function NotificationsPage() {
         setNotifications(response.data.notifications);
         setFilteredNotifications(response.data.notifications);
       }
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
+    } catch (_) {
       setError("Failed to load notifications");
     } finally {
       setLoading(false);
@@ -155,8 +154,7 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, read_status: true } : n))
       );
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
+    } catch (_) {
     }
   };
 
@@ -171,8 +169,7 @@ export default function NotificationsPage() {
         }
       );
       setNotifications((prev) => prev.map((n) => ({ ...n, read_status: true })));
-    } catch (err) {
-      console.error("Error marking all as read:", err);
+    } catch (_) {
     }
   };
 
@@ -188,8 +185,7 @@ export default function NotificationsPage() {
         newSet.delete(id);
         return newSet;
       });
-    } catch (err) {
-      console.error("Error deleting notification:", err);
+    } catch (_) {
     }
   };
 
@@ -209,8 +205,7 @@ export default function NotificationsPage() {
       setSelectedNotifications(new Set());
       setSelectAll(false);
       setShowDeleteConfirm(false);
-    } catch (err) {
-      console.error("Error deleting notifications:", err);
+    } catch (_) {
     }
   };
 

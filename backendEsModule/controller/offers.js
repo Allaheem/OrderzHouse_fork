@@ -26,7 +26,6 @@ export const getAllProjectForOffer = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server Error",
-      error: err,
     });
   }
 };
@@ -1055,13 +1054,9 @@ export const getPendingBiddingApprovals = async (req, res) => {
     });
   } catch (err) {
     console.error("getPendingBiddingApprovals error:", err);
-    const msg = err.message || String(err);
-    const code = err.code;
     return res.status(500).json({
       success: false,
       message: "Server error",
-      error: msg,
-      ...(code && { code }),
     });
   }
 };
@@ -1209,10 +1204,7 @@ export const adminApproveBiddingOffer = async (req, res) => {
     } catch (_) {}
     if (client) client.release();
     console.error("adminApproveBiddingOffer error:", error);
-    return res.status(500).json({
-      success: false,
-      message: error?.message || "Server error",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

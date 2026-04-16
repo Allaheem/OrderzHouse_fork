@@ -2,7 +2,7 @@ import API, { getWebSocketBaseURL } from "../../../api/client.js";
 import store from "../../../store/store";
 
 const getAuthToken = () =>
-  store?.getState()?.auth?.token || localStorage.getItem("token") || null;
+  store?.getState()?.auth?.token || null;
 
 const getAuthHeaders = () => {
   const token = getAuthToken();
@@ -158,13 +158,12 @@ export const connectNotifications = (userId, onMessage) => {
   const wsBase = getWebSocketBaseURL();
   notificationSocket = new WebSocket(`${wsBase}/ws/notifications?user=${userId}`);
 
-  notificationSocket.onopen = () => console.log("🔔 Notifications connected");
+  notificationSocket.onopen = () => {};
   notificationSocket.onmessage = (msg) => {
     const data = JSON.parse(msg.data);
     if (onMessage) onMessage(data);
   };
   notificationSocket.onclose = () => {
-    console.log("⚠️ Notifications disconnected, retrying...");
     setTimeout(() => connectNotifications(userId, onMessage), 5000);
   };
 };
@@ -188,13 +187,12 @@ export const connectChat = (projectOrTaskId, userId, onMessage) => {
     `${wsBase}/ws/chat?room=${projectOrTaskId}&user=${userId}`
   );
 
-  chatSocket.onopen = () => console.log("💬 Chat connected");
+  chatSocket.onopen = () => {};
   chatSocket.onmessage = (msg) => {
     const data = JSON.parse(msg.data);
     if (onMessage) onMessage(data);
   };
   chatSocket.onclose = () => {
-    console.log("⚠️ Chat disconnected, retrying...");
     setTimeout(() => connectChat(projectOrTaskId, userId, onMessage), 5000);
   };
 };

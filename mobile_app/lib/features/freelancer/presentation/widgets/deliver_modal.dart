@@ -51,8 +51,8 @@ class _DeliverModalState extends State<DeliverModal> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to pick files: $e'),
+          const SnackBar(
+            content: Text('Failed to pick files. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -93,8 +93,8 @@ class _DeliverModalState extends State<DeliverModal> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to deliver: $e'),
+          const SnackBar(
+            content: Text('Failed to submit delivery. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );

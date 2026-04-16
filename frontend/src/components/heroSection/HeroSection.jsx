@@ -77,7 +77,7 @@ class x {
     } else if (this.#e.id) {
       this.canvas = document.getElementById(this.#e.id);
     } else {
-      console.error("Three: Missing canvas or id parameter");
+      throw new Error("Three: Missing canvas or id parameter");
     }
     this.canvas.style.display = "block";
     const e = {

@@ -22,8 +22,7 @@ export default function Freelancers() {
             }))
           );
         }
-      } catch (e) {
-        console.error("Failed to load plans for filter", e);
+      } catch (_) {
       }
     })();
     return () => {

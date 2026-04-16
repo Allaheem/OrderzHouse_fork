@@ -77,38 +77,8 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
     final isProjectCompleted =
         projectStatus == 'completed' || completionStatus == 'completed';
 
-    // Debug logs
-    if (AppConfig.isDevelopment) {
-      debugPrint('🔍 [ProjectDetails] Bottom Bar Visibility (REACTIVE):');
-      debugPrint('  currentUserId: $currentUserId');
-      debugPrint(
-        '  userRoleId: $userRoleId (${isClientRole
-            ? "CLIENT"
-            : isFreelancerRole
-            ? "FREELANCER"
-            : "OTHER"})',
-      );
-      debugPrint('  project.userId: ${project.userId}');
-      debugPrint('  project.status: $projectStatus');
-      debugPrint('  isOwner: $isOwner');
-      debugPrint('  isClientRole: $isClientRole');
-      debugPrint('  isFreelancerRole: $isFreelancerRole');
-      debugPrint('  isAssignedToMe: $isAssignedToMe');
-      debugPrint('  isAssignedToSomeone: $isAssignedToSomeone');
-      debugPrint('  statusKey: $statusKey');
-      debugPrint('  deliveries.length: ${_deliveries.length}');
-      debugPrint('  isProjectCompleted: $isProjectCompleted');
-      debugPrint('  _isLoadingAssignment: $_isLoadingAssignment');
-      debugPrint('  _isLoadingDeliveries: $_isLoadingDeliveries');
-      debugPrint('  isLoadingActions: $isLoadingActions');
-      debugPrint('  _projectInitialized: $_projectInitialized');
-    }
-
     // Show Client Action Bar (Receive + Applicants) for client-owned projects
     if (isClientRole && isOwner) {
-      if (AppConfig.isDevelopment) {
-        debugPrint('✅ [ProjectDetails] Showing Client Action Bar');
-      }
       return buildClientActionBar(
         context,
         isProjectCompleted,
@@ -119,11 +89,6 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
     // Apply created a `project_assignments` row (pending_client_approval) but
     // work/delivery is only after client accepts — avoid greyed "Apply" with no deliver CTA.
     if (isFreelancerRole && !isOwner && isFreelancerAssignmentAwaitingConfirmation) {
-      if (AppConfig.isDevelopment) {
-        debugPrint(
-          '✅ [ProjectDetails] Showing freelancer awaiting confirmation bar',
-        );
-      }
       return buildFreelancerAwaitingConfirmationBar(
         context,
         loading: isLoadingActions,
@@ -132,9 +97,6 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
 
     // Show Freelancer Actions (Deliver or Waiting status) if assigned
     if (isFreelancerRole && !isOwner && isAssignedToMe) {
-      if (AppConfig.isDevelopment) {
-        debugPrint('✅ [ProjectDetails] Showing Freelancer Actions');
-      }
       return buildFreelancerActionsBottomBar(
         context,
         statusKey,
@@ -155,9 +117,6 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
         'bidding',
       ].contains(projectStatus);
       if (isOpen) {
-        if (AppConfig.isDevelopment) {
-          debugPrint('✅ [ProjectDetails] Showing Apply/Send Offer CTA');
-        }
         final label = isBidding ? 'Send Offer' : 'Apply';
         return SafeArea(
           top: false,
@@ -176,11 +135,6 @@ extension _ProjectDetailsBottomExtension on _ProjectDetailsScreenState {
       }
     }
 
-    if (AppConfig.isDevelopment) {
-      debugPrint(
-        '❌ [ProjectDetails] No bottom bar shown (empty bar to avoid layout jump)',
-      );
-    }
     return buildSkeletonBar(context, loading: false);
   }
 

@@ -98,11 +98,6 @@ export const getMyReferrals = async (req, res) => {
   const userId = req.token?.userId || req.token?.id || req.user?.id || req.user?.userId;
   
   if (!userId) {
-    console.error('GET /referrals/me ERROR: Missing userId in token', {
-      token: req.token,
-      user: req.user,
-      hasAuth: !!req.headers.authorization
-    });
     return res.status(401).json({ 
       success: false, 
       message: "Unauthorized: missing user in token" 
@@ -203,8 +198,7 @@ export const getMyReferrals = async (req, res) => {
       });
       return res.status(500).json({ 
         success: false, 
-        message: "Failed to generate referral code",
-        error: process.env.NODE_ENV !== 'production' ? codeErr.message : undefined
+        message: "Failed to generate referral code"
       });
     }
     
@@ -392,9 +386,7 @@ export const getMyReferrals = async (req, res) => {
     });
     return res.status(500).json({ 
       success: false, 
-      message: "Server error",
-      error: process.env.NODE_ENV !== 'production' ? err.message : undefined,
-      stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined
+      message: "Server error"
     });
   } finally {
     client.release();
@@ -452,8 +444,7 @@ export const createOrGetReferralCode = async (req, res) => {
     console.error('createOrGetReferralCode error:', err);
     return res.status(500).json({ 
       success: false, 
-      message: "Server error",
-      error: process.env.NODE_ENV !== 'production' ? err.message : undefined
+      message: "Server error"
     });
   } finally {
     client.release();
@@ -724,9 +715,6 @@ export const recordPartnerVisit = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "referrals visit insert failed",
-      code: err.code ?? undefined,
-      detail: err.detail ?? undefined,
-      error: err.message,
     });
   }
 };

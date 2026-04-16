@@ -46,8 +46,7 @@ const FreelancerAppointments = () => {
       setCompletedAppointments(completedFromDB);
       
       localStorage.setItem('freelancerCompletedAppointments', JSON.stringify(completedFromDB));
-    } catch (error) {
-      console.error('Error loading completed appointments:', error);
+    } catch (_) {
       const savedCompleted = localStorage.getItem('freelancerCompletedAppointments');
       if (savedCompleted) {
         setCompletedAppointments(JSON.parse(savedCompleted));
@@ -72,9 +71,8 @@ const FreelancerAppointments = () => {
       fetchMyAppointments();
       
       alert(`Appointment marked as completed!`);
-    } catch (error) {
+    } catch (_) {
       alert('Failed to mark appointment as completed');
-      console.error('Error:', error);
     }
   };
 

@@ -343,8 +343,7 @@ export default function ProjectDetailsDashboard({ mode: propMode }) {
       try {
         const isAssigned = await checkIfAssignedApi(id);
         if (isAssigned) setHasApplied(true);
-      } catch (e) {
-        console.error(e);
+      } catch (_) {
       }
     })();
   }, [id, isFreelancer, mode]);
@@ -387,7 +386,6 @@ export default function ProjectDetailsDashboard({ mode: propMode }) {
 
         setOffersForProject(normalized);
       } catch (err) {
-        console.error("Failed to load offers for project", err);
         try {
           toast.error(
             (err && err.message) || "Failed to load offers for this project."
@@ -473,7 +471,6 @@ export default function ProjectDetailsDashboard({ mode: propMode }) {
       setHasApplied(true);
       setOfferAmount("");
     } catch (err) {
-      console.error(err);
       toast.error(err?.message || "Failed to apply to project.");
     } finally {
       setBusy(false);
@@ -570,8 +567,7 @@ export default function ProjectDetailsDashboard({ mode: propMode }) {
       const { data } = await API.get(`/projects/${id}/change-requests`, authHeaders);
       setNotifItems(data?.requests || data?.items || []);
       await API.put(`/projects/${id}/change-requests/mark-read`, {}, authHeaders).catch(() => {});
-    } catch (e) {
-      console.error(e);
+    } catch (_) {
       setNotifItems([]);
     } finally {
       setNotifLoading(false);
@@ -621,8 +617,7 @@ export default function ProjectDetailsDashboard({ mode: propMode }) {
       const { data } = await API.get(`/projects/project/${id}/applications`, authHeaders);
       const list = Array.isArray(data?.applications) ? data.applications : Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
       setApplicationsList(list);
-    } catch (e) {
-      console.error(e);
+    } catch (_) {
       setApplicationsList([]);
     } finally {
       setApplicationsLoading(false);

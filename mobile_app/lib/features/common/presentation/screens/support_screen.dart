@@ -117,10 +117,7 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.error}: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(l10n.somethingWentWrong), backgroundColor: AppColors.error),
         );
       }
     } finally {

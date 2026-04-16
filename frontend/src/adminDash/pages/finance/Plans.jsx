@@ -271,7 +271,7 @@ export default function Plans() {
                 icon: <FiX />,
                 onClick: async (row) => {
                   if (window.confirm("Cancel this subscription?")) {
-                    await PlansAPI.adminCancelSubscription(row.id);
+                    await PlansAPI.adminCancelSubscription(viewSubsPlanId, row.id);
                   }
                 },
                 variant: "warning",

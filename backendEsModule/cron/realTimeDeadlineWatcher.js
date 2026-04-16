@@ -1,5 +1,5 @@
 import pool from "../models/db.js";
-import { NotificationCreators } from "../services/notificationService.js";
+import { createNotification, NOTIFICATION_TYPES } from "../services/notificationService.js";
 
 export const startDeadlineWatcher = () => {
   console.log("[CRON] Deadline watcher started ✅");
@@ -24,11 +24,19 @@ export const startDeadlineWatcher = () => {
             UPDATE projects SET completion_status = 'overdue' WHERE id = $1
           `, [item.project_id]);
 
-          await NotificationCreators.projectOverdue(
+          await createNotification(
             item.client_id,
-            item.freelancer_id,
+            NOTIFICATION_TYPES.PROJECT_STATUS_CHANGED,
+            `Project "${item.title}" is overdue.`,
             item.project_id,
-            item.title
+            "project"
+          );
+          await createNotification(
+            item.freelancer_id,
+            NOTIFICATION_TYPES.PROJECT_STATUS_CHANGED,
+            `Project "${item.title}" is overdue.`,
+            item.project_id,
+            "project"
           );
 
           if (global.io) {

@@ -51,8 +51,7 @@ export default function Profile() {
       } else {
         showToast(data?.message || "Failed to load profile", "error");
       }
-    } catch (err) {
-      console.error(err);
+    } catch (_) {
       showToast("Error loading profile", "error");
     } finally {
       setFetchLoading(false);

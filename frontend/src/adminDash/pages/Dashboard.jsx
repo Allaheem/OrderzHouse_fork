@@ -508,7 +508,7 @@ function ContinueSection({ title, rightAction, items, renderItem }) {
           }
         }
       }
-    } catch (e) {
+    } catch (_) {
       // Use fallback handler
     }
     
@@ -1380,8 +1380,7 @@ function AdminDashboard() {
         setRevenuePoints(
           Array.isArray(payload?.revenuePoints) ? payload.revenuePoints : []
         );
-      } catch (err) {
-        console.error("Failed to load admin dashboard data", err);
+      } catch (_) {
         setError("حدث خطأ أثناء تحميل بيانات لوحة التحكم.");
       } finally {
         setLoading(false);
@@ -1846,8 +1845,7 @@ function FreelancerDashboard() {
         Array.isArray(payload?.myProjects) ? payload.myProjects : []
       );
       setSubscriptionStatus(payload?.subscriptionStatus || null);
-    } catch (e) {
-      console.error(e);
+    } catch (_) {
       setError("حدث خطأ أثناء تحميل بيانات لوحة التحكم.");
     } finally {
       setLoading(false);
@@ -2199,8 +2197,7 @@ function ClientDashboard() {
           ? payload.attention.pendingReviews
           : [],
       });
-    } catch (e) {
-      console.error(e);
+    } catch (_) {
       setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);

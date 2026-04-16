@@ -123,11 +123,11 @@ class ProjectsRepository implements IProjectsRepository {
             projectsRepositoryExtractErrorMessage(e.response?.data) ??
             'Failed to fetch projects',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch projects: ${e.toString()}',
+        message: 'Failed to fetch projects',
       );
     }
   }
@@ -214,11 +214,11 @@ class ProjectsRepository implements IProjectsRepository {
             ? e.response?.data as Map<String, dynamic>
             : null,
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch projects: ${e.toString()}',
+        message: 'Failed to fetch projects',
       );
     }
   }

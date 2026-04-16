@@ -20,9 +20,10 @@ export const resubmitWorkCompletion = (id, data) =>
   API.post(`/tasks/freelancer/requests/${id}/resubmit`, data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
-export const updateTaskKanbanStatus = (id, status) => API.put(`/tasks/freelancer/${id}/kanban`, { status });
+export const updateTaskKanbanStatus = (id, status) =>
+  API.put(`/tasks/freelancer/${id}/kanban`, { new_status: status });
 export const getFreelancerCreatedTasks = () => API.get("/tasks/freelancer/my-tasks");
-export const getTaskRequests = () => API.get("/tasks/freelancer/requests");
+export const getTaskRequests = (taskId) => API.get(`/tasks/freelancer/requests/${taskId}`);
 export const getAssignedTasks = () => API.get("/tasks/freelancer/assigned");
 
 /* ============================== CLIENT ============================== */
@@ -42,7 +43,7 @@ export const addTaskFiles = (id, data) =>
   API.post(`/tasks/files/${id}`, data, { headers: { "Content-Type": "multipart/form-data" } });
 
 /* ============================== CATEGORY HIERARCHY ============================== */
-export const getCategories = () => API.get("/tasks/category");
+export const getCategories = () => API.get("/tasks/categories");
 
 // ✅ Get sub-categories by main category ID
 export const getSubCategoriesByCategoryId = (categoryId) =>

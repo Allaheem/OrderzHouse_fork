@@ -23,20 +23,9 @@ extension _ProjectDetailsInitExtension on _ProjectDetailsScreenState {
 
     // Prevent double initialization
     if (_projectInitialized) {
-      if (AppConfig.isDevelopment) {
-        debugPrint(
-          '⚠️ [ProjectDetails] initializeWithProject() called but already initialized, skipping',
-        );
-      }
       return;
     }
     _projectInitialized = true;
-
-    if (AppConfig.isDevelopment) {
-      debugPrint(
-        '✅ [ProjectDetails] initializeWithProject() called for project ${project.id}',
-      );
-    }
 
     // Get user role reactively to determine what to fetch
     final authState = ref.read(authStateProvider);

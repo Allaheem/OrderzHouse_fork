@@ -9,7 +9,7 @@ import PageMeta from "../PageMeta.jsx";
 
 
 export default function OrderzHousePageRedesign() {
-  const handleSearch = (q) => console.log(q);
+  const handleSearch = () => {};
 
   return (
     <div className="min-h-screen bg-white" style={{ fontFamily: "'Merriweather', serif" }}>

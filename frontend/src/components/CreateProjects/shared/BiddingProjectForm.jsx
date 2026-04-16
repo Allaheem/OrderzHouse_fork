@@ -54,8 +54,7 @@ export default function BiddingProjectForm({
   useEffect(() => {
     fetchCategories()
       .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error("Failed to fetch categories:", err);
+      .catch(() => {
         setCategories([]);
       });
   }, []);
@@ -73,8 +72,7 @@ export default function BiddingProjectForm({
 
     fetchSubSubCategoriesByCategoryId(idAsNumber)
       .then((data) => setSubSubCategories(Array.isArray(data) ? data : []))
-      .catch((err) => {
-        console.error("Failed to fetch sub-sub-categories:", err);
+      .catch(() => {
         setSubSubCategories([]);
       });
 

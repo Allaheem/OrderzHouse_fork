@@ -1,6 +1,5 @@
 // ??? ????????
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import '../storage/secure_store.dart';
 import '../storage/app_prefs.dart';
 import '../session/auth_api_binding.dart';
@@ -28,117 +27,19 @@ class AuthInterceptor extends Interceptor {
   }
 }
 
-String _dioPayloadSummary(dynamic data) {
-  if (data == null) return 'empty';
-  if (data is String) return 'String(len=${data.length})';
-  if (data is Map) return 'Map(keys=${data.length})';
-  if (data is List) return 'List(len=${data.length})';
-  return data.runtimeType.toString();
-}
-
 class LoggingInterceptor extends Interceptor {
-  /// Never log bodies/headers in release — even if ENV=development in a bundled .env.
-  bool get _shouldLog => kDebugMode;
-
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    if (_shouldLog) {
-      // Never log full tokens or sensitive data
-      final safeHeaders = Map<String, dynamic>.from(options.headers);
-      String? tokenPrefix;
-      if (safeHeaders.containsKey('Authorization')) {
-        final authHeader = safeHeaders['Authorization'] as String?;
-        if (authHeader != null && authHeader.startsWith('Bearer ')) {
-          final token = authHeader.substring(7);
-          tokenPrefix = token.length > 10 ? token.substring(0, 10) : token;
-          safeHeaders['Authorization'] = 'Bearer $tokenPrefix...';
-        } else {
-          safeHeaders['Authorization'] = 'Bearer ***';
-        }
-      }
-      // ignore: avoid_print
-      print('REQUEST[${options.method}] => PATH: ${options.path}');
-      // ignore: avoid_print
-      print('REQUEST[${options.method}] => Final URL: ${options.uri}');
-      // ignore: avoid_print
-      print('REQUEST[${options.method}] => Headers: $safeHeaders');
-      if (tokenPrefix != null) {
-        // ignore: avoid_print
-        print('REQUEST[${options.method}] => Token prefix: $tokenPrefix');
-      }
-      if (options.data != null) {
-        // ignore: avoid_print
-        print(
-          'REQUEST[${options.method}] => Data: ${_dioPayloadSummary(options.data)}',
-        );
-      }
-    }
     handler.next(options);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (_shouldLog) {
-      // ignore: avoid_print
-      print(
-        'RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}',
-      );
-      // ignore: avoid_print
-      print(
-        'RESPONSE[${response.statusCode}] => URI: ${response.requestOptions.uri}',
-      );
-      if (response.data != null) {
-        // ignore: avoid_print
-        print(
-          'RESPONSE[${response.statusCode}] => Data: ${_dioPayloadSummary(response.data)}',
-        );
-      }
-    }
     handler.next(response);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (_shouldLog) {
-      final code = err.response?.statusCode;
-      final path = err.requestOptions.path;
-      final data = err.response?.data;
-      final isShortAuthFailure =
-          err.type == DioExceptionType.badResponse &&
-          (code == 401 || code == 403) &&
-          data is Map;
-      if (isShortAuthFailure) {
-        // ignore: avoid_print
-        print(
-          'ERROR[$code] => $path — ${data['message'] ?? data} (session cleared if invalid token)',
-        );
-      } else {
-        // ignore: avoid_print
-        print(
-          'ERROR[${code ?? 'null'}] => PATH: $path',
-        );
-        // ignore: avoid_print
-        print('ERROR => Type: ${err.type}');
-        // ignore: avoid_print
-        print('ERROR => URI: ${err.requestOptions.uri}');
-        // ignore: avoid_print
-        print('ERROR => Message: ${err.message}');
-        if (err.error != null) {
-          // ignore: avoid_print
-          print('ERROR => Error: ${err.error}');
-        }
-        if (err.response != null) {
-          // ignore: avoid_print
-          print('ERROR => Status Code: ${err.response?.statusCode}');
-          // ignore: avoid_print
-          print(
-            'ERROR => Response Data: ${_dioPayloadSummary(err.response?.data)}',
-          );
-        }
-        // ignore: avoid_print
-        print('ERROR => Stack Trace: ${err.stackTrace}');
-      }
-    }
     handler.next(err);
   }
 }

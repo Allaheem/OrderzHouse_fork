@@ -176,8 +176,7 @@ export default function Plans() {
             setSubscriptionExpiry(null);
           }
         })
-        .catch((err) => {
-          console.error("Failed to fetch subscription status:", err);
+        .catch(() => {
           setHasActiveSubscription(false);
           setSubscriptionExpiry(null);
         });
@@ -185,10 +184,8 @@ export default function Plans() {
   }, [user]);
 
   const subscribeOnline = async () => {
-    console.log("Subscribe Now clicked");
     if (!user) return navigate("/login");
     if (!selectedPlan) {
-      console.error("No plan selected");
       return;
     }
 
@@ -205,8 +202,6 @@ export default function Plans() {
       });
 
       const data = res.data;
-      console.log("Checkout session response:", data);
-
       // Handle free plan (no Stripe needed)
       if (data?.free === true || data?.url === null) {
         toast.success("Free plan subscribed successfully!");
@@ -217,12 +212,10 @@ export default function Plans() {
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        console.error("No checkout URL in response:", data);
-        alert("Invalid response from server. Please try again.");
+        toast.error("Failed to start checkout. Please try again.");
       }
     } catch (err) {
-      console.error("Failed to create checkout session:", err);
-      const msg = err.response?.data?.message ?? err.response?.data?.error ?? err.message ?? "Failed to start checkout. Please try again.";
+      const msg = err.response?.data?.message ?? err.response?.data?.error ?? "Failed to start checkout. Please try again.";
       toast.error(msg);
     }
   };

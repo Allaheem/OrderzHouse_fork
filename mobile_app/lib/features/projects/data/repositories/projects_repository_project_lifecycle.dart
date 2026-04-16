@@ -103,7 +103,7 @@ class ProjectsRepositoryProjectLifecycle {
             e.response?.data?['message'] as String? ??
             'Failed to create project',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects: $e');
       }
@@ -111,7 +111,7 @@ class ProjectsRepositoryProjectLifecycle {
       return ApiResponse(
         success: false,
         data: {},
-        message: 'Failed to create project: ${e.toString()}',
+        message: 'Failed to create project',
       );
     }
   }
@@ -174,7 +174,7 @@ class ProjectsRepositoryProjectLifecycle {
         message:
             e.response?.data?['message'] as String? ?? 'Failed to upload files',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/files: $e');
       }
@@ -182,7 +182,7 @@ class ProjectsRepositoryProjectLifecycle {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to upload files: ${e.toString()}',
+        message: 'Failed to upload files',
       );
     }
   }
@@ -229,16 +229,16 @@ class ProjectsRepositoryProjectLifecycle {
       return ApiResponse(
         success: false,
         data: {},
-        message: msg ?? e.message ?? 'Failed to load project',
+        message: msg ?? 'Failed to load project',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects/success/$projectId: $e');
       }
       return ApiResponse(
         success: false,
         data: {},
-        message: 'Failed to load project: ${e.toString()}',
+        message: 'Failed to load project',
       );
     }
   }
@@ -286,9 +286,9 @@ class ProjectsRepositoryProjectLifecycle {
       return ApiResponse(
         success: false,
         data: null,
-        message: msg ?? e.message ?? 'Failed to set offline payment',
+        message: msg ?? 'Failed to set offline payment',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog(
           '❌ UNEXPECTED ERROR => /projects/$projectId/offline-payment: $e',
@@ -297,7 +297,7 @@ class ProjectsRepositoryProjectLifecycle {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to set offline payment: ${e.toString()}',
+        message: 'Failed to set offline payment',
       );
     }
   }

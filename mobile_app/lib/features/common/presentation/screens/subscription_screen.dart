@@ -688,10 +688,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     } on PlatformException catch (e) {
       if (!mounted) return;
       _showStoreKitBridgeErrorSnack(e);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Restore failed: $e'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Restore failed. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -784,11 +787,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       setState(() => _pendingApplePlan = null);
       if (!mounted) return;
       _showStoreKitBridgeErrorSnack(e);
-    } catch (e) {
+    } catch (_) {
       setState(() => _pendingApplePlan = null);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Purchase error: $e'), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text('Could not start purchase. Please try again.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -916,10 +922,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          const SnackBar(
+            content: Text('Could not open link. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

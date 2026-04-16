@@ -56,7 +56,7 @@ export default class ErrorBoundary extends React.Component {
           >
             Try refreshing the page
           </p>
-          {this.state.errorMessage ? (
+          {this.state.errorMessage && import.meta.env.DEV ? (
             <pre
               style={{
                 maxWidth: "min(100%, 36rem)",

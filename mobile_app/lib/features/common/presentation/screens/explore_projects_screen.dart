@@ -11,7 +11,6 @@ import '../../../../core/models/search_result.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/app_bottom_nav_bar.dart';
@@ -163,21 +162,6 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
     final sharedCategoryId = ref.watch(exploreSelectedCategoryIdProvider);
     final String sortBy = ref.watch(exploreSortByProvider);
 
-    // Debug: Log current state
-    if (AppConfig.isDevelopment) {
-      final String sortByValue = ref.read(exploreSortByProvider);
-      debugPrint(
-        '🔍 [ExploreScreen] State: categoryId=$selectedCategoryId, searchQuery="$searchQuery", sortBy=$sortBy',
-      );
-      debugPrint(
-        '🔍 [ExploreScreen] searchQueryProvider value: "${ref.read(searchQueryProvider)}"',
-      );
-      debugPrint(
-        '🔍 [ExploreScreen] exploreSortByProvider value: "$sortByValue"',
-      );
-      print('sortBy=${ref.watch(exploreSortByProvider)}');
-    }
-
     // Sync shared provider to local provider on first build
     if (!_hasSyncedSharedCategory && sharedCategoryId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -191,11 +175,6 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
         }
       });
     }
-
-    // Debug log
-    debugPrint(
-      'Explore selectedCategoryId=$selectedCategoryId, sharedCategoryId=$sharedCategoryId',
-    );
 
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
@@ -398,14 +377,6 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
                   _debounceTimer?.cancel();
                   _debounceTimer = Timer(const Duration(milliseconds: 350), () {
                     if (mounted) {
-                      if (AppConfig.isDevelopment) {
-                        debugPrint(
-                          '🔍 [ExploreScreen] Search text changed: "$value"',
-                        );
-                        debugPrint(
-                          '🔍 [ExploreScreen] Will update searchQueryProvider (notifier will reload)',
-                        );
-                      }
                       // Update search query provider (provider watches this and will auto-refetch)
                       ref.read(searchQueryProvider.notifier).state = value;
                     }
@@ -415,11 +386,6 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
                   // On submit, update immediately without debounce
                   _debounceTimer?.cancel();
                   if (mounted) {
-                    if (AppConfig.isDevelopment) {
-                      debugPrint(
-                        '🔍 [ExploreScreen] Search submitted: "$value"',
-                      );
-                    }
                     ref.read(searchQueryProvider.notifier).state = value;
                   }
                 },

@@ -190,17 +190,14 @@ const CategoryMegaMenu = ({ activeLink, onSetActiveLink }) => {
                         {selectedSubCategory.subSubCategories?.length ? (
                           <div className="flex flex-wrap gap-3">
                             {selectedSubCategory.subSubCategories.map((s) => (
-                              <a
+                              <button
                                 key={`subsub-${selectedCategory.id}-${selectedSubCategory.id}-${s.id}`}
-                                href="#"
+                                type="button"
                                 className="text-xs text-gray-700 bg-gray-100 hover:bg-[#C2410C] hover:text-white transition-all px-3 py-2 rounded-md font-inter"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  goToProjects(s);
-                                }}
+                                onClick={() => goToProjects(s)}
                               >
                                 {s.name}
-                              </a>
+                              </button>
                             ))}
                           </div>
                         ) : (

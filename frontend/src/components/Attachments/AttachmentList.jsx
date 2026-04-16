@@ -99,8 +99,7 @@ export default function AttachmentList({
         a.remove();
         window.URL.revokeObjectURL(blobUrl);
         return true;
-      } catch (e) {
-        console.error("AttachmentList download:", e);
+      } catch (_) {
         return false;
       } finally {
         setBusyKey(null);

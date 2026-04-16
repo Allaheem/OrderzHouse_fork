@@ -55,11 +55,11 @@ class ProjectsRemoteDataSource {
             projectsRepositoryDioErrorMessage(e),
         error: e.response?.data as Map<String, dynamic>?,
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch projects: ${e.toString()}',
+        message: 'Failed to fetch projects',
       );
     }
   }

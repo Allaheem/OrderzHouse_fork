@@ -105,27 +105,26 @@ const ForgotPassword = () => {
           setMessage("");
         }, 2000);
       } else {
-        // Backend returned error (e.g., email not found)
-        setStatus(false);
-        setMessage(response.data?.message || "Failed to send reset code. Please try again.");
-        // Do NOT navigate to next step if error
+        setStatus(true);
+        setMessage("If an account exists for this email, a reset code has been sent.");
+        setTimeout(() => {
+          setStep("reset");
+          setMessage("");
+        }, 2000);
       }
     } catch (error) {
-      setStatus(false);
-      // Handle specific error cases
-      if (error.response?.status === 404) {
-        // Email not found
-        setMessage(error.response.data?.message || "No account found with this email.");
-      } else if (error.response?.status === 400) {
-        // Invalid email format or other validation error
-        setMessage(error.response.data?.message || "Invalid email address.");
-      } else if (error.code === "ERR_NETWORK" || error.message?.includes("Failed to fetch")) {
+      if (error.code === "ERR_NETWORK" || error.message?.includes("Failed to fetch")) {
+        setStatus(false);
         setMessage("Unable to connect to server. Please check your internet connection and try again.");
       } else {
-        setMessage(error.response?.data?.message || "An error occurred. Please try again later.");
+        // Avoid account enumeration by returning a uniform success response for this step.
+        setStatus(true);
+        setMessage("If an account exists for this email, a reset code has been sent.");
+        setTimeout(() => {
+          setStep("reset");
+          setMessage("");
+        }, 2000);
       }
-      console.error("Forgot password error:", error);
-      // Do NOT navigate to next step on error
     } finally {
       setIsLoading(false);
     }
@@ -214,7 +213,6 @@ const ForgotPassword = () => {
       } else {
         setMessage("An error occurred. Please try again later.");
       }
-      console.error("Reset password error:", error);
     } finally {
       setIsLoading(false);
     }

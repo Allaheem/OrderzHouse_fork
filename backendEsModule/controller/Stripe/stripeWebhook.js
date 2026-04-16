@@ -239,7 +239,7 @@ export const handleStripeWebhook = async (req, res) => {
 
     return res.status(400).json({
       received: false,
-      error: err.message,
+      error: "Webhook processing failed",
     });
   }
 };

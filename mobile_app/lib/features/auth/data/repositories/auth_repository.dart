@@ -1,9 +1,7 @@
 // ??? ????????
-import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import '../../../../core/models/user.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
@@ -199,10 +197,6 @@ class AuthRepository {
 
   /// Step A: Request OTP for signup. Does NOT create user. Backend stores OTP and sends email.
   Future<ApiResponse<void>> requestSignupOtp(String email) async {
-    final uri = '${_dio.options.baseUrl}/users/request-signup-otp';
-    if (kDebugMode) {
-      developer.log('OTP REQUEST => POST $uri', name: 'Auth');
-    }
     try {
       final response = await _dio.post(
         '/users/request-signup-otp',
@@ -212,12 +206,6 @@ class AuthRepository {
       final message = response.data is Map
           ? (response.data as Map)['message'] as String?
           : null;
-      if (kDebugMode) {
-        developer.log(
-          'OTP REQUEST => status=$status message=$message',
-          name: 'Auth',
-        );
-      }
       return ApiResponse(
         success: status >= 200 && status < 300,
         message: message ?? 'Verification code sent',
@@ -227,13 +215,6 @@ class AuthRepository {
       final data = e.response?.data as Map<String, dynamic>?;
       final message =
           data?['message'] as String? ?? 'Failed to send verification code';
-      if (kDebugMode) {
-        developer.log(
-          'OTP REQUEST FAILED => status=$status message=$message',
-          name: 'Auth',
-        );
-        developer.log('OTP REQUEST response data: $data', name: 'Auth');
-      }
       return ApiResponse(success: false, message: message);
     }
   }
@@ -243,10 +224,6 @@ class AuthRepository {
     required SignupPayload payload,
     required String otp,
   }) async {
-    final uri = '${_dio.options.baseUrl}/users/verify-and-register';
-    if (kDebugMode) {
-      developer.log('VERIFY_AND_REGISTER => POST $uri', name: 'Auth');
-    }
     try {
       final data = payload.toJson();
       data['otp'] = otp;
@@ -255,9 +232,6 @@ class AuthRepository {
         data: data,
       );
       final status = response.statusCode ?? 0;
-      if (kDebugMode) {
-        developer.log('VERIFY_AND_REGISTER => status=$status', name: 'Auth');
-      }
       final respData = response.data as Map<String, dynamic>;
       final token = respData['token'] as String?;
       if (token == null || token.isEmpty) {
@@ -300,13 +274,6 @@ class AuthRepository {
         fallback: 'Verification or registration failed',
       );
       final message = _mapDuplicateConstraintMessage(rawMessage, data);
-      if (kDebugMode) {
-        developer.log(
-          'VERIFY_AND_REGISTER FAILED => status=$status message=$message',
-          name: 'Auth',
-        );
-        developer.log('VERIFY_AND_REGISTER response: $data', name: 'Auth');
-      }
       return ApiResponse(success: false, message: message);
     }
   }
@@ -417,10 +384,10 @@ class AuthRepository {
             e.response?.data['message'] as String? ??
             'Failed to fetch user data',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
-        message: 'Failed to parse user data: $e',
+        message: 'Failed to parse user data',
       );
     }
   }
@@ -551,18 +518,9 @@ class AuthRepository {
 
   Future<ApiResponse<void>> deleteAccount({String? reason}) async {
     try {
-      developer.log(
-        'DELETE_ACCOUNT request: PUT /users/deactivate reason=$reason',
-        name: 'Auth',
-      );
       final response = await _dio.put(
         '/users/deactivate',
         data: reason != null ? {'reason': reason} : {},
-      );
-
-      developer.log(
-        'DELETE_ACCOUNT response[${response.statusCode}]: ${response.data}',
-        name: 'Auth',
       );
 
       return ApiResponse(
@@ -572,10 +530,6 @@ class AuthRepository {
             'Account deleted successfully',
       );
     } on DioException catch (e) {
-      developer.log(
-        'DELETE_ACCOUNT error[${e.response?.statusCode}]: ${e.response?.data}',
-        name: 'Auth',
-      );
       return ApiResponse(
         success: false,
         message:

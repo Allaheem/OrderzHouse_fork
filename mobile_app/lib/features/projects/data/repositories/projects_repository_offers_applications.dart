@@ -49,15 +49,15 @@ class ProjectsRepositoryOffersApplications {
         message:
             e.response?.data?['message'] as String? ?? 'Failed to fetch offers',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /offers/project/$projectId/offers: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /offers/project/$projectId/offers');
       }
 
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch offers: ${e.toString()}',
+        message: 'Failed to fetch offers',
       );
     }
   }
@@ -173,17 +173,17 @@ class ProjectsRepositoryOffersApplications {
             e.response?.data?['message'] as String? ??
             'Failed to fetch applications',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog(
-          '❌ UNEXPECTED ERROR => /projects/project/$projectId/applications: $e',
+          '❌ UNEXPECTED ERROR => /projects/project/$projectId/applications',
         );
       }
 
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch applications: ${e.toString()}',
+        message: 'Failed to fetch applications',
       );
     }
   }
@@ -242,15 +242,15 @@ class ProjectsRepositoryOffersApplications {
             e.response?.data?['message'] as String? ??
             'Failed to process application',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/applications/decision: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/applications/decision');
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to process application: ${e.toString()}',
+        message: 'Failed to process application',
       );
     }
   }
@@ -313,10 +313,10 @@ class ProjectsRepositoryOffersApplications {
         message = 'Failed to download file';
       }
       return ApiResponse(success: false, message: message);
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
-        message: 'Failed to download file: ${e.toString()}',
+        message: 'Failed to download file',
       );
     }
   }

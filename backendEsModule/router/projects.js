@@ -1,6 +1,7 @@
 import express from "express";
 
 import { authentication } from "../middleware/authentication.js";
+import adminOnly from "../middleware/adminOnly.js";
 import requireVerifiedWithSubscription from "../middleware/requireVerifiedWithSubscription.js";
 import { upload, uploadErrorHandler } from "../middleware/uploadMiddleware.js";
 
@@ -229,7 +230,7 @@ projectsRouter.get(
 projectsRouter.get(
   "/admin/freelancers",
   authentication,
-  // adminViewerOnly,
+  adminOnly,
   getAllFreelancers
 );
 
@@ -237,7 +238,7 @@ projectsRouter.get(
 projectsRouter.get(
   "/admin/projects",
   authentication,
-  // adminViewerOnly,
+  adminOnly,
   getAllProjectsForAdmin
 );
 
@@ -245,6 +246,7 @@ projectsRouter.get(
 projectsRouter.get(
   "/admin/projects/pending",
   authentication,
+  adminOnly,
   getPendingApprovalProjects
 );
 
@@ -252,7 +254,7 @@ projectsRouter.get(
 projectsRouter.put(
   "/admin/projects/:projectId/reassign",
   authentication,
-  // adminViewerOnly,
+  adminOnly,
   reassignFreelancer
 );
 
@@ -260,6 +262,7 @@ projectsRouter.put(
 projectsRouter.put(
   "/admin/projects/:projectId",
   authentication,
+  adminOnly,
   adminUpdateProject
 );
 
@@ -338,7 +341,7 @@ projectsRouter.get(
 projectsRouter.post(
   "/admin/projects/:projectId/decision",
   authentication,
-  // adminViewerOnly,
+  adminOnly,
   adminApproveProject
 );
 
@@ -376,12 +379,14 @@ projectsRouter.post(
 projectsRouter.post(
   "/admin/projects/:projectId/approve-offline-payment",
   authentication,
+  adminOnly,
   adminApproveOfflinePayment
 );
 
 projectsRouter.post(
   "/admin/projects/:projectId/reject-offline-payment",
   authentication,
+  adminOnly,
   adminRejectOfflinePayment
 );
 
@@ -389,12 +394,14 @@ projectsRouter.post(
 projectsRouter.post(
   "/admin/projects/:id/approve",
   authentication,
+  adminOnly,
   adminApproveOfflinePayment
 );
 
 projectsRouter.post(
   "/admin/projects/:id/reject",
   authentication,
+  adminOnly,
   adminRejectOfflinePayment
 );
 

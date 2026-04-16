@@ -26,7 +26,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to fetch appointments';
       setError(errorMsg);
-      console.error('Fetch all appointments error:', err.response?.data);
       return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
@@ -44,7 +43,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to fetch your appointments';
       setError(errorMsg);
-      console.error('Fetch my appointments error:', err.response?.data);
       return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
@@ -66,7 +64,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to create appointment';
       setError(errorMsg);
-      console.error('Create appointment error:', err.response?.data);
       return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
@@ -88,7 +85,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to create appointment';
       setError(errorMsg);
-      console.error('Create admin appointment error:', err.response?.data);
       return { success: false, error: errorMsg };
     } finally {
       setLoading(false);
@@ -113,7 +109,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to accept appointment';
       setError(errorMsg);
-      console.error('Accept appointment error:', err.response?.data);
       return { success: false, error: errorMsg };
     }
   };
@@ -136,7 +131,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to reject appointment';
       setError(errorMsg);
-      console.error('Reject appointment error:', err.response?.data);
       return { success: false, error: errorMsg };
     }
   };
@@ -150,9 +144,7 @@ export const useAppointments = () => {
       {},
       getConfig()
     );
-    
-    console.log('🔍 [DEBUG] Success response:', response.data);
-    
+
     // Update local state
     setAppointments(prev => 
       prev.map(apt => 
@@ -162,12 +154,7 @@ export const useAppointments = () => {
     
     return { success: true, data: response.data };
   } catch (err) {
-    console.error('🔍 [DEBUG] Full error object:', err);
-    console.error('🔍 [DEBUG] Error response:', err.response);
-    console.error('🔍 [DEBUG] Error message:', err.message);
-    console.error('🔍 [DEBUG] Error code:', err.code);
-    
-    const errorMsg = err.response?.data?.message || err.message || 'Failed to mark appointment as completed';
+    const errorMsg = err.response?.data?.message || 'Failed to mark appointment as completed';
     setError(errorMsg);
     return { success: false, error: errorMsg };
   }
@@ -191,7 +178,6 @@ export const useAppointments = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to reschedule appointment';
       setError(errorMsg);
-      console.error('Reschedule appointment error:', err.response?.data);
       return { success: false, error: errorMsg };
     }
   };

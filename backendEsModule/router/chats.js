@@ -9,6 +9,7 @@ import {
   markProjectChatAsRead,
 } from "../controller/chats.js";
 import { authentication } from "../middleware/authentication.js";
+import adminOnly from "../middleware/adminOnly.js";
 
 const chatsRouter = express.Router();
 
@@ -27,6 +28,6 @@ chatsRouter.get("/task/:taskId/messages", authentication, getMessagesByTaskId);
 chatsRouter.post("/messages", authentication, createMessage);
 
 // Admin — all chats
-chatsRouter.get("/admin/all-chats", authentication, getAllChatsForAdmin);
+chatsRouter.get("/admin/all-chats", authentication, adminOnly, getAllChatsForAdmin);
 
 export default chatsRouter;

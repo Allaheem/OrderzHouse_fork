@@ -263,9 +263,9 @@ class OffersBottomSheet extends StatelessWidget {
                                                     ScaffoldMessenger.of(
                                                       context,
                                                     ).showSnackBar(
-                                                      SnackBar(
+                                                      const SnackBar(
                                                         content: Text(
-                                                          'Failed: $e',
+                                                          'Failed to reject offer. Please try again.',
                                                         ),
                                                         backgroundColor:
                                                             Colors.red,
@@ -326,9 +326,9 @@ class OffersBottomSheet extends StatelessWidget {
                                                     ScaffoldMessenger.of(
                                                       context,
                                                     ).showSnackBar(
-                                                      SnackBar(
+                                                      const SnackBar(
                                                         content: Text(
-                                                          'Failed: $e',
+                                                          'Failed to accept offer. Please try again.',
                                                         ),
                                                         backgroundColor:
                                                             Colors.red,

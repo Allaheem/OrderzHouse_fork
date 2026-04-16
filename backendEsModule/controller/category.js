@@ -24,6 +24,11 @@ export const getCategories = async (_req, res) => {
 export const getCategoryById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid category id" });
+    }
     const { rows } = await pool.query(
       `SELECT id, name, description, image_url, related_words
        FROM categories WHERE id = $1 AND is_deleted = false`,
@@ -68,6 +73,12 @@ export const createCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
+    const numericId = parseInt(id, 10);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid category id" });
+    }
     const { name, description, image_url } = req.body;
 
     const { rows } = await pool.query(
@@ -78,7 +89,7 @@ export const updateCategory = async (req, res) => {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $4
        RETURNING *`,
-      [name, description, image_url, id]
+      [name, description, image_url, numericId]
     );
 
     if (!rows.length)
@@ -100,9 +111,15 @@ export const updateCategory = async (req, res) => {
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
+    const numericId = parseInt(id, 10);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid category id" });
+    }
     const { rows } = await pool.query(
       `UPDATE categories SET is_deleted = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING *`,
-      [id]
+      [numericId]
     );
     if (!rows.length)
       return res

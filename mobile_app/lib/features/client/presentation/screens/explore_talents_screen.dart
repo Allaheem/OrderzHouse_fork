@@ -17,7 +17,11 @@ class ExploreTalentsScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () {
-              // Show filter bottom sheet
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Filters will be available soon'),
+                ),
+              );
             },
           ),
         ],

@@ -7,10 +7,12 @@ import pool from "../models/db.js";
  */
 export const updateFreelancerCategories = async (req, res) => {
   const requesterId = req.token.userId;
-  const requesterRole = req.token.role; 
+  const roleRaw = req.token.role ?? req.token.roleId;
+  const requesterIsAdmin =
+    Number(roleRaw) === 1 || String(roleRaw).toLowerCase() === "admin";
   const { freelancerId, categories } = req.body;
 
-  const targetFreelancerId = requesterRole === 1 ? freelancerId : requesterId;
+  const targetFreelancerId = requesterIsAdmin ? freelancerId : requesterId;
 
   if (!targetFreelancerId) {
     return res.status(400).json({
@@ -63,7 +65,7 @@ export const updateFreelancerCategories = async (req, res) => {
     });
   } catch (err) {
     console.error("updateFreelancerCategories error:", err);
-    res.status(500).json({ success: false, message: "Server error", error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -72,10 +74,14 @@ export const updateFreelancerCategories = async (req, res) => {
  */
 export const getFreelancerCategories = async (req, res) => {
   const requesterId = req.token.userId;
-  const requesterRole = req.token.role;
+  const roleRaw = req.token.role ?? req.token.roleId;
+  const requesterIsAdmin =
+    Number(roleRaw) === 1 || String(roleRaw).toLowerCase() === "admin";
   const { freelancerId } = req.query;
 
-  const targetFreelancerId = requesterRole === 1 ? freelancerId || requesterId : requesterId;
+  const targetFreelancerId = requesterIsAdmin
+    ? freelancerId || requesterId
+    : requesterId;
 
   try {
     const { rows } = await pool.query(
@@ -92,6 +98,6 @@ export const getFreelancerCategories = async (req, res) => {
     });
   } catch (err) {
     console.error("getFreelancerCategories error:", err);
-    res.status(500).json({ success: false, message: "Server error", error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

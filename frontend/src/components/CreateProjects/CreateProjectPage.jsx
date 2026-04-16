@@ -40,7 +40,6 @@ export default function CreateProjectPage() {
   const handleFinalSubmit = async () => {
     // Prevent duplicate submissions
     if (isSubmitting) {
-      console.log("[CreateProject] Submission already in progress, ignoring duplicate call");
       return;
     }
 
@@ -121,7 +120,6 @@ export default function CreateProjectPage() {
       }
 
     } catch (err) {
-      console.error(err);
       showToast(
         err.response?.data?.message || "Failed to proceed",
         "error"
@@ -165,7 +163,6 @@ export default function CreateProjectPage() {
       );
       navigate(`/projects/success/${projectId}?lang=en`, { replace: true });
     } catch (err) {
-      console.error(err);
       showToast(
         err.response?.data?.message || "Failed to create project with offline payment",
         "error"

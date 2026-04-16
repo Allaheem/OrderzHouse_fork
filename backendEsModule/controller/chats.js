@@ -295,7 +295,7 @@ export const getAllChatsForAdmin = async (req, res) => {
     return res.status(200).json({ success: true, count: rows.length, messages: rows });
   } catch (err) {
     console.error("❌ Error in getAllChatsForAdmin:", err.message);
-    return res.status(500).json({ success: false, message: "Server error", error: err.message });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

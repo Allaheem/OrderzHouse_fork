@@ -129,12 +129,12 @@ extension _ProjectDetailsSheetsExtension on _ProjectDetailsScreenState {
         // Force rebuild to show new buttons
         setState(() {});
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(this.context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to approve: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Failed to approve'),
             backgroundColor: Colors.red,
           ),
         );
@@ -306,12 +306,12 @@ extension _ProjectDetailsSheetsExtension on _ProjectDetailsScreenState {
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(this.context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send request: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Failed to send request'),
             backgroundColor: Colors.red,
           ),
         );

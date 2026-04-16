@@ -95,15 +95,15 @@ extension _ProjectDetailsFetchApplyExtension on _ProjectDetailsScreenState {
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (context.mounted) {
         final messenger = ScaffoldMessenger.of(context);
         setState(() => _isLoading = false);
         messenger.showSnackBar(
-          SnackBar(
-            content: Text('Failed to send offer: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Failed to send offer'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: Duration(seconds: 3),
           ),
         );
       }
@@ -155,15 +155,15 @@ extension _ProjectDetailsFetchApplyExtension on _ProjectDetailsScreenState {
           ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (context.mounted) {
         final messenger = ScaffoldMessenger.of(context);
         setState(() => _isLoading = false);
         messenger.showSnackBar(
-          SnackBar(
-            content: Text('Failed to apply: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Failed to apply'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: Duration(seconds: 3),
           ),
         );
       }

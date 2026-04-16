@@ -72,14 +72,14 @@ class ProjectsRepositoryApplyAssignment {
           ...?e.response?.data as Map<String, dynamic>?,
         },
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/apply: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/apply');
       }
 
       return ApiResponse(
         success: false,
-        message: 'Failed to apply to project: ${e.toString()}',
+        message: 'Failed to apply to project',
       );
     }
   }
@@ -152,17 +152,17 @@ class ProjectsRepositoryApplyAssignment {
             e.response?.data?['message'] as String? ??
             'Failed to fetch assignment',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog(
-          '❌ UNEXPECTED ERROR => /assignments/$projectId/my-assignment: $e',
+          '❌ UNEXPECTED ERROR => /assignments/$projectId/my-assignment',
         );
       }
 
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to fetch assignment: ${e.toString()}',
+        message: 'Failed to fetch assignment',
       );
     }
   }
@@ -203,9 +203,9 @@ class ProjectsRepositoryApplyAssignment {
         data: false,
         message: e.response?.data?['message'] as String?,
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
-        appDebugLog('❌ UNEXPECTED ERROR => /assignments/$projectId/check: $e');
+        appDebugLog('❌ UNEXPECTED ERROR => /assignments/$projectId/check');
       }
 
       return const ApiResponse(

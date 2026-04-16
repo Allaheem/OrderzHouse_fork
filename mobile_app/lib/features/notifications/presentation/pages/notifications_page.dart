@@ -10,7 +10,6 @@ import '../../../../core/models/notification_target.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/config/app_config.dart';
 import '../providers/notifications_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../l10n/app_localizations.dart';
@@ -240,9 +239,8 @@ class NotificationsPage extends ConsumerWidget {
         // Refresh notifications list
         ref.invalidate(notificationsProvider);
         ref.invalidate(unreadCountProvider);
-      } catch (e) {
-        // Log error but continue with navigation
-        debugPrint('Failed to mark notification as read: $e');
+      } catch (_) {
+        // Keep navigation resilient even if marking read fails.
       }
     }
 
@@ -276,17 +274,10 @@ class NotificationsPage extends ConsumerWidget {
     }
 
     // Navigate to target (same go_router route as MyProjects: /project/:id)
-    if (AppConfig.isDevelopment) {
-      // ignore: avoid_print
-      print(
-        'Current locale before navigation: ${Localizations.localeOf(context)}',
-      );
-    }
     try {
       target.navigate(context);
-    } catch (e) {
-      debugPrint('Navigation error: $e');
-      _showErrorSnackbar(context, 'Failed to navigate: ${e.toString()}');
+    } catch (_) {
+      _showErrorSnackbar(context, 'Failed to open notification link');
     }
   }
 

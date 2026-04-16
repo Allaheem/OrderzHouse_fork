@@ -42,13 +42,11 @@ export default function ContactUsPage() {
 
     emailjs
       .send(serviceID, templateID, templateParams, publicKey)
-      .then((response) => {
-        console.log("SUCCESS!", response.status, response.text);
+      .then(() => {
         setSubmitStatus("success");
         setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       })
-      .catch((err) => {
-        console.error("FAILED...", err);
+      .catch(() => {
         setSubmitStatus("error");
       })
       .finally(() => {

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../../core/models/notification_model.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/config/app_config.dart';
 
 class NotificationsRepository {
   NotificationsRepository({ApiClient? api}) : _api = api ?? ApiClient.instance;
@@ -20,33 +19,11 @@ class NotificationsRepository {
     bool unreadOnly = false,
   }) async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /notifications');
-        // ignore: avoid_print
-        print(
-          '📡 REQUEST[GET] => Query: limit=$limit, offset=$offset, unreadOnly=$unreadOnly',
-        );
-      }
-
       final response = await _api.getNotifications(
         limit: limit,
         offset: offset,
         unreadOnly: unreadOnly,
       );
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => PATH: /notifications');
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => Final URL: ${response.requestOptions.uri}',
-        );
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => Response data length: ${response.data?.toString().length ?? 0} chars',
-        );
-      }
 
       // Handle multiple response formats:
       // 1. { success: true, notifications: [...] }
@@ -86,13 +63,7 @@ class NotificationsRepository {
           .map((item) {
             try {
               return AppNotification.fromJson(item as Map<String, dynamic>);
-            } catch (e) {
-              if (AppConfig.isDevelopment) {
-                // ignore: avoid_print
-                print('⚠️ Failed to parse notification: $e');
-                // ignore: avoid_print
-                print('⚠️ Notification data: $item');
-              }
+            } catch (_) {
               return null;
             }
           })
@@ -105,19 +76,6 @@ class NotificationsRepository {
         message: 'Notifications fetched successfully',
       );
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /notifications',
-        );
-        // ignore: avoid_print
-        print('❌ ERROR => Message: ${e.message}');
-        if (e.response != null) {
-          // ignore: avoid_print
-          print('❌ ERROR => Response Data: ${e.response?.data}');
-        }
-      }
-
       return ApiResponse(
         success: false,
         data: [],
@@ -128,16 +86,11 @@ class NotificationsRepository {
             ? e.response?.data as Map<String, dynamic>
             : null,
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /notifications: $e');
-      }
-
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch notifications: ${e.toString()}',
+        message: 'Failed to fetch notifications',
       );
     }
   }
@@ -148,21 +101,7 @@ class NotificationsRepository {
   /// Response: { success: true, count: <int> }
   Future<ApiResponse<int>> fetchUnreadCount({bool unreadOnly = true}) async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /notifications/count');
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => Query: unreadOnly=$unreadOnly');
-      }
-
       final response = await _api.getNotificationsCount(unreadOnly: unreadOnly);
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => PATH: /notifications/count',
-        );
-      }
 
       final data = response.data as Map<String, dynamic>;
 
@@ -181,15 +120,6 @@ class NotificationsRepository {
         message: data['message'] as String? ?? 'Failed to fetch unread count',
       );
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /notifications/count',
-        );
-        // ignore: avoid_print
-        print('❌ ERROR => Message: ${e.message}');
-      }
-
       return ApiResponse(
         success: false,
         data: 0,
@@ -197,16 +127,11 @@ class NotificationsRepository {
             _extractErrorMessage(e.response?.data) ??
             'Failed to fetch unread count',
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /notifications/count: $e');
-      }
-
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: 0,
-        message: 'Failed to fetch unread count: ${e.toString()}',
+        message: 'Failed to fetch unread count',
       );
     }
   }
@@ -216,19 +141,7 @@ class NotificationsRepository {
   /// Response: { success: true, message: "..." }
   Future<ApiResponse<void>> markAsRead(int notificationId) async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[PUT] => PATH: /notifications/$notificationId/read');
-      }
-
       final response = await _api.markNotificationRead(notificationId);
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => PATH: /notifications/$notificationId/read',
-        );
-      }
 
       final data = response.data as Map<String, dynamic>;
 
@@ -247,19 +160,6 @@ class NotificationsRepository {
             data['message'] as String? ?? 'Failed to mark notification as read',
       );
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /notifications/$notificationId/read',
-        );
-        // ignore: avoid_print
-        print('❌ ERROR => Message: ${e.message}');
-        if (e.response != null) {
-          // ignore: avoid_print
-          print('❌ ERROR => Response Data: ${e.response?.data}');
-        }
-      }
-
       return ApiResponse(
         success: false,
         data: null,
@@ -267,16 +167,11 @@ class NotificationsRepository {
             _extractErrorMessage(e.response?.data) ??
             'Failed to mark notification as read',
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /notifications/$notificationId/read: $e');
-      }
-
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to mark notification as read: ${e.toString()}',
+        message: 'Failed to mark notification as read',
       );
     }
   }

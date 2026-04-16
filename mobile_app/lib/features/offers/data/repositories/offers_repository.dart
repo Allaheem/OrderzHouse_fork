@@ -2,7 +2,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/config/app_config.dart';
 
 class OffersRepository {
   OffersRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
@@ -18,15 +17,6 @@ class OffersRepository {
     String? proposal,
   }) async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[POST] => PATH: /offers/$projectId/offers');
-        // ignore: avoid_print
-        print(
-          '📡 REQUEST[POST] => Body: { bid_amount: $bidAmount, proposal: ${proposal ?? "null"} }',
-        );
-      }
-
       final response = await _dio.post(
         '/offers/$projectId/offers',
         data: {
@@ -34,15 +24,6 @@ class OffersRepository {
           if (proposal != null && proposal.isNotEmpty) 'proposal': proposal,
         },
       );
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => PATH: /offers/$projectId/offers',
-        );
-        // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Data: ${response.data}');
-      }
 
       return ApiResponse(
         success: true,
@@ -52,15 +33,6 @@ class OffersRepository {
             'Offer sent successfully',
       );
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/$projectId/offers',
-        );
-        // ignore: avoid_print
-        print('❌ ERROR => Response Data: ${e.response?.data}');
-      }
-
       final errorMessage = e.response?.data?['message'] as String?;
       final statusCode = e.response?.statusCode;
 
@@ -72,15 +44,10 @@ class OffersRepository {
           ...?e.response?.data as Map<String, dynamic>?,
         },
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /offers/$projectId/offers: $e');
-      }
-
+    } catch (_) {
       return ApiResponse(
         success: false,
-        message: 'Failed to send offer: ${e.toString()}',
+        message: 'Failed to send offer',
       );
     }
   }
@@ -90,21 +57,7 @@ class OffersRepository {
   /// Response: { success: true, hasPendingOffer: boolean }
   Future<ApiResponse<bool>> checkMyPendingOffer(int projectId) async {
     try {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('📡 REQUEST[GET] => PATH: /offers/my/$projectId/pending');
-      }
-
       final response = await _dio.get('/offers/my/$projectId/pending');
-
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '✅ RESPONSE[${response.statusCode}] => PATH: /offers/my/$projectId/pending',
-        );
-        // ignore: avoid_print
-        print('✅ RESPONSE[${response.statusCode}] => Data: ${response.data}');
-      }
 
       final data = response.data as Map<String, dynamic>;
       final hasPendingOffer = data['hasPendingOffer'] as bool? ?? false;
@@ -115,27 +68,13 @@ class OffersRepository {
         message: 'Check completed',
       );
     } on DioException catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print(
-          '❌ ERROR[${e.response?.statusCode ?? 'null'}] => PATH: /offers/my/$projectId/pending',
-        );
-        // ignore: avoid_print
-        print('❌ ERROR => Response Data: ${e.response?.data}');
-      }
-
       // If 404 or other error, assume no pending offer
       return ApiResponse(
         success: true,
         data: false,
         message: e.response?.data?['message'] as String?,
       );
-    } catch (e) {
-      if (AppConfig.isDevelopment) {
-        // ignore: avoid_print
-        print('❌ UNEXPECTED ERROR => /offers/my/$projectId/pending: $e');
-      }
-
+    } catch (_) {
       return const ApiResponse(
         success: true,
         data: false,

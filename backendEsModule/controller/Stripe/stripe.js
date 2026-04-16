@@ -296,8 +296,7 @@ export const createCheckoutSession = async (req, res) => {
     console.error("[Stripe] Create session error - stack:", err.stack);
     if (err.raw != null) console.error("[Stripe] Create session error - raw:", err.raw);
     return res.status(500).json({
-      message: err.message || "Failed to create checkout session",
-      raw: err.raw?.message ?? undefined,
+      message: "Failed to create checkout session",
     });
   }
 };
@@ -587,7 +586,7 @@ export const createOfferAcceptCheckoutSession = async (req, res) => {
     console.error("createOfferAcceptCheckoutSession error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message || "Failed to create payment session",
+      message: "Failed to create payment session",
     });
   }
 };

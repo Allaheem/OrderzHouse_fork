@@ -22,11 +22,11 @@ export default function ProjectCard({
   } = project;
 
   // Get current user ID to check if they've applied
-  const currentUserId = useSelector((state) => state?.auth?.userId) || 
-                        (typeof window !== "undefined" ? localStorage.getItem("userId") : null);
-  const roleId =
-    useSelector((state) => state?.auth?.userData?.role_id) ||
-    (typeof window !== "undefined" ? Number(localStorage.getItem("roleId") || 0) : 0);
+  const currentUserId =
+    useSelector((state) => state?.auth?.userData?.id) ||
+    useSelector((state) => state?.auth?.userData?.user_id) ||
+    null;
+  const roleId = useSelector((state) => state?.auth?.userData?.role_id) || 0;
   const isStaff = Number(roleId) === 1;
   
   // Check if current user has applied to this project

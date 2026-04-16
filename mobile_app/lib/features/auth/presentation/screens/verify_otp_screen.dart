@@ -128,12 +128,21 @@ class _VerifyOtpScreenState extends ConsumerState<VerifyOtpScreen> {
   Future<void> _handleResend() async {
     if (!_canResend) return;
 
-    // Call login again to resend OTP (or implement a dedicated resend endpoint)
-    // For now, just reset timer
-    _startResendTimer();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('OTP resent successfully')));
+    final authNotifier = ref.read(authStateProvider.notifier);
+    final success = await authNotifier.resendSignupOtp(widget.email);
+    if (!mounted) return;
+
+    if (success) {
+      _startResendTimer();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('OTP resent successfully')));
+    } else {
+      final error = ref.read(authStateProvider).error;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? 'Failed to resend OTP')),
+      );
+    }
   }
 
   void _handleBack() {

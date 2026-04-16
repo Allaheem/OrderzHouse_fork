@@ -1,19 +1,17 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const STORAGE_KEYS = {
-  ACCESS_TOKEN: "accessToken",
   USER_INFO: "userInfo",
 };
 
 function readFromStorage() {
   try {
-    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) || null;
     const raw = localStorage.getItem(STORAGE_KEYS.USER_INFO);
     let userInfo = null;
     if (raw && raw !== "undefined" && raw !== "null") {
       userInfo = JSON.parse(raw);
     }
-    return { token, userInfo };
+    return { token: null, userInfo };
   } catch (e) {
     console.error("authSlice readFromStorage:", e);
     return { token: null, userInfo: null };
@@ -47,8 +45,6 @@ const authSlice = createSlice({
       state.userData = state.user;
       state.userId = state.user?.id ?? state.user?.userId ?? state.user?.user_id ?? null;
       state.roleId = state.user?.role_id ?? state.user?.roleId ?? state.user?.role ?? null;
-
-      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, token);
       if (userInfo != null) {
         localStorage.setItem(STORAGE_KEYS.USER_INFO, JSON.stringify(userInfo));
       }
@@ -61,7 +57,6 @@ const authSlice = createSlice({
       state.userData = null;
       state.userId = null;
       state.roleId = null;
-      localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER_INFO);
     },
 
@@ -80,8 +75,6 @@ const authSlice = createSlice({
       const t = action.payload;
       state.token = t ?? null;
       state.isAuthenticated = !!state.token;
-      if (t) localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, t);
-      else localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     },
 
     setUserData(state, action) {
@@ -111,9 +104,9 @@ export const {
 /** Call on app mount to sync Redux from localStorage (and log for debug). */
 export function hydrateFromStorage() {
   return (dispatch) => {
-    const { token, userInfo } = readFromStorage();
-    console.log("HYDRATE", { tokenFromStorage: !!token, userFromStorage: !!userInfo });
-    dispatch(setAuthFromStorage({ token, userInfo }));
+    const { userInfo } = readFromStorage();
+    console.log("HYDRATE", { tokenFromStorage: false, userFromStorage: !!userInfo });
+    dispatch(setAuthFromStorage({ token: null, userInfo }));
   };
 }
 

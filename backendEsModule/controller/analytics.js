@@ -51,7 +51,7 @@ export async function getAnalyticsKpis(req, res) {
     });
   } catch (err) {
     console.error("getAnalyticsKpis:", err);
-    return res.status(500).json({ success: false, message: "Failed to load KPIs", error: err.message });
+    return res.status(500).json({ success: false, message: "Failed to load KPIs" });
   }
 }
 
@@ -212,6 +212,6 @@ export async function getAnalyticsAdmin(req, res) {
     });
   } catch (err) {
     console.error("getAnalyticsAdmin:", err);
-    return res.status(500).json({ success: false, message: "Failed to load analytics", error: err.message });
+    return res.status(500).json({ success: false, message: "Failed to load analytics" });
   }
 }

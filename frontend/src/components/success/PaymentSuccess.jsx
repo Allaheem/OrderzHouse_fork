@@ -21,16 +21,9 @@ export default function PaymentSuccess() {
 
       // 1️⃣ FRONTEND CHECK: Validate session_id before calling backend
       if (!session_id || session_id.trim() === "") {
-        console.error("[PaymentSuccess] Missing or empty session_id");
         toast.error("Invalid payment session. Please contact support.");
         return navigate("/", { replace: true });
       }
-
-      // Log the exact payload being sent
-      console.log("[PaymentSuccess] Sending confirmation request:", {
-        session_id,
-        endpoint: "/stripe/confirm",
-      });
 
       // Timeout guard
       const timeoutId = setTimeout(() => {
@@ -46,16 +39,8 @@ export default function PaymentSuccess() {
 
         clearTimeout(timeoutId);
 
-        // Log response for debugging
-        console.log("[PaymentSuccess] Confirmation response:", {
-          ok: res.data?.ok,
-          purpose: res.data?.purpose,
-          error: res.data?.error,
-        });
-
         if (!res.data?.ok) {
           const errorMsg = res.data?.error || "Payment verification failed. Please contact support.";
-          console.error("[PaymentSuccess] Confirmation failed:", errorMsg);
           toast.error(errorMsg);
           return navigate("/", { replace: true });
         }
@@ -100,16 +85,7 @@ export default function PaymentSuccess() {
 
       } catch (e) {
         clearTimeout(timeoutId);
-        
-        // Enhanced error logging
-        console.error("[PaymentSuccess] Confirmation error:", {
-          message: e.message,
-          response: e.response?.data,
-          status: e.response?.status,
-          statusText: e.response?.statusText,
-          session_id,
-        });
-        
+
         // Extract error message from response or use default
         let errorMessage = "Payment verification failed. Please contact support.";
         
@@ -117,8 +93,6 @@ export default function PaymentSuccess() {
           errorMessage = e.response?.data?.error || "Invalid payment session. Please contact support.";
         } else if (e.response?.status === 500) {
           errorMessage = "Server error during payment verification. Please contact support.";
-        } else if (e.message) {
-          errorMessage = e.message;
         }
         
         toast.error(errorMessage);

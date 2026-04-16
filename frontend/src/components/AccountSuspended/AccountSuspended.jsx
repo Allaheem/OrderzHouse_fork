@@ -135,15 +135,18 @@ const AccountSuspended = () => {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Help Resources</h3>
             <div className="space-y-2">
-              <a href="#" className="flex items-center text-sm text-gray-600 hover:text-gray-900">
+              <Link to="/privacy" className="flex items-center text-sm text-gray-600 hover:text-gray-900">
                 <HelpCircle className="w-4 h-4 mr-2" />
                 Community Guidelines
-              </a>
-              <a href="#" className="flex items-center text-sm text-gray-600 hover:text-gray-900">
+              </Link>
+              <Link to="/terms" className="flex items-center text-sm text-gray-600 hover:text-gray-900">
                 <FileText className="w-4 h-4 mr-2" />
                 Terms of Service
-              </a>
-              <a href="#" className="flex items-center text-sm text-gray-600 hover:text-gray-900">
+              </Link>
+              <a
+                href="mailto:info@battechno.com?subject=Account%20Suspension%20FAQ"
+                className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+              >
                 <UserX className="w-4 h-4 mr-2" />
                 Account Suspension FAQ
               </a>

@@ -72,7 +72,7 @@ class ProjectsRepositoryChangesDelivery {
             e.response?.data?['message'] as String? ??
             'Failed to send change request',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/request-changes: $e');
       }
@@ -80,7 +80,7 @@ class ProjectsRepositoryChangesDelivery {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to send change request: ${e.toString()}',
+        message: 'Failed to send change request',
       );
     }
   }
@@ -162,7 +162,7 @@ class ProjectsRepositoryChangesDelivery {
             e.response?.data?['message'] as String? ??
             'Failed to fetch change requests',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/change-requests: $e');
       }
@@ -170,7 +170,7 @@ class ProjectsRepositoryChangesDelivery {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch change requests: ${e.toString()}',
+        message: 'Failed to fetch change requests',
       );
     }
   }
@@ -254,7 +254,7 @@ class ProjectsRepositoryChangesDelivery {
             e.response?.data?['message'] as String? ??
             'Failed to deliver project',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/deliver: $e');
       }
@@ -262,7 +262,7 @@ class ProjectsRepositoryChangesDelivery {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to deliver project: ${e.toString()}',
+        message: 'Failed to deliver project',
       );
     }
   }
@@ -298,14 +298,14 @@ class ProjectsRepositoryChangesDelivery {
             e.response?.data?['message'] as String? ??
             'Failed to fetch deliveries',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: const ProjectDeliveriesPayload(
           deliveries: <Map<String, dynamic>>[],
           awaitingClientReview: false,
         ),
-        message: 'Failed to fetch deliveries: ${e.toString()}',
+        message: 'Failed to fetch deliveries',
       );
     }
   }
@@ -346,7 +346,7 @@ class ProjectsRepositoryChangesDelivery {
             e.response?.data?['message'] as String? ??
             'Failed to approve delivery',
       );
-    } catch (e) {
+    } catch (_) {
       if (AppConfig.isDevelopment) {
         appDebugLog('❌ UNEXPECTED ERROR => /projects/$projectId/approve: $e');
       }
@@ -354,7 +354,7 @@ class ProjectsRepositoryChangesDelivery {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to approve delivery: ${e.toString()}',
+        message: 'Failed to approve delivery',
       );
     }
   }
@@ -389,11 +389,11 @@ class ProjectsRepositoryChangesDelivery {
             e.response?.data?['message'] as String? ??
             'Failed to send change request',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to send change request: ${e.toString()}',
+        message: 'Failed to send change request',
       );
     }
   }

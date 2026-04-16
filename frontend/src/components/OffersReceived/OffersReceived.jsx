@@ -8,7 +8,6 @@ const THEME = "#028090";
 function getToken(state) {
   const t = state?.auth?.token;
   if (t) return t;
-  if (typeof window !== "undefined") return localStorage.getItem("accessToken");
   return null;
 }
 
@@ -157,7 +156,6 @@ export default function OffersReceived({ item, offersForProject, setOffersForPro
                           }
                           toast.success("Offer accepted successfully! Other offers rejected.");
                         } catch (err) {
-                          console.error("Accept offer failed", err);
                           if (err?.response?.data?.message?.includes("expired")) {
                             setOffersForProject((prev) =>
                               prev.map((x) =>
@@ -193,7 +191,6 @@ export default function OffersReceived({ item, offersForProject, setOffersForPro
                           );
                           toast.success("Offer rejected.");
                         } catch (err) {
-                          console.error("Reject offer failed", err);
                           // Check if the error is due to offer expiration
                           if (err?.response?.data?.message?.includes("expired")) {
                             // Update the offer status to expired in the UI

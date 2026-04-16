@@ -14,14 +14,6 @@ const extractPaymentIntentId = (paymentIntent) => {
 
 export const confirmCheckoutSession = async (req, res) => {
   try {
-    // 2️⃣ BACKEND CHECK: Log incoming request
-    console.log("[confirmCheckoutSession] Request received:", {
-      query: req.query,
-      params: req.params,
-      method: req.method,
-      url: req.url,
-    });
-
     const { session_id } = req.query;
     
     if (!session_id || session_id.trim() === "") {
@@ -51,13 +43,6 @@ export const confirmCheckoutSession = async (req, res) => {
     const keyMode = stripeKeyPrefix.includes("test") ? "test" : "live";
     const sessionMode = sessionIdPrefix.includes("test") ? "test" : "live";
     
-    console.log("[confirmCheckoutSession] Stripe mode check:", {
-      keyMode,
-      sessionMode,
-      keyPrefix: stripeKeyPrefix,
-      sessionPrefix: sessionIdPrefix,
-    });
-
     // Detect test/live mismatch
     if (keyMode !== sessionMode) {
       console.error("[confirmCheckoutSession] Test/Live mode mismatch detected");
@@ -70,7 +55,6 @@ export const confirmCheckoutSession = async (req, res) => {
     }
 
     // 1️⃣ Get session from Stripe 
-    console.log("[confirmCheckoutSession] Retrieving Stripe session:", session_id);
     let session;
     try {
       session = await stripe.checkout.sessions.retrieve(session_id);
@@ -98,12 +82,6 @@ export const confirmCheckoutSession = async (req, res) => {
       });
     }
     
-    console.log("[confirmCheckoutSession] Session retrieved:", {
-      id: session.id,
-      payment_status: session.payment_status,
-      metadata: session.metadata,
-    });
-
     // Verify payment status
     if (session.payment_status !== "paid") {
       console.warn("[confirmCheckoutSession] Payment not completed:", {
@@ -123,14 +101,6 @@ export const confirmCheckoutSession = async (req, res) => {
     const purpose = session.metadata?.purpose; // 'plan' | 'project' | 'offer'
     const reference_id = session.metadata?.reference_id ? Number(session.metadata.reference_id) : null;
     const includesYearlyFee = session.metadata?.includes_yearly_fee === "yes";
-
-    console.log("[confirmCheckoutSession] Extracted metadata:", {
-      user_id,
-      purpose,
-      reference_id,
-      includesYearlyFee,
-      metadata: session.metadata,
-    });
 
     // Validate required metadata
     if (!user_id || isNaN(user_id)) {
@@ -377,7 +347,7 @@ export const confirmCheckoutSession = async (req, res) => {
           // Project already created for this session - reuse it
           projectId = existingPaymentCheck.rows[0].reference_id;
           projectCreated = true;
-          console.log(`[confirmCheckoutSession] Project ${projectId} already exists for session ${session.id}, reusing`);
+            
         } else {
           // Parse project_data from metadata
           let projectData;
@@ -391,16 +361,6 @@ export const confirmCheckoutSession = async (req, res) => {
             throw new Error(`Invalid project_data format: ${parseError.message}`);
           }
           
-          console.log("[confirmCheckoutSession] Creating project from payment:", {
-            user_id,
-            title: projectData.title,
-            project_type: projectData.project_type,
-            category_id: projectData.category_id,
-            sub_sub_category_id: projectData.sub_sub_category_id,
-            duration_type: projectData.duration_type,
-            budget: projectData.budget,
-          });
-
           // 1️⃣ Bidding projects do NOT require payment - reject them
           if (projectData.project_type === "bidding") {
             console.error("[confirmCheckoutSession] Bidding projects should not go through Stripe confirmation");
@@ -456,15 +416,6 @@ export const confirmCheckoutSession = async (req, res) => {
 
           // 2️⃣-5️⃣ Compute project status: fixed and hourly projects must be "active"
           let projectStatus = "active";
-
-          console.log("[confirmCheckoutSession] Normalized project data:", {
-            durationDaysValue,
-            durationHoursValue,
-            normalizedBudget,
-            normalizedHourlyRate,
-            preferredSkillsCount: preferredSkillsArray.length,
-            projectStatus,
-          });
 
           // Create project with computed status and payment_method='stripe'
           const projectInsertResult = await pool.query(
@@ -526,8 +477,7 @@ export const confirmCheckoutSession = async (req, res) => {
               [projectId, session.id]
             );
             
-            console.log(`✅ Project ${project.id} "${project.title}" created with status ${projectStatus} after payment`);
-            console.log(`✅ Payment record updated: ${updateResult.rowCount} row(s) updated`);
+            
 
             // A) Create escrow if freelancer is already assigned (rare but possible)
             // Check if project has an active freelancer assignment
@@ -548,7 +498,7 @@ export const confirmCheckoutSession = async (req, res) => {
                   amount,
                   paymentId,
                 });
-                console.log(`✅ Escrow created for project ${projectId} with freelancer ${freelancerId}`);
+                
               } catch (escrowError) {
                 console.error("[confirmCheckoutSession] Escrow creation error:", escrowError);
                 // Don't fail payment confirmation if escrow creation fails
@@ -583,7 +533,7 @@ export const confirmCheckoutSession = async (req, res) => {
       try {
         const { completeOfferAcceptance } = await import("../offers.js");
         await completeOfferAcceptance(offerId);
-        console.log(`✅ Offer ${offerId} accepted and freelancer assigned after payment`);
+        
       } catch (err) {
         console.error("completeOfferAcceptance error:", err);
         return res.status(500).json({ ok: false, error: "Failed to complete offer acceptance" });
@@ -610,24 +560,13 @@ export const confirmCheckoutSession = async (req, res) => {
       }
       if (projectError) {
         responseData.project_error = {
-          message: projectError.message,
-          code: projectError.code,
-          detail: projectError.detail,
-          constraint: projectError.constraint,
+          message: "Project creation failed after payment confirmation.",
         };
         // Also update main message to indicate project creation failed
-        responseData.message = "Payment confirmed but project creation failed. Check project_error for details.";
+        responseData.message = "Payment confirmed but project creation failed. Please contact support.";
       }
     }
 
-    console.log("[confirmCheckoutSession] Confirmation successful:", {
-      purpose,
-      user_id,
-      reference_id: referenceIdForDb,
-      project_created: purpose === "project" ? projectCreated : undefined,
-      project_id: purpose === "project" ? projectId : undefined,
-    });
-    
     return res.json(responseData);
 
   } catch (err) {

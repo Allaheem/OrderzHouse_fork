@@ -49,10 +49,7 @@ final projectByIdProvider = FutureProvider.autoDispose.family<Project?, int>((
     if (projectData.isNotEmpty) {
       try {
         return Project.fromJson(projectData);
-      } catch (e) {
-        if (AppConfig.isDevelopment) {
-          print('❌ Failed to parse project $projectId: $e');
-        }
+      } catch (_) {
         return null;
       }
     }
@@ -256,7 +253,8 @@ class ExploreProjectsNotifier
       );
     } catch (e, st) {
       if (cached != null && cached.isNotEmpty) {
-        ref.read(exploreRefreshErrorProvider.notifier).state = e.toString();
+        ref.read(exploreRefreshErrorProvider.notifier).state =
+            'Could not refresh';
         return;
       }
       state = AsyncValue.error(e, st);

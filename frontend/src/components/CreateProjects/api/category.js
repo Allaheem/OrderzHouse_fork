@@ -53,12 +53,7 @@ export const fetchSubSubCategoriesByCategoryId = async (categoryId) => {
     // 2) نجيب sub‑sub لكل sub‑category (على التوازي)
     const results = await Promise.all(
       subsArray.map((sub) =>
-        fetchSubSubCategoriesBySubId(sub.id).catch((err) => {
-          console.error(
-            "fetchSubSubCategoriesByCategoryId: failed for sub",
-            sub.id,
-            err
-          );
+        fetchSubSubCategoriesBySubId(sub.id).catch((_) => {
           return [];
         })
       )
@@ -69,12 +64,7 @@ export const fetchSubSubCategoriesByCategoryId = async (categoryId) => {
       (all, arr) => all.concat(Array.isArray(arr) ? arr : []),
       []
     );
-  } catch (err) {
-    console.error(
-      "fetchSubSubCategoriesByCategoryId: failed for category",
-      categoryId,
-      err
-    );
+  } catch (_) {
     return [];
   }
 };

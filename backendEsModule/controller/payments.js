@@ -42,7 +42,7 @@ export const getClientPayments = async (req, res) => {
 
   } catch (err) {
     console.error("getClientPayments:", err);
-    res.status(403).json({ success: false, message: err.message });
+    res.status(403).json({ success: false, message: "Forbidden" });
   }
 };
 
@@ -72,7 +72,7 @@ export const getClientTotalSpent = async (req, res) => {
 
   } catch (err) {
     console.error("getClientTotalSpent:", err);
-    res.status(403).json({ success: false, message: err.message });
+    res.status(403).json({ success: false, message: "Forbidden" });
   }
 };
 
@@ -123,7 +123,7 @@ export const getClientEscrowSummary = async (req, res) => {
 
   } catch (err) {
     console.error("getClientEscrowSummary:", err);
-    res.status(403).json({ success: false, message: err.message });
+    res.status(403).json({ success: false, message: "Forbidden" });
   }
 };
 
@@ -149,7 +149,7 @@ export const getFreelancerWallet = async (req, res) => {
 
   } catch (err) {
     console.error("getFreelancerWallet:", err);
-    res.status(403).json({ success: false, message: err.message });
+    res.status(403).json({ success: false, message: "Forbidden" });
   }
 };
 
@@ -187,7 +187,7 @@ export const getFreelancerWalletTransactions = async (req, res) => {
 
   } catch (err) {
     console.error("getFreelancerWalletTransactions:", err);
-    res.status(403).json({ success: false, message: err.message });
+    res.status(403).json({ success: false, message: "Forbidden" });
   }
 };
 
@@ -215,7 +215,7 @@ export const adminGetAllPayments = async (req, res) => {
 
   } catch (err) {
     console.error("adminGetAllPayments:", err);
-    res.status(403).json({ success: false, message: err.message });
+    res.status(403).json({ success: false, message: "Forbidden" });
   }
 };
 
@@ -329,7 +329,7 @@ export const releaseEscrow = async (req, res) => {
 
   } catch (err) {
     console.error("releaseEscrow:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -355,7 +355,7 @@ export const refundEscrow = async (req, res) => {
 
   } catch (err) {
     console.error("refundEscrow:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -440,7 +440,7 @@ export const releaseHeldEscrowForCompletedProjects = async (req, res) => {
     });
   } catch (err) {
     console.error("releaseHeldEscrowForCompletedProjects:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -459,9 +459,6 @@ export const getPaymentHistory = async (req, res) => {
     const offset = Math.max(0, (Number(page) - 1) * Number(limit));
     const limitNum = Math.min(100, Math.max(1, Number(limit)));
 
-    // [TEMP DEBUG]
-    console.log("[getPaymentHistory] req.user.id / req.token.userId:", req.user?.id ?? req.token?.userId);
-
     // 1) Wallet balance: wallets where user_id = current user
     const walletResult = await pool.query(
       `SELECT balance FROM wallets WHERE user_id = $1`,
@@ -469,9 +466,6 @@ export const getPaymentHistory = async (req, res) => {
     );
     const walletRow = walletResult.rows[0] ?? null;
     const balance = Number(walletRow?.balance ?? 0);
-
-    // [TEMP DEBUG]
-    console.log("[getPaymentHistory] wallet row found:", !!walletRow, "balance:", balance);
 
     // 2) Transaction rows: wallet_transactions where user_id = current user, newest first
     const txResult = await pool.query(
@@ -483,9 +477,6 @@ export const getPaymentHistory = async (req, res) => {
       [userId, limitNum, offset]
     );
     const rows = txResult.rows || [];
-
-    // [TEMP DEBUG]
-    console.log("[getPaymentHistory] transactions count:", rows.length);
 
     // 3) Map to UI table fields: id, purpose, reference, amount, status, date
     const transactions = rows.map((row) => ({
@@ -513,6 +504,6 @@ export const getPaymentHistory = async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error("getPaymentHistory:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

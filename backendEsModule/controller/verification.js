@@ -53,14 +53,21 @@ export const getPendingVerifications = async (req, res) => {
 ========================================= */
 export const approveVerification = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
 
-    await pool.query(
+    const result = await pool.query(
       `UPDATE users 
        SET is_verified = true, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $1`,
+       WHERE id = $1
+       RETURNING id`,
       [id]
     );
+    if (!result.rows.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     try {
       eventBus.emit("freelancer.verificationApproved", {
@@ -83,14 +90,21 @@ export const approveVerification = async (req, res) => {
 ========================================= */
 export const rejectVerification = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
 
-    await pool.query(
+    const result = await pool.query(
       `UPDATE users 
        SET is_verified = false, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $1`,
+       WHERE id = $1
+       RETURNING id`,
       [id]
     );
+    if (!result.rows.length) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     try {
       eventBus.emit("freelancer.verificationRejected", {

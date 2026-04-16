@@ -102,12 +102,12 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
           );
         }
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() => _isDeleting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${l10n.error}: ${e.toString()}'),
+            content: Text(l10n.somethingWentWrong),
             backgroundColor: AppColors.error,
           ),
         );

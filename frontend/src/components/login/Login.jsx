@@ -42,7 +42,7 @@ export const applyLoginSuccess = async (dispatch, data, navigate, connectSocket)
   let decoded;
   try {
     decoded = jwtDecode(token);
-  } catch (e) {
+  } catch (_) {
     decoded = {};
   }
   let userInfo = data.userInfo ?? {
@@ -68,8 +68,8 @@ export const applyLoginSuccess = async (dispatch, data, navigate, connectSocket)
         userInfo = fullUser;
         roleId = fullUser.role_id ?? fullUser.roleId;
       }
-    } catch (err) {
-      console.warn("Could not fetch user data after login:", err);
+    } catch (_) {
+      // Keep login flow resilient without exposing internals in console.
     }
   }
 
@@ -106,9 +106,6 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setMessage("");
-
-    // Debug: Log to verify single call
-    console.log("[Login] Attempting login for:", email.toLowerCase());
 
     API
       .post("/users/login", {

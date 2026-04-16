@@ -48,10 +48,8 @@ export const adminUpdateSubscription = async (data) => {
   return response.data;
 };
 
-export const adminCancelSubscription = async (subscriptionId) => {
-  const response = await API.patch("/plans/:planId/subscribers/:id", {
-    subscription_id: subscriptionId,
-  });
+export const adminCancelSubscription = async (planId, subscriptionId) => {
+  const response = await API.patch(`/plans/${planId}/subscribers/${subscriptionId}`);
   return response.data;
 };
 

@@ -24,14 +24,15 @@ import {
   getAssignedTasks,
 } from "../controller/tasks.js";
 import authentication from "../middleware/authentication.js";
+import adminOnly from "../middleware/adminOnly.js";
 import { upload, uploadErrorHandler } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
 /* ============================== ADMIN ============================== */
-router.get("/admin", authentication, getAllTasksForAdmin);
-router.put("/admin/:id/status", authentication, approveTaskByAdmin);
-router.put("/admin/payment/:id/confirm", authentication, confirmPaymentByAdmin);
+router.get("/admin", authentication, adminOnly, getAllTasksForAdmin);
+router.put("/admin/:id/status", authentication, adminOnly, approveTaskByAdmin);
+router.put("/admin/payment/:id/confirm", authentication, adminOnly, confirmPaymentByAdmin);
 
 /* ============================== FREELANCER ============================== */
 router.post("/freelancer", authentication, upload.array("files"), createTask);

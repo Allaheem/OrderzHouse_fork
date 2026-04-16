@@ -53,8 +53,7 @@ String projectDetailsFormatDeliveryDate(dynamic date) {
     } else {
       return DateFormat('MMM dd, yyyy').format(dateTime);
     }
-  } catch (e) {
-    debugPrint('Date formatting error: $e for date: $date');
+  } catch (_) {
     return 'Recently';
   }
 }

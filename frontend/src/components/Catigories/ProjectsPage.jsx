@@ -58,8 +58,7 @@ export default function ProjectsPage({ mode: propMode }) {
         );
 
         setCatalog(catalogObj);
-      } catch (err) {
-        console.error("Failed to fetch categories", err);
+      } catch (_) {
       }
     };
     loadCategories();
@@ -100,8 +99,7 @@ export default function ProjectsPage({ mode: propMode }) {
         setNameToCatId(_nameToCatId);
         setNameToSubCat(_nameToSubCat);
         setIndexReady(true);
-      } catch (e) {
-        console.error("buildIndex error", e);
+      } catch (_) {
         setIndexReady(true);
       }
     };
@@ -209,8 +207,7 @@ export default function ProjectsPage({ mode: propMode }) {
         const found =
           list && list.find((item) => String(item.id) === String(sub));
         setSubSubInfo(found || null);
-      } catch (err) {
-        console.error("Failed to fetch sub-sub-category info", err);
+      } catch (_) {
         setSubSubInfo(null);
       }
     };
@@ -229,8 +226,7 @@ export default function ProjectsPage({ mode: propMode }) {
         const subs = await fetchSubCategoriesByCategoryId(Number(category));
         const found = subs?.find((s) => String(s.id) === String(subcat));
         setSubCatInfo(found || null);
-      } catch (e) {
-        console.error("Failed to fetch sub-category info", e);
+      } catch (_) {
         setSubCatInfo(null);
       }
     };

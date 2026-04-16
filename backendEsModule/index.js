@@ -29,9 +29,8 @@ if (process.env.NODE_ENV !== "test") {
     process.exit(1);
   }
   if (process.env.NODE_ENV === "production" && !process.env.OTP_SECRET) {
-    console.warn(
-      "⚠️  OTP_SECRET is not set; OTP HMAC falls back to JWT_SECRET. Set OTP_SECRET for isolation."
-    );
+    console.error("FATAL: OTP_SECRET must be set in production.");
+    process.exit(1);
   }
   if (process.env.NODE_ENV === "production" && !process.env.REFRESH_TOKEN_SECRET) {
     console.error(

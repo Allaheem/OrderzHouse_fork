@@ -117,7 +117,6 @@ export default function AdminSubscriptions() {
         setPlans(plansData);
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to load data");
     } finally {
       setLoading(false);
@@ -262,7 +261,6 @@ export default function AdminSubscriptions() {
         fetchData();
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to assign subscription");
     } finally {
       setActionLoading(null);
@@ -291,7 +289,6 @@ export default function AdminSubscriptions() {
         fetchData();
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to activate subscription");
     } finally {
       setActionLoading(null);
@@ -319,7 +316,6 @@ export default function AdminSubscriptions() {
         fetchData();
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to cancel subscription");
     } finally {
       setActionLoading(null);

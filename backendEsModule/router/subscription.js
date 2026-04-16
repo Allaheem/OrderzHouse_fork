@@ -18,12 +18,12 @@ const SubscriptionRouter = express.Router();
 /** Same as GET /paypal/checkout-available — for clients on older API deploys that only added subscriptions routes. */
 SubscriptionRouter.get("/paypal-checkout-available", getPayPalCheckoutAvailable);
 
-SubscriptionRouter.get("/admin/all", adminOnly ,getAllSubscriptions);
-SubscriptionRouter.get("/admin/subscriptions", authentication, getAdminSubscriptions);
-SubscriptionRouter.get("/admin/subscriptions/freelancers", authentication, getFreelancersWithSubscriptions);
-SubscriptionRouter.post("/admin/subscriptions/assign", authentication, assignSubscriptionToFreelancer);
-SubscriptionRouter.post("/admin/subscriptions/:id/activate", authentication, activateSubscription);
-SubscriptionRouter.post("/admin/subscriptions/:id/cancel", authentication, cancelSubscription);
+SubscriptionRouter.get("/admin/all", authentication, adminOnly, getAllSubscriptions);
+SubscriptionRouter.get("/admin/subscriptions", authentication, adminOnly, getAdminSubscriptions);
+SubscriptionRouter.get("/admin/subscriptions/freelancers", authentication, adminOnly, getFreelancersWithSubscriptions);
+SubscriptionRouter.post("/admin/subscriptions/assign", authentication, adminOnly, assignSubscriptionToFreelancer);
+SubscriptionRouter.post("/admin/subscriptions/:id/activate", authentication, adminOnly, activateSubscription);
+SubscriptionRouter.post("/admin/subscriptions/:id/cancel", authentication, adminOnly, cancelSubscription);
 SubscriptionRouter.get("/status", authentication, getSubscriptionStatus);
 SubscriptionRouter.post("/apple/verify-receipt", authentication, verifyAppleReceipt);
 

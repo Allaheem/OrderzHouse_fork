@@ -11,7 +11,6 @@ export const createTaskApi = async (formData, token) => {
     });
     return res.data.task;
   } catch (err) {
-    console.error("createTaskApi error:", err);
     throw err.response?.data || err;
   }
 };
@@ -31,7 +30,6 @@ export const uploadTaskFilesApi = async (requestId, files, token) => {
 
     return res.data;
   } catch (err) {
-    console.error("uploadTaskFilesApi error:", err);
     throw err.response?.data || err;
   }
 };
@@ -47,7 +45,6 @@ export const fetchTasksByFilter = async ({ category, subcat, sub } = {}) => {
     const res = await API.get("/tasks/pool", { params });
     return res.data.tasks || [];
   } catch (err) {
-    console.error("fetchTasksByFilter error:", err);
     throw err.response?.data || err;
   }
 };
@@ -58,7 +55,6 @@ export const getTaskByIdApi = async (id) => {
     const res = await API.get(`/tasks/${id}`);
     return res.data.task;
   } catch (err) {
-    console.error("getTaskByIdApi error:", err);
     throw err.response?.data || err;
   }
 };

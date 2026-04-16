@@ -98,7 +98,6 @@ export default function AdminPendingProjects() {
         setProjects(data.projects || []);
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to load pending projects");
     } finally {
       setLoading(false);
@@ -128,7 +127,6 @@ export default function AdminPendingProjects() {
         }
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to approve project");
     } finally {
       setApprovingId(null);
@@ -166,7 +164,6 @@ export default function AdminPendingProjects() {
         setRejectReason("");
       }
     } catch (err) {
-      console.error(err);
       toast.error(err.response?.data?.message || "Failed to reject project");
     } finally {
       setRejectingId(null);

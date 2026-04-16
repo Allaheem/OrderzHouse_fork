@@ -1,7 +1,6 @@
 // ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../cache/cache_service.dart';
-import '../../core/config/app_config.dart';
 
 /// Stale-while-revalidate provider helper
 /// Returns cached data immediately, then fetches fresh data in background
@@ -37,9 +36,6 @@ class StaleWhileRevalidateProvider<T> {
           .catchError((error) {
             // If fetch fails, return cached data if available
             if (cached != null) {
-              if (AppConfig.isDevelopment) {
-                print('⚠️ [SWR] Fetch failed for $cacheKey, using cached data');
-              }
               return cached;
             }
             throw error;
@@ -79,9 +75,6 @@ class StaleWhileRevalidateProvider<T> {
           .catchError((error) {
             // If fetch fails, return cached data if available
             if (cached != null && cached.isNotEmpty) {
-              if (AppConfig.isDevelopment) {
-                print('⚠️ [SWR] Fetch failed for $cacheKey, using cached data');
-              }
               return cached;
             }
             throw error;

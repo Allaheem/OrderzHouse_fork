@@ -24,8 +24,7 @@ const CreateAppointmentModal = ({ onClose, onSuccess, isAdmin, validateDate }) =
             headers: { Authorization: `Bearer ${token}` },
           });
           setFreelancers(response.data.freelancers || []);
-        } catch (err) {
-          console.error("Failed to fetch freelancers:", err);
+        } catch (_) {
         }
       };
       fetchFreelancers();

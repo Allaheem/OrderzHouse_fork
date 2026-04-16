@@ -50,8 +50,7 @@ export default function CreateAdminProject() {
         if (data.success) {
           setFreelancers(data.freelancers);
         }
-      } catch (error) {
-        console.error("Error fetching freelancers:", error);
+      } catch (_) {
       } finally {
         setFreelancersLoading(false);
       }
@@ -114,7 +113,6 @@ export default function CreateAdminProject() {
         throw new Error(data.message || "Failed to create project");
       }
     } catch (err) {
-      console.error("Error creating project:", err);
       setError(err.message || "Failed to create project. Please try again.");
     } finally {
       setLoading(false);

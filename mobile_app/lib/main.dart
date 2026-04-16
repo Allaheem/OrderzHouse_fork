@@ -1,6 +1,5 @@
 // ??? ????????
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -30,11 +29,8 @@ void main() async {
   try {
     await Hive.initFlutter();
     await CacheService.init();
-  } catch (e, st) {
+  } catch (e, _) {
     appDebugLog('⚠️ Hive/cache init failed (app runs without local cache): $e');
-    if (kDebugMode) {
-      debugPrint('$st');
-    }
   }
 
   // Step 5: Load environment variables (gracefully handle missing .env file)

@@ -2,8 +2,6 @@ import axios from "axios";
 import store from "../store/store";
 import { logout, setToken } from "../slice/auth/authSlice";
 
-const STORAGE_KEYS = { ACCESS_TOKEN: "accessToken" };
-
 /** Run refresh every 12 min so access token (e.g. 15m) never expires during use */
 const PROACTIVE_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 /** Delay first refresh after login/hydrate so refresh cookie is attached (avoids intermittent 401) */
@@ -70,7 +68,8 @@ let proactiveRefreshTimerId = null;
 let proactiveRefreshTimeoutId = null;
 
 async function doOneRefresh() {
-  if (!localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)) return;
+  const hasSession = !!store.getState()?.auth?.isAuthenticated;
+  if (!hasSession) return;
   try {
     const { data } = await API.post("/users/refresh");
     if (data?.token) store.dispatch(setToken(data.token));
@@ -112,10 +111,7 @@ export function clearProactiveRefresh() {
 // Request interceptor: always read accessToken from localStorage first so it's set before Redux updates
 API.interceptors.request.use(
   (config) => {
-    const token =
-      (typeof localStorage !== "undefined" && localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN)) ||
-      store.getState()?.auth?.token ||
-      null;
+    const token = store.getState()?.auth?.token || null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

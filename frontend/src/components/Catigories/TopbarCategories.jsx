@@ -63,12 +63,7 @@ export function CategoriesRail({
                 ...sub,
                 subSubs: Array.isArray(subSubs) ? subSubs : [],
               };
-            } catch (err) {
-              console.error(
-                "Failed to fetch sub-sub-categories for sub",
-                sub.id,
-                err
-              );
+            } catch (_) {
               return { ...sub, subSubs: [] };
             }
           })
@@ -78,8 +73,7 @@ export function CategoriesRail({
           ...prev,
           [id]: withChildren,
         }));
-      } catch (err) {
-        console.error("Failed to fetch sub-categories for category", err);
+      } catch (_) {
         setMenuMap((prev) => ({
           ...prev,
           [id]: [],
@@ -236,8 +230,7 @@ export default function Topbar({
           categories.map((c) => [c.id.toString(), { title: c.name }])
         );
         setCatalog(catalogObj);
-      } catch (err) {
-        console.error("Failed to load categories", err);
+      } catch (_) {
       }
     };
     loadCategories();

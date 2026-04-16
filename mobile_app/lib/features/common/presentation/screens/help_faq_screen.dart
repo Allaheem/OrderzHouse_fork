@@ -19,7 +19,6 @@ class HelpFaqScreen extends StatefulWidget {
 class _HelpFaqScreenState extends State<HelpFaqScreen> {
   final TextEditingController _searchController = TextEditingController();
   final Map<int, bool> _expandedItems = {};
-  bool _isLoading = false;
 
   final List<Map<String, String>> _faqs = [
     {
@@ -71,21 +70,8 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
     });
   }
 
-  void _handleContactSupport() async {
-    setState(() => _isLoading = true);
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Support request submitted. We\'ll get back to you soon!',
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
+  void _handleContactSupport() {
+    context.push('/support');
   }
 
   List<Map<String, String>> get _filteredFaqs {
@@ -221,9 +207,9 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
                         AppSpacing.lg + MediaQuery.of(context).padding.bottom,
                   ),
                   child: PrimaryGradientButton(
-                    onPressed: _isLoading ? null : _handleContactSupport,
+                    onPressed: _handleContactSupport,
                     label: l10n.contactSupport,
-                    isLoading: _isLoading,
+                    isLoading: false,
                     height: 54,
                     borderRadius: 17,
                   ),

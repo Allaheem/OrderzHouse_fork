@@ -38,7 +38,6 @@ export default function TenderDetails() {
         throw new Error("Failed to load tender");
       }
     } catch (err) {
-      console.error("Failed to fetch tender:", err);
       if (err.response?.status === 403) {
         toast.error("Access denied. You do not have permission to manage tender vault.");
         navigate("/client/tender-vault");

@@ -128,7 +128,6 @@ export const getUsersByRole = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch users",
-      error: err.message,
     });
   }
 };
@@ -155,7 +154,7 @@ export const getUserById = async (req, res) => {
 
     res.status(200).json({ success: true, user: result.rows[0] });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -220,7 +219,7 @@ export const createUser = async (req, res) => {
         message: "Email, username, or phone already exists",
       });
     } else {
-      res.status(500).json({ success: false, error: err.message });
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
 };
@@ -340,7 +339,7 @@ export const deleteUser = async (req, res) => {
       user: result.rows[0],
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -379,6 +378,6 @@ export const verifyFreelancer = async (req, res) => {
       user: result.rows[0],
     });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };

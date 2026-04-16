@@ -1,6 +1,6 @@
 import pool from "../models/db.js";
 import cron from "node-cron";
-import { NotificationCreators } from "../services/notificationService.js";
+import eventBus from "../events/eventBus.js";
 
 
 cron.schedule("0 0 * * *", async () => {
@@ -28,12 +28,11 @@ cron.schedule("0 0 * * *", async () => {
             ? planRes.rows[0].name
             : "your plan";
 
-          await NotificationCreators.subscriptionStatusChanged(
-            row.id,
-            row.freelancer_id,
-            planName,
-            "expired"
-          );
+          eventBus.emit("subscription.statusChanged", {
+            userId: row.freelancer_id,
+            subscriptionId: row.id,
+            messageText: `Your subscription (${planName}) has expired.`,
+          });
         } catch (notifErr) {
           console.error(
             `⚠️ Notification failed for subscription ${row.id}:`,

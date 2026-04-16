@@ -6,7 +6,7 @@ import "animate.css";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { captureAndLogReferral } from "./utils/partnerReferral.js";
-import { hydrateFromStorage } from "./slice/auth/authSlice";
+import { hydrateFromStorage, setToken, setUserData } from "./slice/auth/authSlice";
 import API, { startProactiveRefresh } from "./api/client";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -110,9 +110,29 @@ function App() {
                        location.pathname.startsWith("/partner");
 
   useEffect(() => {
-    dispatch(hydrateFromStorage());
-    // Start proactive token refresh so user is not logged out after ~15 min
-    if (localStorage.getItem("accessToken")) startProactiveRefresh();
+    const bootstrapSession = async () => {
+      dispatch(hydrateFromStorage());
+      try {
+        const refreshRes = await API.post("/users/refresh");
+        const newToken = refreshRes?.data?.token;
+        if (newToken) {
+          dispatch(setToken(newToken));
+          try {
+            const me = await API.get("/users/getUserdata", {
+              headers: { Authorization: `Bearer ${newToken}` },
+            });
+            const user = me?.data?.user ?? me?.data?.data ?? me?.data;
+            if (user) dispatch(setUserData(user));
+          } catch (err) {
+            console.warn("Session bootstrap user fetch failed:", err);
+          }
+          startProactiveRefresh();
+        }
+      } catch (_) {
+        // No valid refresh cookie/session at startup
+      }
+    };
+    bootstrapSession();
   }, [dispatch]);
 
   useEffect(() => {

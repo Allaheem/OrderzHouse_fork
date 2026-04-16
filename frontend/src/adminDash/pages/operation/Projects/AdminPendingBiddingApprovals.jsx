@@ -95,7 +95,6 @@ export default function AdminPendingBiddingApprovals() {
         setApprovals(data.approvals || []);
       }
     } catch (err) {
-      console.error("Failed to fetch pending bidding approvals:", err);
       const res = err?.response?.data;
       const message = res?.error || res?.message || "Failed to load pending approvals";
       toast.error(message);
@@ -118,7 +117,6 @@ export default function AdminPendingBiddingApprovals() {
         fetchPendingApprovals();
       }
     } catch (err) {
-      console.error("Failed to approve bidding project:", err);
       toast.error(err?.response?.data?.message || "Failed to approve project");
     } finally {
       setApprovingId(null);
@@ -142,7 +140,6 @@ export default function AdminPendingBiddingApprovals() {
         setSelectedProjectId(null);
       }
     } catch (err) {
-      console.error("Failed to reject bidding project:", err);
       toast.error(err?.response?.data?.message || "Failed to reject project");
     } finally {
       setRejectingId(null);

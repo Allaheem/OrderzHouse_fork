@@ -232,8 +232,7 @@ function AddAdminModal({ token, onClose, onCreated }) {
       if (!arr.length) {
         setError("No users found for this search.");
       }
-    } catch (err) {
-      console.error("Search users failed", err);
+    } catch (_) {
       setError(
         "Failed to search users. Please check the /admUser/search endpoint in your backend."
       );
@@ -273,8 +272,7 @@ function AddAdminModal({ token, onClose, onCreated }) {
 
       resetState();
       if (typeof onCreated === "function") onCreated();
-    } catch (err) {
-      console.error("Promote to admin failed", err);
+    } catch (_) {
       setError(
         "Failed to promote user to admin. Please check the /admUser/:id endpoint."
       );

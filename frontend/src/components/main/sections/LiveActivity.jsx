@@ -43,8 +43,7 @@ export default function LiveActivity() {
       setClients(data.clients);
       setFreelancers(data.freelancers);
 
-    } catch (err) {
-      console.error("Stats fetch error:", err);
+    } catch (_) {
     }
   };
 

@@ -335,12 +335,7 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
       final downloadResult = await repository.downloadFile(
         url: downloadPath,
         savePath: savePath,
-        onReceiveProgress: (received, total) {
-          if (total != -1) {
-            final progress = (received / total * 100).toStringAsFixed(0);
-            debugPrint('Download progress: $progress%');
-          }
-        },
+        onReceiveProgress: (_, __) {},
       );
       // Always use authenticated API proxy for project_files — direct Cloudinary URLs often 401
       // and previously confused session handling; the server streams bytes with signed URLs.
@@ -353,9 +348,6 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
       if (!file.existsSync()) {
         throw Exception('File download failed');
       }
-
-      // Print saved path to console
-      debugPrint('✅ File saved to: $savePath');
 
       if (mounted) {
         // Show success message with full path
@@ -402,14 +394,13 @@ extension _ProjectDetailsSheetsMoreExtension on _ProjectDetailsScreenState {
           ),
         );
       }
-    } catch (e) {
-      debugPrint('Download error: $e');
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Download failed: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Download failed'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+            duration: Duration(seconds: 3),
           ),
         );
       }

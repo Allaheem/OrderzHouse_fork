@@ -124,9 +124,8 @@ const Sidebar = ({
           null;
         if (u) setProfile(u);
       })
-      .catch((error) => {
+      .catch(() => {
         // Silently fail - don't crash the UI
-        console.warn("Error fetching user profile in Sidebar:", error);
         // Don't set profile to avoid infinite retries
       })
       .finally(() => setProfileLoading(false));

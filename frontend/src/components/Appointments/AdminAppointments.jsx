@@ -62,8 +62,7 @@ const AdminAppointments = () => {
       setCompletedAppointments(completedFromDB);
       
       localStorage.setItem('completedAppointments', JSON.stringify(completedFromDB));
-    } catch (error) {
-      console.error('Error loading completed appointments:', error);
+    } catch (_) {
       const savedCompleted = localStorage.getItem('completedAppointments');
       if (savedCompleted) {
         setCompletedAppointments(JSON.parse(savedCompleted));
@@ -100,9 +99,8 @@ const AdminAppointments = () => {
       await fetchAllAppointments();
       
       alert(`Appointment marked as completed!`);
-    } catch (error) {
+    } catch (_) {
       alert('Failed to mark appointment as completed');
-      console.error('Error:', error);
     }
   };
 

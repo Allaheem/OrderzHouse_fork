@@ -101,8 +101,7 @@ const Register = () => {
         setCategories(res.data.data);
       }
     })
-    .catch((err) => {
-      console.error("Failed to load categories", err);
+    .catch((_) => {
     });
 }, []);
 
@@ -160,8 +159,7 @@ const Register = () => {
           ...prev,
           [categoryId]: res.data.subCategories || [],
         }));
-      } catch (error) {
-        console.error("Error fetching sub-categories:", error);
+      } catch (_) {
       }
     }
   };
@@ -217,8 +215,7 @@ const Register = () => {
         setMessage("Cloudinary upload failed");
         setStatus(false);
       }
-    } catch (err) {
-      console.error("Image upload error:", err);
+    } catch (_) {
       setMessage("Error uploading image");
       setStatus(false);
     } finally {
@@ -655,7 +652,7 @@ const Register = () => {
                         aria-describedby="terms-desc"
                       />
                       <label id="terms-desc" htmlFor="acceptTerms" className="text-sm text-slate-700">
-                        I agree to the <a href="#" className="text-[#C2410C] hover:underline">Terms and Conditions</a> and <a href="#" className="text-[#C2410C] hover:underline">Privacy Policy</a>.
+                        I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[#C2410C] hover:underline">Terms and Conditions</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[#C2410C] hover:underline">Privacy Policy</a>.
                       </label>
                     </div>
                     {stepErrors.acceptTerms && <p className="text-xs text-red-600 -mt-2">{stepErrors.acceptTerms}</p>}

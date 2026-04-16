@@ -22,7 +22,6 @@ const MyRestrictedCourses = () => {
         });
         setCourses(res.data.courses || []);
       } catch (err) {
-        console.error('Error fetching my courses:', err);
         setError(err.response?.data?.message || 'Failed to load courses.');
         toast.error('Failed to load courses.');
       } finally {

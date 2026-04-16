@@ -12,13 +12,7 @@ class MessagesRepository {
   /// Response: { success: true, messages: [...] }
   Future<ApiResponse<List<Message>>> getProjectMessages(int projectId) async {
     try {
-      print(
-        '🔍 [MessagesRepository] Fetching messages for projectId: $projectId',
-      );
       final response = await _dio.get('/chat/project/$projectId/messages');
-
-      print('📡 [MessagesRepository] Response status: ${response.statusCode}');
-      print('📦 [MessagesRepository] Response data: ${response.data}');
 
       final data = response.data as Map<String, dynamic>;
 
@@ -26,22 +20,11 @@ class MessagesRepository {
       List<dynamic>? messagesList;
       if (data['messages'] != null && data['messages'] is List) {
         messagesList = data['messages'] as List<dynamic>;
-        print(
-          '✅ [MessagesRepository] Found ${messagesList.length} messages in "messages" field',
-        );
       } else if (data['data'] != null && data['data'] is List) {
         messagesList = data['data'] as List<dynamic>;
-        print(
-          '✅ [MessagesRepository] Found ${messagesList.length} messages in "data" field',
-        );
-      } else {
-        print(
-          '⚠️ [MessagesRepository] No messages list found in response. Keys: ${data.keys.toList()}',
-        );
       }
 
       if (messagesList == null || messagesList.isEmpty) {
-        print('ℹ️ [MessagesRepository] Returning empty list (null or empty)');
         return const ApiResponse(
           success: true,
           data: [],
@@ -49,36 +32,22 @@ class MessagesRepository {
         );
       }
 
-      print(
-        '🔄 [MessagesRepository] Parsing ${messagesList.length} messages...',
-      );
       final messages = <Message>[];
       for (var i = 0; i < messagesList.length; i++) {
         try {
           final json = messagesList[i] as Map<String, dynamic>;
-          print('📝 [MessagesRepository] Message $i: $json');
           final message = Message.fromJson(json);
           messages.add(message);
-          print(
-            '✅ [MessagesRepository] Parsed message $i: id=${message.id}, senderId=${message.senderId}, content="${message.content.substring(0, message.content.length > 50 ? 50 : message.content.length)}..."',
-          );
-        } catch (e, stackTrace) {
-          print('❌ [MessagesRepository] Error parsing message $i: $e');
-          print('Stack trace: $stackTrace');
+        } catch (_) {
+          // Skip malformed message payloads without leaking internals to logs/UI.
         }
       }
-
-      print(
-        '✅ [MessagesRepository] Successfully parsed ${messages.length}/${messagesList.length} messages',
-      );
       return ApiResponse(
         success: true,
         data: messages,
         message: 'Messages fetched successfully',
       );
     } on DioException catch (e) {
-      print('❌ [MessagesRepository] DioException: ${e.message}');
-      print('Response: ${e.response?.data}');
       return ApiResponse(
         success: false,
         data: [],
@@ -86,13 +55,11 @@ class MessagesRepository {
             e.response?.data?['message'] as String? ??
             'Failed to fetch messages',
       );
-    } catch (e, stackTrace) {
-      print('❌ [MessagesRepository] Exception: $e');
-      print('Stack trace: $stackTrace');
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: [],
-        message: 'Failed to fetch messages: ${e.toString()}',
+        message: 'Failed to fetch messages',
       );
     }
   }
@@ -145,11 +112,11 @@ class MessagesRepository {
         message:
             e.response?.data?['message'] as String? ?? 'Failed to send message',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to send message: ${e.toString()}',
+        message: 'Failed to send message',
       );
     }
   }
@@ -174,11 +141,11 @@ class MessagesRepository {
             e.response?.data?['message'] as String? ??
             'Failed to get unread count',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: 0,
-        message: 'Failed to get unread count: ${e.toString()}',
+        message: 'Failed to get unread count',
       );
     }
   }
@@ -199,11 +166,11 @@ class MessagesRepository {
         message:
             e.response?.data?['message'] as String? ?? 'Failed to mark as read',
       );
-    } catch (e) {
+    } catch (_) {
       return ApiResponse(
         success: false,
         data: null,
-        message: 'Failed to mark as read: ${e.toString()}',
+        message: 'Failed to mark as read',
       );
     }
   }

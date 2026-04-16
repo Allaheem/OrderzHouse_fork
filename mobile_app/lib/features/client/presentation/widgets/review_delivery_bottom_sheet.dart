@@ -1,10 +1,10 @@
 // ??? ????????
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/models/project.dart';
 import '../../../../core/widgets/gradient_button.dart';
+import '../../../../core/utils/safe_url_launch.dart';
 
 /// Bottom sheet for client to review delivery and approve/request changes
 class ReviewDeliveryBottomSheet extends StatefulWidget {
@@ -113,8 +113,8 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to approve: $e'),
+          const SnackBar(
+            content: Text('Failed to approve delivery. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -153,8 +153,8 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to send request: $e'),
+          const SnackBar(
+            content: Text('Failed to send change request. Please try again.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -469,10 +469,11 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
           const SizedBox(height: 4),
           GestureDetector(
             onTap: () async {
-              final uri = Uri.tryParse(url);
-              if (uri != null && await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.externalApplication);
-              }
+              await safeLaunchExternalUrl(
+                context,
+                url,
+                fallbackMessage: 'Invalid link',
+              );
             },
             child: Text(
               url,
@@ -539,10 +540,11 @@ class _ReviewDeliveryBottomSheetState extends State<ReviewDeliveryBottomSheet> {
             IconButton(
               icon: const Icon(Icons.open_in_browser_rounded, size: 18),
               onPressed: () async {
-                final uri = Uri.tryParse(fileUrl.toString());
-                if (uri != null && await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                }
+                await safeLaunchExternalUrl(
+                  context,
+                  fileUrl.toString(),
+                  fallbackMessage: 'Invalid attachment link',
+                );
               },
               color: const Color(0xFF3B82F6),
             ),

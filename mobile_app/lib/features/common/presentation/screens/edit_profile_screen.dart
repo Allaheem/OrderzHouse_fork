@@ -98,11 +98,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           );
         }
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Failed to load profile'),
             backgroundColor: Colors.red,
           ),
         );
@@ -257,11 +257,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       } else {
         throw Exception(response.message ?? 'Failed to update profile');
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Failed to update profile'),
             backgroundColor: Colors.red,
           ),
         );

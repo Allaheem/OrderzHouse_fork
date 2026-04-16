@@ -25,7 +25,10 @@ export default function SubSidebar({
   theme = "#028090",
   subCategoryId,
 }) {
-  const userData = useSelector((state) => state?.auth?.userData) || null;
+  const { userData, token } = useSelector((state) => ({
+    userData: state?.auth?.userData || null,
+    token: state?.auth?.token || null,
+  }));
   const [subSubs, setSubSubs] = useState([]);
   const [items, setItems] = useState([]);
   const [loadingSubSubs, setLoadingSubSubs] = useState(false);
@@ -189,10 +192,8 @@ export default function SubSidebar({
 
         // Batch check which projects user has applied to (only for freelancers)
         if (projects.length > 0 && !isTasks) {
-          const token = localStorage.getItem("token");
           const roleIdFromState = userData?.role_id || userData?.roleId;
-          const roleIdFromStorage = localStorage.getItem("roleId");
-          const roleId = roleIdFromState || roleIdFromStorage;
+          const roleId = roleIdFromState;
           const isFreelancer = String(roleId) === "3";
 
           if (token && isFreelancer) {
@@ -204,7 +205,7 @@ export default function SubSidebar({
               try {
                 const hasApplied = await checkIfAssignedApi(project.id, token);
                 return hasApplied ? project.id : null;
-              } catch (err) {
+              } catch (_) {
                 return null;
               }
             });
@@ -218,8 +219,7 @@ export default function SubSidebar({
         } else {
           setAppliedProjectIds(new Set());
         }
-      } catch (err) {
-        console.error("SubSidebar fetch error:", err);
+      } catch (_) {
         setItems([]);
       } finally {
         setLoadingItems(false);

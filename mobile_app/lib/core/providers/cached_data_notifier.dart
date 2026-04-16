@@ -1,7 +1,6 @@
 // ??? ????????
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../cache/cache_service.dart';
-import '../../core/config/app_config.dart';
 
 /// State for cached data with loading/error states
 class CachedDataState<T> {
@@ -90,11 +89,6 @@ class CachedDataNotifier<T> extends StateNotifier<CachedDataState<T>> {
       } catch (error, stackTrace) {
         // If fetch fails, keep cached data if available
         if (cached != null) {
-          if (AppConfig.isDevelopment) {
-            print(
-              '⚠️ [CachedData] Fetch failed for $cacheKey, keeping cached data',
-            );
-          }
           state = CachedDataState<T>(
             data: cached,
             isLoading: false,
@@ -199,11 +193,6 @@ class CachedListDataNotifier<T>
       } catch (error, stackTrace) {
         // If fetch fails, keep cached data if available
         if (cached != null && cached.isNotEmpty) {
-          if (AppConfig.isDevelopment) {
-            print(
-              '⚠️ [CachedListData] Fetch failed for $cacheKey, keeping cached data',
-            );
-          }
           state = CachedDataState<List<T>>(
             data: cached,
             isLoading: false,

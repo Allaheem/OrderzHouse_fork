@@ -5,7 +5,7 @@ import pool from "../../models/db.js";
  */
 const handleError = (res, err, message = "Server error") => {
   console.error(`[Plans API] ${message}:`, err.message);
-  return res.status(500).json({ success: false, message, error: err.message });
+  return res.status(500).json({ success: false, message });
 };
 
 /**
@@ -223,18 +223,27 @@ export const subscribeToPlan = async (req, res) => {
     }
 
     const { rows: planRows } = await pool.query(
-      "SELECT duration FROM plans WHERE id = $1",
+      "SELECT duration, plan_type FROM plans WHERE id = $1",
       [plan_id]
     );
     if (!planRows.length)
       return res.status(404).json({ success: false, message: "Plan not found" });
 
+    const duration = Number(planRows[0].duration || 0);
+    const planType = String(planRows[0].plan_type || "monthly").toLowerCase();
+    const intervalUnit = planType === "yearly" ? "years" : "months";
+
     const query = `
       INSERT INTO subscriptions (freelancer_id, plan_id, start_date, end_date, status)
-      VALUES ($1, $2, NOW(), NOW() + (p.duration || ' days')::interval, 'active')
+      VALUES ($1, $2, NOW(), NOW() + ($3::text || ' ' || $4::text)::interval, 'active')
       RETURNING *;
     `;
-    const { rows } = await pool.query(query, [freelancerId, plan_id]);
+    const { rows } = await pool.query(query, [
+      freelancerId,
+      plan_id,
+      duration.toString(),
+      intervalUnit,
+    ]);
     res.status(201).json({
       success: true,
       message: "Subscription created successfully.",

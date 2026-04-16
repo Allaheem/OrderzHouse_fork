@@ -1,6 +1,7 @@
 import express from "express";
 import { authentication } from "../middleware/authentication.js";
 import requireVerifiedWithSubscription from "../middleware/requireVerifiedWithSubscription.js";
+import adminOnly from "../middleware/adminOnly.js";
 import {
   sendOffer,
   getMyOffersForProject,
@@ -90,18 +91,21 @@ offersRouter.get(
 offersRouter.get(
   "/admin/pending-bidding-approvals",
   authentication,
+  adminOnly,
   getPendingBiddingApprovals
 );
 
 offersRouter.post(
   "/admin/projects/:projectId/approve-bidding-offer",
   authentication,
+  adminOnly,
   adminApproveBiddingOffer
 );
 
 offersRouter.post(
   "/admin/projects/:projectId/reject-bidding-offer",
   authentication,
+  adminOnly,
   adminRejectBiddingOffer
 );
 

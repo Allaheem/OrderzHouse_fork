@@ -83,8 +83,7 @@ export const getSystemLogs = async (req, res) => {
     console.error('Error getting system logs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get system logs',
-      error: error.message
+      message: 'Failed to get system logs'
     });
   }
 };
@@ -120,8 +119,7 @@ export const getEntityLogsRoute = async (req, res) => {
     console.error('Error getting entity logs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get entity logs',
-      error: error.message
+      message: 'Failed to get entity logs'
     });
   }
 };
@@ -156,8 +154,7 @@ export const getUserLogsRoute = async (req, res) => {
     console.error('Error getting user logs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get user logs',
-      error: error.message
+      message: 'Failed to get user logs'
     });
   }
 };
@@ -184,8 +181,7 @@ export const getErrorLogsRoute = async (req, res) => {
     console.error('Error getting error logs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get error logs',
-      error: error.message
+      message: 'Failed to get error logs'
     });
   }
 };
@@ -212,8 +208,7 @@ export const getCriticalLogsRoute = async (req, res) => {
     console.error('Error getting critical logs:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get critical logs',
-      error: error.message
+      message: 'Failed to get critical logs'
     });
   }
 };
@@ -243,8 +238,7 @@ export const getLogStatisticsRoute = async (req, res) => {
     console.error('Error getting log statistics:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get log statistics',
-      error: error.message
+      message: 'Failed to get log statistics'
     });
   }
 };
@@ -451,8 +445,7 @@ export const exportLogs = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      message: 'Failed to export logs',
-      error: error.message
+      message: 'Failed to export logs'
     });
   }
 };

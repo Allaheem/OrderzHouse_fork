@@ -120,8 +120,7 @@ function useProjectsStats(endpoint, token) {
           : [];
 
         if (!cancelled) setStats(statFromProjects(list));
-      } catch (e) {
-        console.error("Stats fetch failed:", e);
+      } catch (_) {
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -450,8 +449,7 @@ function ClientProjects() {
           setOffersMap(map);
           setOffersListMap(listMap);
         }
-      } catch (e) {
-        console.error("Failed to fetch offers for client projects", e);
+      } catch (_) {
       }
     })();
 
@@ -488,8 +486,7 @@ function ClientProjects() {
 
       setOffersListMap((prev) => ({ ...prev, [projectId]: filtered }));
       setOffersMap((prev) => ({ ...prev, [projectId]: stats }));
-    } catch (e) {
-      console.error("Failed to fetch offers for project", projectId, e);
+    } catch (_) {
     }
   };
 
@@ -586,8 +583,6 @@ function ClientProjects() {
         return next;
       });
     } catch (err) {
-      console.error("Failed to update offer status", err);
-
       // لو العرض منتهي (expired) خلي UI يحدث
       const msg = err?.response?.data?.message || "";
       if (String(msg).toLowerCase().includes("expired")) {
@@ -671,8 +666,7 @@ function ClientProjects() {
         ...prev,
         [projectId]: list,
       }));
-    } catch (e) {
-      console.error("Failed to fetch applications for project", projectId, e);
+    } catch (_) {
     }
   };
 
@@ -725,7 +719,6 @@ function ClientProjects() {
         return next;
       });
     } catch (err) {
-      console.error("Failed to update application status", err);
       toast.error(
         err?.response?.data?.message ||
           "Failed to update application. Please try again."
@@ -1063,12 +1056,10 @@ function FreelancerProjects() {
               return r;
             })
           );
-        } catch (e) {
-          console.error("Mark change requests as read:", e);
+        } catch (_) {
         }
       }
-    } catch (err) {
-      console.error(err);
+    } catch (_) {
       const msg = row?.change_request_message;
       setNotifItems(
         msg
@@ -1213,7 +1204,6 @@ function FreelancerProjects() {
       setDeliverOpen(false);
       setDeliverFor(null);
     } catch (err) {
-      console.error(err);
       toast?.error?.(
         err?.response?.data?.message ||
           "Something went wrong. Please try again."
@@ -1538,8 +1528,7 @@ function ClientReviewDrawer({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      console.error("Download failed:", err);
+    } catch (_) {
       toast?.error?.("Failed to download attachment.");
       try {
         if (resolvedExternal && isAbsoluteUrl(resolvedExternal)) {
@@ -1680,8 +1669,7 @@ function ClientReviewDrawer({
           : [];
 
         setDeliveries(list);
-      } catch (e) {
-        if (alive) console.error("Failed to load deliveries", e);
+      } catch (_) {
       } finally {
         if (alive) setLoading(false);
       }
@@ -1709,8 +1697,7 @@ function ClientReviewDrawer({
         : [];
 
       setDeliveries(list);
-    } catch (e) {
-      console.error("Failed to refresh deliveries", e);
+    } catch (_) {
     } finally {
       setLoading(false);
     }
@@ -1723,7 +1710,6 @@ function ClientReviewDrawer({
       toast?.success?.("Project approved ✅");
       onClose();
     } catch (err) {
-      console.error(err);
       toast?.error?.(err?.response?.data?.message || "فشل اعتماد المشروع.");
     } finally {
       setSubmitting(false);
@@ -1744,7 +1730,6 @@ function ClientReviewDrawer({
       toast?.info?.("Change request sent ✉️");
       onClose();
     } catch (err) {
-      console.error(err);
       toast?.error?.(
         err?.response?.data?.message || "فشل إرسال طلب التعديلات."
       );

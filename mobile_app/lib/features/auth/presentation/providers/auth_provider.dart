@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/models/user.dart';
@@ -152,11 +151,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return;
       }
       state = const AuthState();
-    } catch (e, st) {
-      if (kDebugMode) {
-        debugPrint('restoreSession error: $e');
-        debugPrint('$st');
-      }
+    } catch (_, __) {
       try {
         final cachedUser = await _readCachedUser();
         state = cachedUser != null

@@ -3,10 +3,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const OTP_SECRET = process.env.OTP_SECRET || process.env.JWT_SECRET;
+const OTP_SECRET = process.env.OTP_SECRET;
 
 if (!OTP_SECRET) {
-  console.warn("⚠️  OTP_SECRET not set. Using JWT_SECRET as fallback. Set OTP_SECRET for better security.");
+  console.warn("⚠️  OTP_SECRET is not set. OTP features will fail until it is configured.");
 }
 
 /**

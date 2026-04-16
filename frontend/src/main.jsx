@@ -10,6 +10,12 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ToastProvider } from "./components/toast/ToastProvider.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+if (!googleClientId) {
+  console.warn("VITE_GOOGLE_CLIENT_ID is not set. Google login will be unavailable.");
+}
+
 window.addEventListener("unhandledrejection", (event) => {
   console.error("Unhandled promise rejection:", event.reason);
 });
@@ -17,7 +23,7 @@ window.addEventListener("unhandledrejection", (event) => {
 createRoot(document.getElementById("root")).render(
   <ErrorBoundary>
     <HelmetProvider>
-      <GoogleOAuthProvider clientId="308002675488-t2b7tf6ndhl5dg4u31hr7fcrm7l31gmp.apps.googleusercontent.com">
+      <GoogleOAuthProvider clientId={googleClientId || ""}>
         <BrowserRouter>
           <Provider store={store}>
             <StrictMode>
