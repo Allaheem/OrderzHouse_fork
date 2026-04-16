@@ -1,5 +1,17 @@
 import pool from "../../models/db.js";
 
+function isEClickEnabled() {
+  const v = String(process.env.ECLICK_ENABLED || "").trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
+function hasEClickCheckoutUrl() {
+  return (
+    typeof process.env.ECLICK_CHECKOUT_URL === "string" &&
+    process.env.ECLICK_CHECKOUT_URL.trim().length > 0
+  );
+}
+
 function parseSessionId(sessionId) {
   if (!sessionId || typeof sessionId !== "string") return null;
   const parts = sessionId.split("_");
@@ -22,10 +34,11 @@ function buildCheckoutUrl({ baseUrl, sessionId, userId, planId, returnUrl, cance
 
 export const createEClickPlanCheckoutSession = async (req, res) => {
   try {
-    if (process.env.ECLICK_ENABLED !== "true") {
+    if (!isEClickEnabled() && !hasEClickCheckoutUrl()) {
       return res.status(400).json({
         success: false,
-        message: "eClick checkout is disabled (set ECLICK_ENABLED=true).",
+        message:
+          "eClick checkout is not configured. Set ECLICK_ENABLED=true and ECLICK_CHECKOUT_URL (or at least ECLICK_CHECKOUT_URL).",
       });
     }
 

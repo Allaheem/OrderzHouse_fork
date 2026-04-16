@@ -6,8 +6,9 @@ final subscriptionRepositoryProvider = Provider<SubscriptionRepository>((ref) {
   return SubscriptionRepository();
 });
 
-/// `true` if backend has `ECLICK_ENABLED=true` (see `GET /eclick/checkout-available`).
-final eClickCheckoutAvailableProvider = FutureProvider<bool>((ref) async {
+/// `true` if backend exposes eClick checkout (see `GET /eclick/checkout-available`).
+/// Auto-dispose so reopening Plans refetches after you change Render env / redeploy.
+final eClickCheckoutAvailableProvider = FutureProvider.autoDispose<bool>((ref) async {
   final repo = ref.watch(subscriptionRepositoryProvider);
   return repo.isEClickCheckoutAvailable();
 });
