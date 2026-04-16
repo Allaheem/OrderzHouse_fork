@@ -39,7 +39,10 @@ export function issueAccessToken(payload) {
 export function issueRefreshToken(payload) {
   const secret = process.env.REFRESH_TOKEN_SECRET;
   if (!secret) {
-    throw new Error("REFRESH_TOKEN_SECRET is required to issue refresh tokens");
+    // Production-safe fallback: do not crash login if refresh secret is missing.
+    // Access token flow still works; refresh endpoint will remain unavailable
+    // until REFRESH_TOKEN_SECRET is configured.
+    return null;
   }
   return jwt.sign(payload, secret, { expiresIn: getRefreshExpiresIn() });
 }
@@ -60,6 +63,7 @@ export function verifyRefreshToken(token) {
  * In production with cross-domain (frontend ≠ backend), sameSite must be "none" for cookies to work.
  */
 export function setRefreshTokenCookie(res, refreshToken) {
+  if (!refreshToken) return;
   const isProduction = process.env.NODE_ENV === "production";
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
