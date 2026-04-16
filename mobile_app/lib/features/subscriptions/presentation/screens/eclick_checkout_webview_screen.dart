@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-enum PayPalApprovalResult {
+enum EClickCheckoutResult {
   approved,
   cancelled,
   failed,
 }
 
-class PayPalApprovalWebViewScreen extends StatefulWidget {
-  const PayPalApprovalWebViewScreen({
+class EClickCheckoutWebViewScreen extends StatefulWidget {
+  const EClickCheckoutWebViewScreen({
     super.key,
     required this.approvalUrl,
     required this.allowedReturnHosts,
@@ -18,11 +18,11 @@ class PayPalApprovalWebViewScreen extends StatefulWidget {
   final Set<String> allowedReturnHosts;
 
   @override
-  State<PayPalApprovalWebViewScreen> createState() =>
-      _PayPalApprovalWebViewScreenState();
+  State<EClickCheckoutWebViewScreen> createState() =>
+      _EClickCheckoutWebViewScreenState();
 }
 
-class _PayPalApprovalWebViewScreenState extends State<PayPalApprovalWebViewScreen> {
+class _EClickCheckoutWebViewScreenState extends State<EClickCheckoutWebViewScreen> {
   late final WebViewController _controller;
   bool _loading = true;
   int _progress = 0;
@@ -34,12 +34,12 @@ class _PayPalApprovalWebViewScreenState extends State<PayPalApprovalWebViewScree
       final isTrustedReturnHost = widget.allowedReturnHosts.contains(host);
       final isHttps = uri.scheme.toLowerCase() == 'https';
       final path = uri.path.toLowerCase();
-      if (isHttps && isTrustedReturnHost && path.contains('/payment/paypal-return')) {
-        Navigator.of(context).pop(PayPalApprovalResult.approved);
+      if (isHttps && isTrustedReturnHost && path.contains('/payment/eclick-return')) {
+        Navigator.of(context).pop(EClickCheckoutResult.approved);
         return NavigationDecision.prevent;
       }
-      if (isHttps && isTrustedReturnHost && path.contains('/payment/paypal-cancel')) {
-        Navigator.of(context).pop(PayPalApprovalResult.cancelled);
+      if (isHttps && isTrustedReturnHost && path.contains('/payment/eclick-cancel')) {
+        Navigator.of(context).pop(EClickCheckoutResult.cancelled);
         return NavigationDecision.prevent;
       }
     }
@@ -71,7 +71,7 @@ class _PayPalApprovalWebViewScreenState extends State<PayPalApprovalWebViewScree
           },
           onWebResourceError: (_) {
             if (!mounted) return;
-            Navigator.of(context).pop(PayPalApprovalResult.failed);
+            Navigator.of(context).pop(EClickCheckoutResult.failed);
           },
         ),
       )
@@ -85,7 +85,7 @@ class _PayPalApprovalWebViewScreenState extends State<PayPalApprovalWebViewScree
       await _controller.goBack();
       return;
     }
-    Navigator.of(context).pop(PayPalApprovalResult.cancelled);
+    Navigator.of(context).pop(EClickCheckoutResult.cancelled);
   }
 
   @override
@@ -98,7 +98,7 @@ class _PayPalApprovalWebViewScreenState extends State<PayPalApprovalWebViewScree
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('PayPal Checkout'),
+          title: const Text('eClick Checkout'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded),
             onPressed: _handleBack,

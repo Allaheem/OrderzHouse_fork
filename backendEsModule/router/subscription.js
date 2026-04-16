@@ -11,12 +11,12 @@ import {
 } from "../controller/plans-subscriptions/adminSubscriptions.js";
 import { authentication } from "../middleware/authentication.js";
 import adminOnly from "../middleware/adminOnly.js";
-import { getPayPalCheckoutAvailable } from "../controller/plans-subscriptions/paypalCheckoutAvailable.js";
+import { getEClickCheckoutAvailable } from "../controller/plans-subscriptions/eclickCheckoutAvailable.js";
 
 const SubscriptionRouter = express.Router();
 
-/** Same as GET /paypal/checkout-available — for clients on older API deploys that only added subscriptions routes. */
-SubscriptionRouter.get("/paypal-checkout-available", getPayPalCheckoutAvailable);
+/** Same as GET /eclick/checkout-available — for clients on older API deploys that only added subscriptions routes. */
+SubscriptionRouter.get("/eclick-checkout-available", getEClickCheckoutAvailable);
 
 SubscriptionRouter.get("/admin/all", authentication, adminOnly, getAllSubscriptions);
 SubscriptionRouter.get("/admin/subscriptions", authentication, adminOnly, getAdminSubscriptions);

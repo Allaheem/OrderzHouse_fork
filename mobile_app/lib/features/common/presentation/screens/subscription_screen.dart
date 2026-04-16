@@ -26,7 +26,7 @@ import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscriptions/data/repositories/subscription_repository.dart';
 import '../../../subscriptions/presentation/providers/subscription_provider.dart';
-import '../../../subscriptions/presentation/screens/paypal_approval_webview_screen.dart';
+import '../../../subscriptions/presentation/screens/eclick_checkout_webview_screen.dart';
 import '../../../subscriptions/presentation/widgets/payment_method_chooser_sheet.dart';
 import '../../../../core/models/plan.dart';
 
@@ -40,7 +40,7 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   int _selectedTab = 0; // 0 = Plans, 1 = FAQ (UI only)
 
-  /// One-shot: refresh access token before subscription/PayPal calls if JWT is near expiry.
+  /// One-shot: refresh access token before subscription/eClick calls if JWT is near expiry.
   bool _didProactiveTokenRefresh = false;
 
   StreamSubscription<List<PurchaseDetails>>? _iosPurchaseSub;
@@ -149,8 +149,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget build(BuildContext context) {
     final plansAsync = ref.watch(plansProvider);
     final authState = ref.watch(authStateProvider);
-    final payPalCheckoutAsync = ref.watch(paypalCheckoutAvailableProvider);
-    final payPalEnabledOnServer = payPalCheckoutAsync.valueOrNull == true;
+    final eClickCheckoutAsync = ref.watch(eClickCheckoutAvailableProvider);
+    final eClickEnabledOnServer = eClickCheckoutAsync.valueOrNull == true;
     final user = authState.user;
 
     return AppScaffold(
@@ -249,7 +249,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
                 return _buildPlansContent(
                   plans,
-                  payPalEnabledOnServer: payPalEnabledOnServer,
+                  eClickEnabledOnServer: eClickEnabledOnServer,
                 );
               },
             ),
@@ -424,7 +424,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   // D) Big Rounded Container with Plan Rows
   Widget _buildPlansContent(
     List<Plan> plans, {
-    required bool payPalEnabledOnServer,
+    required bool eClickEnabledOnServer,
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -457,7 +457,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     children: [
                       _buildPlanRow(
                         plan,
-                        payPalEnabledOnServer: payPalEnabledOnServer,
+                        eClickEnabledOnServer: eClickEnabledOnServer,
                       ),
                       if (!isLast) ...[
                         const SizedBox(height: AppSpacing.sm),
@@ -483,7 +483,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _handlePlanSelection(
     Plan plan, {
-    required bool payPalEnabledOnServer,
+    required bool eClickEnabledOnServer,
   }) async {
     final authState = ref.read(authStateProvider);
     final user = authState.user;
@@ -549,25 +549,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final appleConfigured =
         Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
 
-    // Never force PayPal in release builds from local flags.
+    // Never force eClick in release builds from local flags.
     // In production, only show when backend confirms availability.
-    final allowForcedPayPalInDebug =
-        !kReleaseMode && AppConfig.enablePayPalPlanCheckout;
-    final showPayPal = !AppConfig.hidePayPalPlanCheckout &&
+    final allowForcedEClickInDebug =
+        !kReleaseMode && AppConfig.enableEClickCheckout;
+    final showEClick = !AppConfig.hideEClickCheckout &&
         (role == 2 || role == 3) &&
-        (payPalEnabledOnServer ||
-            AppConfig.showPayPalButtonForLocalDev ||
-            allowForcedPayPalInDebug);
+        (eClickEnabledOnServer ||
+            AppConfig.showEClickButtonForLocalDev ||
+            allowForcedEClickInDebug);
 
     showPaymentMethodChooserSheet(
       context: context,
       showAppleOptions: Platform.isIOS,
       applePayConfiguredForSelectedPlan: appleConfigured,
-      showPayPalOption: showPayPal,
+      showEClickOption: showEClick,
       selectedPlanName: plan.name,
       onPayWithApple:
           appleConfigured ? () => _startApplePurchase(plan) : null,
-      onPayWithPayPal: showPayPal ? () => _startPayPalCheckout(plan) : null,
+      onPayWithEClick: showEClick ? () => _startEClickCheckout(plan) : null,
       onRestoreApplePurchases: Platform.isIOS ? _restoreApplePurchases : null,
       onSubscribeFromCompany: () => _openCompanySubscribeUrl(),
     );
@@ -612,15 +612,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
   }
 
-  Future<void> _startPayPalCheckout(Plan plan) async {
+  Future<void> _startEClickCheckout(Plan plan) async {
     final repo = ref.read(subscriptionRepositoryProvider);
-    final available = await repo.isPayPalCheckoutAvailable();
+    final available = await repo.isEClickCheckoutAvailable();
     if (!mounted) return;
     if (!available) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'PayPal checkout is not enabled on the server yet. Please use Subscribe from Company for now.',
+            'eClick checkout is not enabled on the server yet. Please use Subscribe from Company for now.',
           ),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 5),
@@ -629,7 +629,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       return;
     }
 
-    final created = await repo.createPayPalPlanOrder(planId: plan.id);
+    final created = await repo.createEClickPlanCheckoutSession(planId: plan.id);
     if (!mounted) return;
     if (!created.success ||
         created.orderId == null ||
@@ -647,7 +647,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     if (uri == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Invalid PayPal link from server.'),
+          content: Text('Invalid eClick link from server.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -661,39 +661,39 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       'www.orderzhouse.com',
     };
 
-    final approvalResult = await Navigator.of(context).push<PayPalApprovalResult>(
+    final approvalResult = await Navigator.of(context).push<EClickCheckoutResult>(
       MaterialPageRoute(
-        builder: (_) => PayPalApprovalWebViewScreen(
+        builder: (_) => EClickCheckoutWebViewScreen(
           approvalUrl: uri,
           allowedReturnHosts: allowedReturnHosts,
         ),
       ),
     );
     if (!mounted) return;
-    if (approvalResult == null || approvalResult == PayPalApprovalResult.cancelled) {
+    if (approvalResult == null || approvalResult == EClickCheckoutResult.cancelled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('PayPal checkout was cancelled.'),
+          content: Text('eClick checkout was cancelled.'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
-    if (approvalResult == PayPalApprovalResult.failed) {
+    if (approvalResult == EClickCheckoutResult.failed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not load PayPal checkout page.'),
+          content: Text('Could not load eClick checkout page.'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
-    await _completePayPalCapture(created.orderId!);
+    await _completeEClickCapture(created.orderId!);
   }
 
-  Future<void> _completePayPalCapture(String orderId) async {
+  Future<void> _completeEClickCapture(String orderId) async {
     final repo = ref.read(subscriptionRepositoryProvider);
-    final result = await repo.capturePayPalPlanOrder(orderId: orderId);
+    final result = await repo.captureEClickPlanOrder(orderId: orderId);
     if (!mounted) return;
     if (result.success) {
       await ref.read(authStateProvider.notifier).refreshUser();
@@ -1011,7 +1011,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Widget _buildPlanRow(
     Plan plan, {
-    required bool payPalEnabledOnServer,
+    required bool eClickEnabledOnServer,
   }) {
     final durationLabel = plan.planType == 'monthly'
         ? '${plan.duration} Month'
@@ -1022,7 +1022,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     return InkWell(
       onTap: () => _handlePlanSelection(
         plan,
-        payPalEnabledOnServer: payPalEnabledOnServer,
+        eClickEnabledOnServer: eClickEnabledOnServer,
       ),
       borderRadius: BorderRadius.circular(18),
       child: Opacity(

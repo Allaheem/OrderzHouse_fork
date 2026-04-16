@@ -16,6 +16,7 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		D63D0D63A085D7EF6EF2044A /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CD5183B50A5C9704BD9FEBB1 /* Pods_RunnerTests.framework */; };
+		F6AD0FD82F910C0500B80A4F /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AD0FD72F910C0500B80A4F /* StoreKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +67,7 @@
 		AB120AE7DB5356E1B5A6698E /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CD5183B50A5C9704BD9FEBB1 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4E8F0A2294A63A400263CF0 /* Profile.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Profile.xcconfig; path = Flutter/Profile.xcconfig; sourceTree = "<group>"; };
+		F6AD0FD72F910C0500B80A4F /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +76,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				95E86F5AC9AACA895F39EE90 /* Pods_Runner.framework in Frameworks */,
+				F6AD0FD82F910C0500B80A4F /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,6 +94,7 @@
 		322C3AE7CD3612AFDB72CD6B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				F6AD0FD72F910C0500B80A4F /* StoreKit.framework */,
 				AB120AE7DB5356E1B5A6698E /* Pods_Runner.framework */,
 				CD5183B50A5C9704BD9FEBB1 /* Pods_RunnerTests.framework */,
 			);

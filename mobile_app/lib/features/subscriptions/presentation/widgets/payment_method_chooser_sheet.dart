@@ -4,17 +4,17 @@ import '../../../../core/theme/app_colors.dart';
 
 String _paymentChooserBlurb({
   required bool showAppleOptions,
-  required bool showPayPalOption,
+  required bool showEClickOption,
   required bool applePayConfiguredForSelectedPlan,
 }) {
-  if (!showAppleOptions && !showPayPalOption) {
+  if (!showAppleOptions && !showEClickOption) {
     return 'Complete the company subscription form. Your request will be reviewed.';
   }
   final parts = <String>[
     'Use the company form (reviewed by admin).',
   ];
-  if (showPayPalOption) {
-    parts.add('You can pay with PayPal.');
+  if (showEClickOption) {
+    parts.add('You can pay with eClick.');
   }
   if (showAppleOptions) {
     parts.add(
@@ -34,11 +34,11 @@ void showPaymentMethodChooserSheet({
   required BuildContext context,
   required VoidCallback onSubscribeFromCompany,
   VoidCallback? onPayWithApple,
-  VoidCallback? onPayWithPayPal,
+  VoidCallback? onPayWithEClick,
   VoidCallback? onRestoreApplePurchases,
   bool showAppleOptions = false,
   bool applePayConfiguredForSelectedPlan = false,
-  bool showPayPalOption = false,
+  bool showEClickOption = false,
   String? selectedPlanName,
 }) {
   showModalBottomSheet<void>(
@@ -52,9 +52,9 @@ void showPaymentMethodChooserSheet({
       final showAppleButton = showAppleOptions &&
           applePayConfiguredForSelectedPlan &&
           appleCallback != null;
-      final paypalCallback = onPayWithPayPal;
-      final showPayPalButton =
-          showPayPalOption && paypalCallback != null;
+      final eClickCallback = onPayWithEClick;
+      final showEClickButton =
+          showEClickOption && eClickCallback != null;
 
       return Padding(
         padding: EdgeInsets.only(
@@ -100,7 +100,7 @@ void showPaymentMethodChooserSheet({
                   Text(
                     _paymentChooserBlurb(
                       showAppleOptions: showAppleOptions,
-                      showPayPalOption: showPayPalOption,
+                      showEClickOption: showEClickOption,
                       applePayConfiguredForSelectedPlan:
                           applePayConfiguredForSelectedPlan,
                     ),
@@ -135,17 +135,17 @@ void showPaymentMethodChooserSheet({
                       ),
                     ),
                   ),
-                  if (showPayPalButton) ...[
+                  if (showEClickButton) ...[
                     const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
                         onPressed: () {
                           Navigator.of(context).pop();
-                          paypalCallback();
+                          eClickCallback();
                         },
                         icon: const Icon(Icons.payment_rounded, size: 22),
-                        label: const Text('Pay with PayPal'),
+                        label: const Text('Pay with eClick'),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF0070BA),
                           foregroundColor: Colors.white,
@@ -264,6 +264,14 @@ void showPaymentMethodChooserSheet({
                   const Text(
                     '* Annual account verification fee: 25 JD (where applicable).',
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Note: Payments shown in this app are not for selling digital goods. '
+                    'They support internal workflows, learning, and professional development. '
+                    'The in-app subscription is an internal company system to identify active freelancer subscriptions and save operational time.',
+                    style: TextStyle(fontSize: 11, color: AppColors.textSecondary, height: 1.35),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),

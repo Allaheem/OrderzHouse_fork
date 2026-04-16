@@ -49,15 +49,15 @@ class SubscriptionRepository {
     }
   }
 
-  /// Whether the API has PayPal plan checkout enabled (`PAYPAL_ENABLED=true`). Used to show the PayPal button.
+  /// Whether the API has eClick plan checkout enabled (`ECLICK_ENABLED=true`). Used to show the eClick button.
   ///
-  /// Tries `GET /paypal/checkout-available` first, then `GET /subscriptions/paypal-checkout-available`
-  /// (same payload) so older deploys without `/paypal` still work after a minimal backend update.
+  /// Tries `GET /eclick/checkout-available` first, then `GET /subscriptions/eclick-checkout-available`
+  /// (same payload) so older deploys without `/eclick` still work after a minimal backend update.
   /// Uses [validateStatus] so 404 does not throw (avoids noisy Dio errors when a route is missing).
-  Future<bool> isPayPalCheckoutAvailable() async {
+  Future<bool> isEClickCheckoutAvailable() async {
     const paths = [
-      '/paypal/checkout-available',
-      '/subscriptions/paypal-checkout-available',
+      '/eclick/checkout-available',
+      '/subscriptions/eclick-checkout-available',
     ];
     for (final path in paths) {
       try {
@@ -125,16 +125,16 @@ class SubscriptionRepository {
     }
   }
 
-  /// Creates a PayPal order and returns the approval URL (freelancers only; backend enforces).
-  Future<PayPalPlanOrderResult> createPayPalPlanOrder({required int planId}) async {
+  /// Creates a eClick order and returns the approval URL (freelancers only; backend enforces).
+  Future<EClickCheckoutSessionResult> createEClickPlanCheckoutSession({required int planId}) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/paypal/plan/create-order',
+        '/eclick/plan/create-session',
         data: {'planId': planId},
       );
       final data = response.data ?? {};
       final ok = data['success'] == true;
-      return PayPalPlanOrderResult(
+      return EClickCheckoutSessionResult(
         success: ok,
         message: data['message']?.toString() ?? (ok ? 'OK' : 'Failed'),
         orderId: data['orderId']?.toString(),
@@ -142,47 +142,47 @@ class SubscriptionRepository {
       );
     } on DioException catch (e) {
       final msg = _dioResponseMessage(e);
-      return PayPalPlanOrderResult(
+      return EClickCheckoutSessionResult(
         success: false,
         message: msg ?? e.message ?? 'Network error',
         orderId: null,
         approvalUrl: null,
       );
     } catch (_) {
-      return PayPalPlanOrderResult(
+      return EClickCheckoutSessionResult(
         success: false,
-        message: 'Could not create PayPal order. Please try again.',
+        message: 'Could not create eClick checkout session. Please try again.',
         orderId: null,
         approvalUrl: null,
       );
     }
   }
 
-  /// Captures payment after the user approves the order in PayPal (browser / app).
-  Future<PayPalCaptureResult> capturePayPalPlanOrder({required String orderId}) async {
+  /// Captures payment after the user approves the order in eClick (browser / app).
+  Future<EClickCaptureResult> captureEClickPlanOrder({required String orderId}) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
-        '/paypal/plan/capture',
+        '/eclick/plan/capture',
         data: {'orderId': orderId},
       );
       final data = response.data ?? {};
       final ok = data['success'] == true;
-      return PayPalCaptureResult(
+      return EClickCaptureResult(
         success: ok,
         message: data['message']?.toString() ?? (ok ? 'OK' : 'Capture failed'),
         idempotent: data['idempotent'] == true,
       );
     } on DioException catch (e) {
       final msg = _dioResponseMessage(e);
-      return PayPalCaptureResult(
+      return EClickCaptureResult(
         success: false,
         message: msg ?? e.message ?? 'Network error',
         idempotent: false,
       );
     } catch (e) {
-      return PayPalCaptureResult(
+      return EClickCaptureResult(
         success: false,
-        message: 'Could not complete PayPal payment. Please try again.',
+        message: 'Could not complete eClick payment. Please try again.',
         idempotent: false,
       );
     }
@@ -213,7 +213,7 @@ class SubscriptionStatusSnapshot {
   final String? subscriptionRowStatus;
   final String? endDateRaw;
 
-  /// Mirrors backend rules for new plan checkout (Stripe/PayPal): block duplicate while pending or active period.
+  /// Mirrors backend rules for new plan checkout (Stripe/eClick): block duplicate while pending or active period.
   /// Cancelled / expired rows can subscribe again (even if an old end_date is still in the future).
   bool get blocksNewPlanPurchase {
     if (!success) return false;
@@ -264,8 +264,8 @@ class AppleReceiptVerifyResult {
   final bool idempotent;
 }
 
-class PayPalPlanOrderResult {
-  const PayPalPlanOrderResult({
+class EClickCheckoutSessionResult {
+  const EClickCheckoutSessionResult({
     required this.success,
     required this.message,
     required this.orderId,
@@ -278,8 +278,8 @@ class PayPalPlanOrderResult {
   final String? approvalUrl;
 }
 
-class PayPalCaptureResult {
-  const PayPalCaptureResult({
+class EClickCaptureResult {
+  const EClickCaptureResult({
     required this.success,
     required this.message,
     required this.idempotent,

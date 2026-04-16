@@ -70,11 +70,11 @@ class AppConfig {
     return 'https://appointments.battechno.com/survey';
   }
 
-  /// PayPal plan checkout (backend `/paypal/plan/*`).
-  /// Prefer server [`GET /paypal/checkout-available`]; this flag forces the button on without a round-trip.
+  /// eClick checkout (backend `/eclick/plan/*`).
+  /// Prefer server [`GET /eclick/checkout-available`]; this flag forces the button on without a round-trip.
   /// Accepts `true`, `1`, or `yes` in `.env` / `--dart-define`.
-  static bool get enablePayPalPlanCheckout {
-    final v = _readEnvValue('ENABLE_PAYPAL');
+  static bool get enableEClickCheckout {
+    final v = _readEnvValue('ENABLE_ECLICK');
     if (v == null || v.isEmpty) return false;
     switch (v.toLowerCase()) {
       case 'true':
@@ -86,10 +86,17 @@ class AppConfig {
     }
   }
 
-  /// When `true`, hides “Pay with PayPal” on the subscription sheet (Apple IAP + company flow only).
-  /// Set `SUBSCRIPTION_HIDE_PAYPAL=true` in `mobile_app/.env` while testing Apple; remove when you return to PayPal.
-  static bool get hidePayPalPlanCheckout {
-    final v = _readEnvValue('SUBSCRIPTION_HIDE_PAYPAL');
+  /// Optional direct web checkout URL override for eClick.
+  /// If unset, mobile asks backend to create a checkout session.
+  static String? get eClickCheckoutUrlOverride {
+    final v = _readEnvValue('ECLICK_CHECKOUT_URL');
+    if (v == null || v.trim().isEmpty) return null;
+    return v.trim();
+  }
+
+  /// When `true`, hides “Pay with eClick” on the subscription sheet.
+  static bool get hideEClickCheckout {
+    final v = _readEnvValue('SUBSCRIPTION_HIDE_ECLICK');
     if (v == null || v.isEmpty) return false;
     switch (v.toLowerCase()) {
       case 'true':
@@ -101,10 +108,9 @@ class AppConfig {
     }
   }
 
-  /// Non-release builds only: show the PayPal button when the API points at a **local/LAN** dev server,
-  /// so you do not need `ENABLE_PAYPAL=true` or `GET /paypal/checkout-available` during local testing.
+  /// Non-release builds only: show the eClick button when the API points at a **local/LAN** dev server.
   /// Release/App Store builds ignore this (still require explicit flag or server).
-  static bool get showPayPalButtonForLocalDev {
+  static bool get showEClickButtonForLocalDev {
     if (kReleaseMode) return false;
     final u = baseUrl.toLowerCase();
     if (u.contains('127.0.0.1') ||
