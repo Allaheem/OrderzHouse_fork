@@ -101,11 +101,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   void _showStoreKitBridgeErrorSnack(Object e) {
     if (!mounted) return;
-    final isChannel =
-        e is PlatformException && (e.message?.contains('channel') ?? false);
-    final msg = isChannel
-        ? 'App Store billing is not available here (often the iOS Simulator). '
-            'Use a real iPhone/iPad, or add a StoreKit Configuration in Xcode for simulator testing.'
+    final raw = e is PlatformException ? (e.message ?? e.code) : '$e';
+    final lower = raw.toLowerCase();
+    final isChannel = lower.contains('channel');
+    final isPlatformResponseFail =
+        lower.contains('failed to get response from platform');
+    final msg = (isChannel || isPlatformResponseFail)
+        ? 'App Store billing is currently unavailable on this device/session. '
+            'On real devices, sign out/in App Store Sandbox account and retry. '
+            'If it still fails, verify the product ID is approved in App Store Connect.'
         : '$e';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -511,11 +515,14 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final appleConfigured =
         Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
 
-    // PayPal: ENABLE_PAYPAL, server probe, or (debug only) local/LAN API — see AppConfig.showPayPalButtonForLocalDev.
+    // Never force PayPal in release builds from local flags.
+    // In production, only show when backend confirms availability.
+    final allowForcedPayPalInDebug =
+        !kReleaseMode && AppConfig.enablePayPalPlanCheckout;
     final showPayPal = (role == 2 || role == 3) &&
-        (AppConfig.enablePayPalPlanCheckout ||
-            payPalEnabledOnServer ||
-            AppConfig.showPayPalButtonForLocalDev);
+        (payPalEnabledOnServer ||
+            AppConfig.showPayPalButtonForLocalDev ||
+            allowForcedPayPalInDebug);
 
     showPaymentMethodChooserSheet(
       context: context,
@@ -572,6 +579,21 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _startPayPalCheckout(Plan plan) async {
     final repo = ref.read(subscriptionRepositoryProvider);
+    final available = await repo.isPayPalCheckoutAvailable();
+    if (!mounted) return;
+    if (!available) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'PayPal checkout is not enabled on the server yet. Please use Subscribe from Company for now.',
+          ),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
     final created = await repo.createPayPalPlanOrder(planId: plan.id);
     if (!mounted) return;
     if (!created.success ||
