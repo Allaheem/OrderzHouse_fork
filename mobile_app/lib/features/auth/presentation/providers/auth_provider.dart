@@ -116,6 +116,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final CachedUserWriter _writeCachedUser;
   final CachedUserClearer _clearCachedUser;
 
+  bool _isAuthFailureMessage(String? msg) {
+    final m = (msg ?? '').toLowerCase();
+    return m.contains('unauthorized') ||
+        m.contains('invalid token') ||
+        m.contains('token expired') ||
+        m.contains('jwt') ||
+        m.contains('login') && m.contains('required');
+  }
+
   /// Restore session from secure storage on app startup.
   /// Sets isChecking false and either authenticated (with user) or unauthenticated.
   Future<void> restoreSession() async {
@@ -143,6 +152,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = AuthState(user: response.data);
         await _writeCachedUser(response.data!);
         await AuthApiBinding.recordCurrentApiForSession();
+        return;
+      }
+      // If token exists but backend rejects auth, do not keep a stale cached session.
+      if (_isAuthFailureMessage(response.message)) {
+        await SecureStore.clearAll();
+        await AuthApiBinding.clear();
+        await _clearCachedUser();
+        state = const AuthState();
         return;
       }
       final cachedUser = await _readCachedUser();

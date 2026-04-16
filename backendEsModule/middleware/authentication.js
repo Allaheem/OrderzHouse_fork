@@ -1,6 +1,14 @@
 import jwt from "jsonwebtoken";
 import pool from "../models/db.js";
 
+/** Normalize JWT payload so controllers always see `userId` + `role`. */
+function normalizeTokenPayload(payload) {
+  if (!payload || typeof payload !== "object") return payload;
+  const userId = payload.userId ?? payload.user_id ?? payload.id;
+  const role = payload.role ?? payload.roleId ?? payload.role_id;
+  return { ...payload, userId, role };
+}
+
 const authentication = (req, res, next) => {
   try {
     if (!req.headers.authorization) {
@@ -17,8 +25,10 @@ const authentication = (req, res, next) => {
         });
       }
 
+      const decoded = normalizeTokenPayload(result);
+
       // Check if user is deleted (from token or DB)
-      if (result.is_deleted === true) {
+      if (decoded.is_deleted === true) {
         return res.status(401).json({
           success: false,
           message: "Account has been deleted",
@@ -29,7 +39,7 @@ const authentication = (req, res, next) => {
       try {
         const userCheck = await pool.query(
           "SELECT id, terms_accepted_at, terms_version FROM users WHERE id = $1 AND is_deleted = FALSE",
-          [result.userId]
+          [decoded.userId]
         );
         if (userCheck.rows.length === 0) {
           return res.status(401).json({
@@ -65,7 +75,7 @@ const authentication = (req, res, next) => {
         });
       }
 
-      req.token = result;
+      req.token = decoded;
       next();
     });
   } catch (error) {
@@ -81,12 +91,14 @@ const authSocket = async (socket, next) => {
       return next(new Error("Authentication error: Token required"));
     }
 
-    let decoded;
+    let decodedRaw;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decodedRaw = jwt.verify(token, process.env.JWT_SECRET);
     } catch {
       return next(new Error("Authentication error: Invalid token"));
     }
+
+    const decoded = normalizeTokenPayload(decodedRaw);
 
     if (decoded?.is_deleted === true) {
       return next(new Error("Authentication error: Account deleted"));

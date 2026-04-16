@@ -8,6 +8,16 @@ class SubscriptionRepository {
 
   final Dio _dio;
 
+  /// Dio often decodes JSON as `Map<dynamic, dynamic>` — never use `is Map<String, dynamic>` here.
+  static String? _dioResponseMessage(DioException e) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final msg = data['message'] ?? data['error'] ?? data['msg'];
+      return msg?.toString();
+    }
+    return null;
+  }
+
   /// `GET /subscriptions/status` — current plan, remaining days, etc. (authenticated).
   Future<SubscriptionStatusSnapshot> fetchSubscriptionStatus() async {
     try {
@@ -22,11 +32,15 @@ class SubscriptionRepository {
       }
       return SubscriptionStatusSnapshot.fromJson(data);
     } on DioException catch (e) {
-      final msg = e.response?.data is Map<String, dynamic>
-          ? (e.response!.data as Map)['error']?.toString()
-          : null;
+      final body = _dioResponseMessage(e);
+      final code = e.response?.statusCode;
+      if (code == 401) {
+        return SubscriptionStatusSnapshot.failure(
+          body ?? 'Session expired. Please log out and sign in again.',
+        );
+      }
       return SubscriptionStatusSnapshot.failure(
-        msg ?? e.message ?? 'Network error',
+        body ?? e.message ?? 'Network error',
       );
     } catch (_) {
       return SubscriptionStatusSnapshot.failure(
@@ -96,9 +110,7 @@ class SubscriptionRepository {
         idempotent: data['idempotent'] == true,
       );
     } on DioException catch (e) {
-      final msg = e.response?.data is Map<String, dynamic>
-          ? (e.response!.data as Map)['message']?.toString()
-          : null;
+      final msg = _dioResponseMessage(e);
       return AppleReceiptVerifyResult(
         success: false,
         message: msg ?? e.message ?? 'Network error',
@@ -129,9 +141,7 @@ class SubscriptionRepository {
         approvalUrl: data['approvalUrl']?.toString(),
       );
     } on DioException catch (e) {
-      final msg = e.response?.data is Map<String, dynamic>
-          ? (e.response!.data as Map)['message']?.toString()
-          : null;
+      final msg = _dioResponseMessage(e);
       return PayPalPlanOrderResult(
         success: false,
         message: msg ?? e.message ?? 'Network error',
@@ -163,9 +173,7 @@ class SubscriptionRepository {
         idempotent: data['idempotent'] == true,
       );
     } on DioException catch (e) {
-      final msg = e.response?.data is Map<String, dynamic>
-          ? (e.response!.data as Map)['message']?.toString()
-          : null;
+      final msg = _dioResponseMessage(e);
       return PayPalCaptureResult(
         success: false,
         message: msg ?? e.message ?? 'Network error',
