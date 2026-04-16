@@ -553,7 +553,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     // In production, only show when backend confirms availability.
     final allowForcedPayPalInDebug =
         !kReleaseMode && AppConfig.enablePayPalPlanCheckout;
-    final showPayPal = (role == 2 || role == 3) &&
+    final showPayPal = !AppConfig.hidePayPalPlanCheckout &&
+        (role == 2 || role == 3) &&
         (payPalEnabledOnServer ||
             AppConfig.showPayPalButtonForLocalDev ||
             allowForcedPayPalInDebug);
@@ -819,9 +820,27 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         response.notFoundIDs.isNotEmpty) {
       setState(() => _pendingApplePlan = null);
       if (!mounted) return;
-      final msg = response.error?.message ?? 'Product not found in App Store.';
+      final err = response.error;
+      final notFound = response.notFoundIDs;
+      final String msg;
+      if (err != null) {
+        final code = err.code.trim().isEmpty ? '' : ' (${err.code})';
+        msg = '${err.message}$code';
+      } else if (notFound.isNotEmpty) {
+        msg =
+            'App Store returned no product for: ${notFound.join(", ")}. '
+            'In App Store Connect, the subscription product ID must match exactly, '
+            'be Cleared for Sale, and belong to this app’s bundle ID. Sandbox: sign in under Settings → App Store → Sandbox.';
+      } else {
+        msg =
+            'No product details for "$pid". Check the plan’s apple_product_id in the admin/API matches App Store Connect.';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(msg, style: const TextStyle(height: 1.35)),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 8),
+        ),
       );
       return;
     }

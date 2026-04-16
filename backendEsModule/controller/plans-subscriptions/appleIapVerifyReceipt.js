@@ -36,11 +36,12 @@ function parseLatestReceiptInfo(body) {
  * Authenticated clients (role 2) and freelancers (role 3).
  */
 export const verifyAppleReceipt = async (req, res) => {
-  const userId = req.token?.userId;
+  const userId =
+    req.token?.userId ?? req.token?.user_id ?? req.token?.id;
   const roleId = Number(req.token?.role ?? req.token?.roleId ?? 0);
   const { receiptData, planId } = req.body || {};
 
-  if (!userId) {
+  if (userId === undefined || userId === null) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
   if (![2, 3].includes(roleId)) {

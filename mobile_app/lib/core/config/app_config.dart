@@ -86,6 +86,21 @@ class AppConfig {
     }
   }
 
+  /// When `true`, hides “Pay with PayPal” on the subscription sheet (Apple IAP + company flow only).
+  /// Set `SUBSCRIPTION_HIDE_PAYPAL=true` in `mobile_app/.env` while testing Apple; remove when you return to PayPal.
+  static bool get hidePayPalPlanCheckout {
+    final v = _readEnvValue('SUBSCRIPTION_HIDE_PAYPAL');
+    if (v == null || v.isEmpty) return false;
+    switch (v.toLowerCase()) {
+      case 'true':
+      case '1':
+      case 'yes':
+        return true;
+      default:
+        return false;
+    }
+  }
+
   /// Non-release builds only: show the PayPal button when the API points at a **local/LAN** dev server,
   /// so you do not need `ENABLE_PAYPAL=true` or `GET /paypal/checkout-available` during local testing.
   /// Release/App Store builds ignore this (still require explicit flag or server).
