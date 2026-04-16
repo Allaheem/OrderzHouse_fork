@@ -19,6 +19,7 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/utils/safe_url_launch.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/storage/secure_store.dart';
 import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscriptions/data/repositories/subscription_repository.dart';
@@ -469,12 +470,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }) async {
     final authState = ref.read(authStateProvider);
     final user = authState.user;
+    final token = await SecureStore.readAccessToken();
 
-    if (user == null) {
+    if (user == null || token == null || token.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please log in to subscribe'),
-          backgroundColor: Colors.red,
+          content: Text('Session expired. Please log in again to continue.'),
+          backgroundColor: Colors.orange,
         ),
       );
       return;
@@ -496,6 +498,21 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final subStatus = await repo.fetchSubscriptionStatus();
     if (!mounted) return;
     if (!subStatus.success) {
+      final authMsg = (subStatus.errorMessage ?? '').toLowerCase();
+      final isAuthFailure = authMsg.contains('session expired') ||
+          authMsg.contains('unauthorized') ||
+          authMsg.contains('invalid token') ||
+          authMsg.contains('expired');
+      if (isAuthFailure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Session expired. Please log in again.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
