@@ -163,10 +163,21 @@ export const verifyAppleReceipt = async (req, res) => {
     await client.query("BEGIN");
 
     const existing = await client.query(
-      `SELECT id FROM subscriptions WHERE apple_original_transaction_id = $1`,
+      `SELECT id, freelancer_id
+       FROM subscriptions
+       WHERE apple_original_transaction_id = $1
+       LIMIT 1`,
       [originalTx]
     );
     if (existing.rows.length > 0) {
+      const ownerId = Number(existing.rows[0].freelancer_id);
+      if (ownerId !== Number(userId)) {
+        await client.query("ROLLBACK");
+        return res.status(403).json({
+          success: false,
+          message: "This App Store purchase belongs to another account.",
+        });
+      }
       await client.query("COMMIT");
       return res.json({
         success: true,

@@ -37,7 +37,7 @@ export const getSubscriptionStatus = async (req, res) => {
          FROM subscriptions s
          JOIN plans p ON s.plan_id = p.id
          WHERE s.freelancer_id = $1
-           AND s.status IN ('pending_start', 'active', 'cancelled')
+           AND s.status IN ('pending_start', 'active', 'cancelled', 'expired')
          ORDER BY s.id DESC
          LIMIT 1`,
         [freelancerId]
@@ -59,7 +59,7 @@ export const getSubscriptionStatus = async (req, res) => {
            FROM subscriptions s
            JOIN plans p ON s.plan_id = p.id
            WHERE s.freelancer_id = $1
-             AND s.status IN ('pending_start', 'active', 'cancelled')
+             AND s.status IN ('pending_start', 'active', 'cancelled', 'expired')
            ORDER BY s.id DESC
            LIMIT 1`,
           [freelancerId]

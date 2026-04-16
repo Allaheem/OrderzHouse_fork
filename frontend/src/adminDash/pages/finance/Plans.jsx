@@ -96,20 +96,6 @@ export default function Plans() {
   // ---------------------------
   // HANDLERS
   // ---------------------------
-  const openAdd = useCallback(() => {
-    setEditId(null);
-    setForm({
-      name: "",
-      price: "",
-      duration: 30,
-      description: "",
-      featuresText: "",
-      plan_type: "monthly",
-      apple_product_id: "",
-    });
-    setOpen(true);
-  }, []);
-
   const openEdit = useCallback(
     (id) => {
       const plan = items.find((p) => p.id === id);

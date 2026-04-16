@@ -23,6 +23,7 @@ import '../../../plans/presentation/providers/plans_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../subscriptions/data/repositories/subscription_repository.dart';
 import '../../../subscriptions/presentation/providers/subscription_provider.dart';
+import '../../../subscriptions/presentation/screens/paypal_approval_webview_screen.dart';
 import '../../../subscriptions/presentation/widgets/payment_method_chooser_sheet.dart';
 import '../../../../core/models/plan.dart';
 
@@ -596,44 +597,41 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       return;
     }
 
-    final opened = await launchTrustedHttpUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
+    final returnHost = Uri.tryParse(AppConfig.adminWebOrigin)?.host.toLowerCase();
+    final allowedReturnHosts = <String>{
+      if (returnHost != null && returnHost.isNotEmpty) returnHost,
+      'orderzhouse.com',
+      'www.orderzhouse.com',
+    };
+
+    final approvalResult = await Navigator.of(context).push<PayPalApprovalResult>(
+      MaterialPageRoute(
+        builder: (_) => PayPalApprovalWebViewScreen(
+          approvalUrl: uri,
+          allowedReturnHosts: allowedReturnHosts,
+        ),
+      ),
     );
     if (!mounted) return;
-    if (!opened) {
+    if (approvalResult == null || approvalResult == PayPalApprovalResult.cancelled) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Could not open PayPal. Check your connection.'),
+          content: Text('PayPal checkout was cancelled.'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
-
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        title: const Text('PayPal'),
-        content: const Text(
-          'After you approve the payment in PayPal, return here and tap Complete to activate your subscription.',
+    if (approvalResult == PayPalApprovalResult.failed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not load PayPal checkout page.'),
+          backgroundColor: Colors.red,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Later'),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await _completePayPalCapture(created.orderId!);
-            },
-            child: const Text('Complete'),
-          ),
-        ],
-      ),
-    );
+      );
+      return;
+    }
+    await _completePayPalCapture(created.orderId!);
   }
 
   Future<void> _completePayPalCapture(String orderId) async {
