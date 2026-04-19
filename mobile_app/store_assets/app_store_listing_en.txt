@@ -1,0 +1,37 @@
+# OrderzHouse — App Store (English) listing copy
+# Paste each block into App Store Connect → App Information / Version → localizable metadata.
+# Limits: Promotional Text 170 chars · Description 4000 · Keywords 100 (comma-separated, no spaces).
+
+--------------------------------------------------------------------------------
+PROMOTIONAL_TEXT  (max 170 characters)
+--------------------------------------------------------------------------------
+OrderzHouse connects clients with verified freelancers for fixed & hourly work. Post projects, compare offers, pay safely, and track delivery in one app.
+
+--------------------------------------------------------------------------------
+DESCRIPTION  (max 4000 characters)
+--------------------------------------------------------------------------------
+OrderzHouse is a marketplace that brings clients and freelancers together for real projects.
+
+FOR CLIENTS
+• Post fixed-price or hourly projects and describe what you need.
+• Review freelancers, offers, and applications in one place.
+• Track project status from posting through delivery.
+• Use payments and project tools designed for clear milestones.
+
+FOR FREELANCERS
+• Explore open projects and send competitive offers.
+• Manage active work: applications, deliveries, and client communication.
+• Get paid through the platform’s payment flows tied to your projects.
+• Build your profile and grow repeat work with verified clients.
+
+WHY ORDERZHOUSE
+• Role-based experience for clients and freelancers.
+• Structured project lifecycle: post → offers → work → delivery.
+• Built for real collaboration—not generic chat-only gigs.
+
+OrderzHouse helps you run serious freelance work with clarity from first brief to final payment.
+
+--------------------------------------------------------------------------------
+KEYWORDS  (max 100 characters; comma-separated)
+--------------------------------------------------------------------------------
+freelance,marketplace,Jordan,JOD,projects,gigs,remote,client,offers,payments

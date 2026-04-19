@@ -1,0 +1,42 @@
+# OrderzHouse — App Store Connect → App Review Information → Notes
+# Paste the block below (from ORDERZHOUSE through the thank-you line) into the Notes field.
+
+--------------------------------------------------------------------------------
+
+ORDERZHOUSE — APP REVIEW NOTES
+
+UPDATE — PRIOR REVIEW FEEDBACK ADDRESSED
+This submission addresses the issues raised in our previous review. Specifically:
+• Design & readability (Guideline 4): We improved layouts and typography on iPhone and iPad, including primary buttons and tabbed flows, so labels are fully visible and screens read clearly on tablets and with larger text sizes.
+• App completeness (Guideline 2.1): Review paths use finalized UI and realistic project data on the demo accounts below—no placeholder or “test only” strings in the screens we ask you to exercise.
+• Business & payments (Guideline 3.1): Subscription and paid-feature access are presented consistently with this build and our current App Store setup for digital services.
+
+We believe each point from the prior rejection has been resolved. Thank you for taking another look.
+
+---
+
+TEST ACCOUNTS (demo only)
+
+1) FREELANCER ACCOUNT
+Email: allaheema@gmail.com
+Password: Abood079
+Use this account to review freelancer flows: Home, Explore, My Projects, applications/offers, Payments, and Profile.
+
+2) CLIENT ACCOUNT
+Email: bahahdbsa@gmail.com
+Password: Bhbsa767
+Use this account to review client flows: posting/managing projects, hiring, and related client-side screens.
+
+HOW TO SIGN IN
+Open the app → Login → enter the email and password for the role you are testing.
+
+LOCALIZATION
+The app supports Arabic and English (follows device language).
+
+BACKEND
+The app uses our production API. If a screen is slow on first open, pull to refresh or reopen once.
+
+SUBSCRIPTIONS
+Some actions may require an active subscription depending on role and product rules.
+
+Thank you for reviewing OrderzHouse.
