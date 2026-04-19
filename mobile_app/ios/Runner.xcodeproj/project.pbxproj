@@ -19,6 +19,20 @@
 		F6AD0FD82F910C0500B80A4F /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AD0FD72F910C0500B80A4F /* StoreKit.framework */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildRule section */
+		F6AB818D2F95326700168F0A /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			fileType = folder.rkassets;
+			inputFiles = (
+			);
+			isEditable = 1;
+			outputFiles = (
+			);
+			script = "# <com.apple.build-tasks.compile-rk-assets.xcplugin>\n";
+		};
+/* End PBXBuildRule section */
+
 /* Begin PBXContainerItemProxy section */
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -206,6 +220,7 @@
 				BEA3F5E49C474F2BDD68C1B6 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
+				F6AB818D2F95326700168F0A /* PBXBuildRule */,
 			);
 			dependencies = (
 			);

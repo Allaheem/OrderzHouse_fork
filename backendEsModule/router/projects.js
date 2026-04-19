@@ -39,6 +39,7 @@ import {
   getPendingApprovalProjects,
   getProjectSuccess,
   adminUpdateProject,
+  adminDeleteProject,
 } from "../controller/projectsManagment/projects.js";
 
 import {
@@ -264,6 +265,14 @@ projectsRouter.put(
   authentication,
   adminOnly,
   adminUpdateProject
+);
+
+// Admin: soft-delete project (PeopleTable DELETE /projects/admin/projects/:id)
+projectsRouter.delete(
+  "/admin/projects/:projectId",
+  authentication,
+  adminOnly,
+  adminDeleteProject
 );
 
 /* --------------------------------

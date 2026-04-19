@@ -2056,6 +2056,58 @@ export const adminUpdateProject = async (req, res) => {
   }
 };
 
+/**
+ * Admin: soft-delete any project (PeopleTable DELETE /projects/admin/projects/:id)
+ * DELETE /projects/admin/projects/:projectId
+ */
+export const adminDeleteProject = async (req, res) => {
+  try {
+    const adminId = req.token?.userId;
+    const roleId = Number(req.token?.role ?? req.token?.roleId ?? NaN);
+    if (!adminId || roleId !== 1) {
+      return res.status(403).json({ success: false, message: "Admin access required" });
+    }
+
+    const projectId = Number.parseInt(String(req.params.projectId ?? ""), 10);
+    if (!Number.isInteger(projectId) || projectId <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid project id" });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT id, title FROM projects WHERE id = $1 AND is_deleted = false`,
+      [projectId]
+    );
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+    const project = rows[0];
+
+    await pool.query(`UPDATE projects SET is_deleted = true, updated_at = NOW() WHERE id = $1`, [
+      projectId,
+    ]);
+
+    try {
+      await LogCreators.projectOperation(
+        adminId,
+        ACTION_TYPES.PROJECT_DELETE,
+        projectId,
+        true,
+        { title: project.title, deletedBy: "admin" }
+      );
+    } catch (e) {
+      console.error("adminDeleteProject log error:", e);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Project deleted successfully",
+      data: { id: projectId },
+    });
+  } catch (err) {
+    console.error("adminDeleteProject error:", err);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 /**
  * -------------------------------
