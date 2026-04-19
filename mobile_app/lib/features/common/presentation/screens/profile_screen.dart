@@ -120,6 +120,7 @@ class ProfileScreen extends ConsumerWidget {
                             _UpgradeCard(
                               onViewPlans: () => context.go('/subscription'),
                               l10n: l10n,
+                              isFreelancer: user?.roleId == 3,
                             ),
 
                           const SizedBox(height: AppSpacing.lg),
@@ -650,8 +651,13 @@ class _LogoutCard extends StatelessWidget {
 class _UpgradeCard extends StatelessWidget {
   final VoidCallback onViewPlans;
   final AppLocalizations l10n;
+  final bool isFreelancer;
 
-  const _UpgradeCard({required this.onViewPlans, required this.l10n});
+  const _UpgradeCard({
+    required this.onViewPlans,
+    required this.l10n,
+    this.isFreelancer = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -676,7 +682,7 @@ class _UpgradeCard extends StatelessWidget {
         children: [
           // Text
           Text(
-            l10n.wantMoreFeatures,
+            isFreelancer ? l10n.freelancerPlanCardTitle : l10n.wantMoreFeatures,
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textPrimary,
               fontSize: 15,
@@ -686,7 +692,7 @@ class _UpgradeCard extends StatelessWidget {
           const SizedBox(height: 16),
           PrimaryGradientButton(
             onPressed: onViewPlans,
-            label: l10n.viewPlans,
+            label: isFreelancer ? l10n.freelancerPlanCardButton : l10n.viewPlans,
             height: 56,
             borderRadius: 30,
             width: double.infinity,

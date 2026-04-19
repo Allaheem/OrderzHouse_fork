@@ -1217,6 +1217,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get renewSubscription => 'تجديد الاشتراك';
 
   @override
+  String get freelancerVerifyAccount => 'توثيق الحساب';
+
+  @override
+  String get freelancerVerificationBookingOpened =>
+      'احجز موعد مقابلة التوثيق مع فريقنا.';
+
+  @override
+  String get freelancerPlansEmpty =>
+      'لا تظهر خطة مجانية حالياً. تواصل مع الدعم.';
+
+  @override
+  String get freelancerPlanCardTitle => 'الخطة المجانية وتوثيق الحساب';
+
+  @override
+  String get freelancerPlanCardButton => 'فتح الخطة';
+
+  @override
   String get failedToLoad => 'فشل في التحميل';
 
   @override

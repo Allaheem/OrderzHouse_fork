@@ -81,6 +81,15 @@ export const createCheckoutSession = async (req, res) => {
       });
     }
 
+    const planPriceEarly = Number(plan.price) || 0;
+    if (planPriceEarly > 0) {
+      return res.status(403).json({
+        error: "Forbidden",
+        message:
+          "Paid freelancer subscriptions are not sold in the app or web checkout. Use the free plan and verify your account with the company, or ask admin.",
+      });
+    }
+
     // Check if user already has an active or pending_start subscription
     const activeSubscriptionCheck = await pool.query(
       `SELECT id, status, end_date, start_date 
@@ -124,8 +133,8 @@ export const createCheckoutSession = async (req, res) => {
 
     console.log("[Stripe] Computed:", { planPrice, needsYearlyFee });
 
-    // CASE A: Free plan (price = 0) AND yearly fee required
-    if (planPrice === 0 && needsYearlyFee) {
+    // CASE A: Free plan (price = 0) AND yearly fee required (Stripe) — not freelancers (handled offline/admin)
+    if (planPrice === 0 && needsYearlyFee && Number(user.role_id) !== 3) {
       const line_items = [
         {
           price_data: {
@@ -165,8 +174,8 @@ export const createCheckoutSession = async (req, res) => {
       return res.json({ url: session.url });
     }
 
-    // CASE B: Free plan (price = 0) AND yearly fee NOT required
-    if (planPrice === 0 && !needsYearlyFee) {
+    // CASE B: Free plan (price = 0) AND yearly fee NOT required — OR freelancer (no in-app fees)
+    if (planPrice === 0 && (!needsYearlyFee || Number(user.role_id) === 3)) {
       console.log("[Stripe] Free plan without yearly fee - creating subscription directly");
 
       // Create subscription directly without Stripe

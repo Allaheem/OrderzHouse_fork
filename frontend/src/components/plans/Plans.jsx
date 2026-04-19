@@ -12,6 +12,14 @@ import { useToast } from "../toast/ToastProvider";
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
 const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
+function freelancerVerificationBookingUrl() {
+  const a = import.meta.env.VITE_FREELANCER_VERIFY_BOOKING_URL;
+  const b = import.meta.env.VITE_COMPANY_SUBSCRIBE_URL;
+  if (typeof a === "string" && a.trim()) return a.trim();
+  if (typeof b === "string" && b.trim()) return b.trim();
+  return "https://appointments.battechno.com/survey";
+}
+
 // =============== Auth Hook ===============
 const useAuth = () => {
   const { user } = useSelector((s) => ({
@@ -42,7 +50,14 @@ function CheckIcon({ className = "" }) {
   );
 }
 
-function PlanCard({ plan, onSubscribe, canSubscribe, hasActiveSubscription }) {
+function PlanCard({
+  plan,
+  onSubscribe,
+  canSubscribe,
+  hasActiveSubscription,
+  freelancerMode,
+  onVerifyAccount,
+}) {
   const highlight = plan.plan_type === "popular";
 
   const durationLabel =
@@ -105,7 +120,21 @@ function PlanCard({ plan, onSubscribe, canSubscribe, hasActiveSubscription }) {
         </ul>
 
         <div className="mt-auto">
-    {canSubscribe ? (
+    {freelancerMode ? (
+      <>
+        <button
+          type="button"
+          onClick={onVerifyAccount}
+          className="w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white bg-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.18)] hover:opacity-95 active:scale-[0.99]"
+        >
+          Verify account
+        </button>
+        <p className="mt-2 text-xs text-slate-500 text-center">
+          Book a short interview with our team to verify your profile after using the free plan. Paid
+          tiers are not sold in the app or on the web — admin handles upgrades.
+        </p>
+      </>
+    ) : canSubscribe ? (
       <>
         <button
           onClick={() => !hasActiveSubscription && onSubscribe(plan)}
@@ -149,12 +178,16 @@ export default function Plans() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [subscriptionExpiry, setSubscriptionExpiry] = useState(null);
 
+  const isFreelancer = user?.role_id === 3;
+
   useEffect(() => {
-    API.get("/plans").then((res) => {
-      setPlans(Array.isArray(res.data.plans) ? res.data.plans : []);
-      setLoading(false);
-    });
-  }, []);
+    API.get("/plans")
+      .then((res) => {
+        setPlans(Array.isArray(res.data.plans) ? res.data.plans : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [user?.id]);
 
   // Fetch subscription status for freelancers
   useEffect(() => {
@@ -225,6 +258,15 @@ export default function Plans() {
     window.location.href = "https://appointments.battechno.com/survey";
   };
 
+  const openFreelancerVerification = () => {
+    const url = freelancerVerificationBookingUrl();
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.location.href = url;
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-600">
@@ -235,7 +277,10 @@ export default function Plans() {
 
   return (
     <div className="relative isolate overflow-hidden bg-white">
-      <PageMeta title="Plans & Pricing – OrderzHouse" description="Choose a plan for freelancers: monthly or yearly subscription with clear pricing." />
+      <PageMeta
+        title="Plans & Pricing – OrderzHouse"
+        description="Freelancers use the free plan; verify your account with the team. Clients and guests see full plan options where applicable."
+      />
       {/* ✅ نفس Glows الموجودة في Pricing */}
            <div className="pointer-events-none absolute -top-28 left-[-80px] h-[360px] w-[360px] rounded-full bg-yellow-300/25 blur-3xl" />
           <div className="pointer-events-none absolute -top-28 right-[-90px] h-[380px] w-[380px] rounded-full bg-orange-400/20 blur-3xl" />
@@ -248,15 +293,17 @@ export default function Plans() {
         <div className="max-w-2xl">
           <p className="text-sm text-orange-700">Pricing</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Choose Your Plan
+            {isFreelancer ? "Free plan & verification" : "Choose Your Plan"}
           </h1>
           <p className="mt-3 text-slate-600">
-            Pick a plan that fits your workflow — upgrade anytime.
+            {isFreelancer
+              ? "You are on the free freelancer plan. Book verification to become a trusted account after we review your work. Paid upgrades are arranged through admin, not in the app."
+              : "Pick a plan that fits your workflow — upgrade anytime."}
           </p>
         </div>
 
-        {/* Active Subscription Message */}
-        {hasActiveSubscription && subscriptionExpiry && (
+        {/* Active Subscription Message (not shown for freelancer-only-free flow) */}
+        {!isFreelancer && hasActiveSubscription && subscriptionExpiry && (
           <div className="mt-6 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
             <p className="text-sm font-semibold text-orange-900">
               You already have an active subscription. You can change plans after it expires on {subscriptionExpiry.toLocaleDateString()}.
@@ -265,6 +312,11 @@ export default function Plans() {
         )}
 
         {/* Grid نفس Pricing */}
+        {plans.length === 0 && !loading && (
+          <p className="mt-10 text-center text-slate-600">
+            No free plan is available from the server. Ask an admin to add a plan with price 0, or contact support.
+          </p>
+        )}
         <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {plans.map((p) => (
             <PlanCard 
@@ -273,16 +325,20 @@ export default function Plans() {
               onSubscribe={setSelectedPlan}
               canSubscribe={user?.role_id === 3}
               hasActiveSubscription={hasActiveSubscription}
+              freelancerMode={isFreelancer}
+              onVerifyAccount={openFreelancerVerification}
             />
           ))}
         </div>
 
-        <PaymentMethodModal
-          open={!!selectedPlan}
-          onClose={() => setSelectedPlan(null)}
-          onOnline={subscribeOnline}
-          onOffline={subscribeOffline}
-        />
+        {!isFreelancer && (
+          <PaymentMethodModal
+            open={!!selectedPlan}
+            onClose={() => setSelectedPlan(null)}
+            onOnline={subscribeOnline}
+            onOffline={subscribeOffline}
+          />
+        )}
 
         <p className="mt-10 text-center text-sm font-semibold text-slate-600">
           * A contract is signed after subscription.

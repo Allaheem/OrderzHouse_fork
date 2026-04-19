@@ -2444,6 +2444,36 @@ abstract class AppLocalizations {
   /// **'Renew Subscription'**
   String get renewSubscription;
 
+  /// No description provided for @freelancerVerifyAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify account'**
+  String get freelancerVerifyAccount;
+
+  /// No description provided for @freelancerVerificationBookingOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a time for your verification interview with our team.'**
+  String get freelancerVerificationBookingOpened;
+
+  /// No description provided for @freelancerPlansEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No free plan is listed yet. Please contact support.'**
+  String get freelancerPlansEmpty;
+
+  /// No description provided for @freelancerPlanCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free plan & account verification'**
+  String get freelancerPlanCardTitle;
+
+  /// No description provided for @freelancerPlanCardButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plan'**
+  String get freelancerPlanCardButton;
+
   /// No description provided for @failedToLoad.
   ///
   /// In en, this message translates to:

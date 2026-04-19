@@ -462,6 +462,11 @@
   "managePlan": "Manage Plan",
   "cancelSubscription": "Cancel Subscription",
   "renewSubscription": "Renew Subscription",
+  "freelancerVerifyAccount": "Verify account",
+  "freelancerVerificationBookingOpened": "Book a time for your verification interview with our team.",
+  "freelancerPlansEmpty": "No free plan is listed yet. Please contact support.",
+  "freelancerPlanCardTitle": "Free plan & account verification",
+  "freelancerPlanCardButton": "Open plan",
   
   "failedToLoad": "Failed to load",
   "failedToLoadData": "Failed to load data",

@@ -96,7 +96,7 @@ export const verifyAppleReceipt = async (req, res) => {
     let planRow;
     if (planIdProvided) {
       const planRes = await client.query(
-        `SELECT id, name, duration, plan_type, apple_product_id FROM plans WHERE id = $1`,
+        `SELECT id, name, duration, plan_type, apple_product_id, price FROM plans WHERE id = $1`,
         [pid]
       );
       if (!planRes.rows.length) {
@@ -122,7 +122,7 @@ export const verifyAppleReceipt = async (req, res) => {
       planRow._matches = matches;
     } else {
       const { rows: mappedPlans } = await client.query(
-        `SELECT id, name, duration, plan_type, apple_product_id FROM plans
+        `SELECT id, name, duration, plan_type, apple_product_id, price FROM plans
          WHERE apple_product_id IS NOT NULL AND trim(apple_product_id) <> ''`
       );
       const matches = [];
@@ -145,6 +145,15 @@ export const verifyAppleReceipt = async (req, res) => {
       planRow = matches[0].plan;
       planRow._matches = matches.map((m) => m.receipt);
       pid = planRow.id;
+    }
+
+    const planPriceNum = Number(planRow.price ?? 0);
+    if (roleId === 3 && planPriceNum > 0) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Paid freelancer subscriptions are not available in the app. Use the free plan and verify your account with the company.",
+      });
     }
 
     const matches = planRow._matches;

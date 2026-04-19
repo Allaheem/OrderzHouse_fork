@@ -70,6 +70,18 @@ class AppConfig {
     return 'https://appointments.battechno.com/survey';
   }
 
+  /// Freelancer **account verification** booking (interview with the company).
+  /// Set `FREELANCER_VERIFY_BOOKING_URL` in `.env`. Falls back to [companySubscribeUrl] if unset.
+  static String get freelancerVerificationBookingUrl {
+    if (dotenv.isInitialized) {
+      final url = dotenv.env['FREELANCER_VERIFY_BOOKING_URL'];
+      if (url != null && url.trim().isNotEmpty) return url.trim();
+    }
+    const defineValue = String.fromEnvironment('FREELANCER_VERIFY_BOOKING_URL');
+    if (defineValue.trim().isNotEmpty) return defineValue.trim();
+    return companySubscribeUrl;
+  }
+
   /// eClick checkout (backend `/eclick/plan/*`).
   /// Prefer server [`GET /eclick/checkout-available`]; this flag forces the button on without a round-trip.
   /// Accepts `true`, `1`, or `yes` in `.env` / `--dart-define`.

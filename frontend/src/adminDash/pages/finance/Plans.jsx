@@ -288,7 +288,15 @@ export default function Plans() {
   // ---------------------------
   return (
     <div className="space-y-6 px-4 sm:px-6 lg:px-8 py-6">
-    
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <p className="font-semibold">Freelancer plans policy</p>
+        <p className="mt-1 text-amber-900/90">
+          The mobile app and public web no longer sell paid freelancer subscription tiers in-app. Freelancers
+          only see <strong>free</strong> plans (price 0) in the app/web; upgrades and verification are handled
+          by admin or offline. You can still create paid plans here for records, client use, or admin-assigned
+          subscriptions — use <strong>Assign subscription</strong> and finance tools as needed.
+        </p>
+      </div>
 
       {loading && (
         <div className="text-center py-8 text-slate-500 text-base">

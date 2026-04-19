@@ -462,6 +462,11 @@
   "managePlan": "إدارة الخطة",
   "cancelSubscription": "إلغاء الاشتراك",
   "renewSubscription": "تجديد الاشتراك",
+  "freelancerVerifyAccount": "توثيق الحساب",
+  "freelancerVerificationBookingOpened": "احجز موعد مقابلة التوثيق مع فريقنا.",
+  "freelancerPlansEmpty": "لا تظهر خطة مجانية حالياً. تواصل مع الدعم.",
+  "freelancerPlanCardTitle": "الخطة المجانية وتوثيق الحساب",
+  "freelancerPlanCardButton": "فتح الخطة",
   
   "failedToLoad": "فشل في التحميل",
   "failedToLoadData": "فشل في تحميل البيانات",

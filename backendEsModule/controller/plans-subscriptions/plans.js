@@ -14,6 +14,13 @@ const handleError = (res, err, message = "Server error") => {
  */
 export const getPlans = async (req, res) => {
   const withCounts = req.query.withCounts === "true";
+  const roleId = Number(req.token?.role ?? req.token?.roleId ?? req.token?.role_id ?? 0);
+  const freelancerOnlyFree = roleId === 3;
+
+  let where = "";
+  if (freelancerOnlyFree) {
+    where = withCounts ? " WHERE (p.price::numeric <= 0) " : " WHERE (price::numeric <= 0) ";
+  }
 
   try {
     const query = withCounts
@@ -23,10 +30,11 @@ export const getPlans = async (req, res) => {
           COALESCE(COUNT(s.id), 0) AS subscription_count
         FROM plans p
         LEFT JOIN subscriptions s ON p.id = s.plan_id
+        ${where}
         GROUP BY p.id
         ORDER BY p.id ASC;
       `
-      : `SELECT * FROM plans ORDER BY id ASC;`;
+      : `SELECT * FROM plans ${where} ORDER BY id ASC;`;
 
     const { rows } = await pool.query(query);
     res.status(200).json({ success: true, plans: rows });
@@ -200,6 +208,21 @@ export const subscribeToPlan = async (req, res) => {
   const { plan_id } = req.body;
 
   try {
+    const { rows: planCheck } = await pool.query(
+      "SELECT price::numeric AS price FROM plans WHERE id = $1",
+      [plan_id]
+    );
+    if (!planCheck.length) {
+      return res.status(404).json({ success: false, message: "Plan not found" });
+    }
+    if (Number(planCheck[0].price) > 0) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Paid freelancer subscriptions are not activated here. Use the free plan and verify with the company, or ask admin.",
+      });
+    }
+
     // Check if user already has an active or pending_start subscription
     const { rows: existing } = await pool.query(
       `SELECT id, status, end_date, start_date 

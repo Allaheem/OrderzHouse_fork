@@ -64,11 +64,19 @@ export const createEClickPlanCheckoutSession = async (req, res) => {
     }
 
     const planRes = await pool.query(
-      "SELECT id FROM plans WHERE id = $1",
+      "SELECT id, price::numeric AS price FROM plans WHERE id = $1",
       [planId]
     );
     if (planRes.rowCount === 0) {
       return res.status(404).json({ success: false, message: "Plan not found" });
+    }
+    const planPrice = Number(planRes.rows[0].price) || 0;
+    if (roleId === 3 && planPrice > 0) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Paid freelancer plans are not sold in the app. Contact the company for verification or subscription through admin.",
+      });
     }
 
     const activeSubscriptionCheck = await pool.query(
@@ -140,6 +148,21 @@ export const captureEClickPlanOrder = async (req, res) => {
       return res.status(404).json({ success: false, message: "Plan not found" });
     }
     const planPrice = Number(plans[0].price) || 0;
+
+    const userRoleRes = await pool.query(
+      "SELECT role_id FROM users WHERE id = $1 AND is_deleted = false",
+      [userId]
+    );
+    const payerRole = userRoleRes.rowCount
+      ? Number(userRoleRes.rows[0].role_id)
+      : 0;
+    if (payerRole === 3 && planPrice > 0) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Paid freelancer plans are not sold in the app. Subscriptions are handled through admin.",
+      });
+    }
 
     const currentYear = new Date().getFullYear();
     const feeCheckRes = await pool.query(

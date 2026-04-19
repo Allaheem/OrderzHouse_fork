@@ -1221,6 +1221,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renewSubscription => 'Renew Subscription';
 
   @override
+  String get freelancerVerifyAccount => 'Verify account';
+
+  @override
+  String get freelancerVerificationBookingOpened =>
+      'Book a time for your verification interview with our team.';
+
+  @override
+  String get freelancerPlansEmpty =>
+      'No free plan is listed yet. Please contact support.';
+
+  @override
+  String get freelancerPlanCardTitle => 'Free plan & account verification';
+
+  @override
+  String get freelancerPlanCardButton => 'Open plan';
+
+  @override
   String get failedToLoad => 'Failed to load';
 
   @override

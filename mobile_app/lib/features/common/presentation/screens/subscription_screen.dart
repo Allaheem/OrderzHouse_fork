@@ -29,6 +29,7 @@ import '../../../subscriptions/presentation/providers/subscription_provider.dart
 import '../../../subscriptions/presentation/screens/eclick_checkout_webview_screen.dart';
 import '../../../subscriptions/presentation/widgets/payment_method_chooser_sheet.dart';
 import '../../../../core/models/plan.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -147,11 +148,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final plansAsync = ref.watch(plansProvider);
     final authState = ref.watch(authStateProvider);
     final eClickCheckoutAsync = ref.watch(eClickCheckoutAvailableProvider);
     final eClickEnabledOnServer = eClickCheckoutAsync.valueOrNull == true;
     final user = authState.user;
+    final isFreelancer = user?.roleId == 3;
 
     return AppScaffold(
       body: Column(
@@ -201,9 +204,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   ),
                   const Spacer(),
                   // Title
-                  const Text(
-                    'Plans',
-                    style: TextStyle(
+                  Text(
+                    isFreelancer ? l10n.freePlan : 'Plans',
+                    style: const TextStyle(
                       color: Color(0xFF0B0B0F), // Near-black primary
                       fontWeight: FontWeight.w600,
                       fontSize: 18,
@@ -220,7 +223,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           _buildPillSegmentedControl(),
 
           // C) Section Header Row
-          _buildSectionHeader(),
+          _buildSectionHeader(isFreelancer ? l10n.freePlan : 'Plans'),
 
           // D) Main Content (Big Container with Plans)
           Expanded(
@@ -233,11 +236,19 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
               data: (plans) {
-                if (plans.isEmpty) {
+                final displayPlans = isFreelancer
+                    ? plans.where((p) => p.price <= 0).toList()
+                    : plans;
+
+                if (displayPlans.isEmpty) {
                   return EmptyState(
                     icon: Icons.subscriptions_outlined,
-                    title: 'No active subscriptions',
-                    message: 'Subscribe to a plan to access premium features',
+                    title: isFreelancer
+                        ? l10n.freelancerPlansEmpty
+                        : 'No active subscriptions',
+                    message: isFreelancer
+                        ? null
+                        : 'Subscribe to a plan to access premium features',
                     action: PrimaryButton(
                       label: 'View Plans',
                       onPressed: () {
@@ -248,8 +259,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 }
 
                 return _buildPlansContent(
-                  plans,
+                  displayPlans,
                   eClickEnabledOnServer: eClickEnabledOnServer,
+                  freelancerFreeOnly: isFreelancer,
                 );
               },
             ),
@@ -367,7 +379,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   // C) Section Header Row (title on left, chip on right)
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -379,7 +391,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Plans',
+            title,
             style: AppTextStyles.titleLarge.copyWith(
               color: const Color(0xFF0B0B0F), // Near-black primary
               fontWeight: FontWeight.w600,
@@ -425,6 +437,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   Widget _buildPlansContent(
     List<Plan> plans, {
     required bool eClickEnabledOnServer,
+    required bool freelancerFreeOnly,
   }) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -458,6 +471,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                       _buildPlanRow(
                         plan,
                         eClickEnabledOnServer: eClickEnabledOnServer,
+                        freelancerFreeOnly: freelancerFreeOnly,
                       ),
                       if (!isLast) ...[
                         const SizedBox(height: AppSpacing.sm),
@@ -508,6 +522,25 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           backgroundColor: Colors.red,
         ),
       );
+      return;
+    }
+
+    // Freelancers: paid tiers and in-app purchases were removed (App Store policy).
+    // Verification is booked outside the app via [AppConfig.freelancerVerificationBookingUrl].
+    if (role == 3) {
+      if (!mounted) return;
+      if (plan.price > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Paid freelancer plans are not available in the app. '
+              'Use Verify account to book a verification interview.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
       return;
     }
 
@@ -1009,9 +1042,57 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     }
   }
 
+  Future<void> _openFreelancerVerificationBooking() async {
+    final l10n = AppLocalizations.of(context)!;
+    final uri = Uri.tryParse(AppConfig.freelancerVerificationBookingUrl);
+    if (uri == null || !(uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https'))) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Verification booking URL is not configured.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    try {
+      final launched = await launchTrustedHttpUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.freelancerVerificationBookingOpened),
+            backgroundColor: AppColors.accentOrange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open link. Please try again.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open link. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildPlanRow(
     Plan plan, {
     required bool eClickEnabledOnServer,
+    required bool freelancerFreeOnly,
   }) {
     final durationLabel = plan.planType == 'monthly'
         ? '${plan.duration} Month'
@@ -1019,120 +1100,138 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         ? '${plan.duration} Year'
         : plan.planType;
 
+    final l10n = AppLocalizations.of(context)!;
+
+    final card = Opacity(
+      opacity: 1.0,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: const Color(0xFFE6E6E6), // Light gray border
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04), // Subtle shadow
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Side: Name + Description
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    plan.name,
+                    style: AppTextStyles.titleMedium.copyWith(
+                      color: const Color(0xFF0B0B0F), // Near-black primary
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (plan.description != null &&
+                      plan.description!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      plan.description!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF8B8F97), // Gray secondary
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            const SizedBox(width: AppSpacing.md),
+
+            // Right Side: Price + Badge
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Price
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${plan.price}',
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        color: const Color(
+                          0xFF0B0B0F,
+                        ), // Near-black primary (bold)
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'JD',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF8B8F97), // Gray for currency
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                // Badge (Duration/Plan Type) - accent color with low opacity
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(
+                      0xFFFB923C,
+                    ).withOpacity(0.15), // Accent color with 15% opacity
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    durationLabel,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: const Color(0xFFFB923C), // Accent color for text
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (freelancerFreeOnly) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          card,
+          const SizedBox(height: AppSpacing.md),
+          PrimaryButton(
+            label: l10n.freelancerVerifyAccount,
+            onPressed: _openFreelancerVerificationBooking,
+          ),
+        ],
+      );
+    }
+
     return InkWell(
       onTap: () => _handlePlanSelection(
         plan,
         eClickEnabledOnServer: eClickEnabledOnServer,
       ),
       borderRadius: BorderRadius.circular(18),
-      child: Opacity(
-        opacity: 1.0,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: const Color(0xFFE6E6E6), // Light gray border
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04), // Subtle shadow
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left Side: Name + Description
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      plan.name,
-                      style: AppTextStyles.titleMedium.copyWith(
-                        color: const Color(0xFF0B0B0F), // Near-black primary
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (plan.description != null &&
-                        plan.description!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        plan.description!,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: const Color(0xFF8B8F97), // Gray secondary
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: AppSpacing.md),
-
-              // Right Side: Price + Badge
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Price
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${plan.price}',
-                        style: AppTextStyles.headlineSmall.copyWith(
-                          color: const Color(
-                            0xFF0B0B0F,
-                          ), // Near-black primary (bold)
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'JD',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: const Color(0xFF8B8F97), // Gray for currency
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  // Badge (Duration/Plan Type) - accent color with low opacity
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(
-                        0xFFFB923C,
-                      ).withOpacity(0.15), // Accent color with 15% opacity
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      durationLabel,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: const Color(0xFFFB923C), // Accent color for text
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+      child: card,
     );
   }
 }

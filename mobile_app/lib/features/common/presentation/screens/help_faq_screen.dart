@@ -54,7 +54,7 @@ class _HelpFaqScreenState extends State<HelpFaqScreen> {
     {
       'question': 'How do subscriptions (Plans) work for freelancers?',
       'answer':
-          'Freelancers can subscribe to plans that unlock additional features and benefits. Go to the "Subscription" section in your profile to view available plans. Plans are billed monthly or annually depending on your selection.',
+          'Freelancers use the free plan in the app. To get a verified account after you have used the free plan, open Subscription in your profile and tap "Verify account" to book a short interview with our team. Paid subscription tiers are not sold inside the mobile app.',
     },
   ];
 
