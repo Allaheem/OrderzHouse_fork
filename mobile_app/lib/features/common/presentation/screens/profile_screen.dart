@@ -9,7 +9,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/config/app_config.dart';
-import '../../../../core/widgets/gradient_button.dart';
 import 'package:OrderzHouse/features/auth/presentation/providers/auth_provider.dart';
 import 'package:OrderzHouse/core/models/user.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
@@ -20,8 +19,6 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).user;
-    final canManagePlans =
-        user?.roleId == 2 || user?.roleId == 3; // client or freelancer
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
@@ -65,7 +62,8 @@ class ProfileScreen extends ConsumerWidget {
                             onEditProfile: () => context.go('/edit-profile'),
                             onSettings: () => context.go('/settings'),
                             onSubscription: () => context.go('/subscription'),
-                            showSubscription: canManagePlans,
+                            showSubscription:
+                                user?.roleId == 2 || user?.roleId == 3,
                             l10n: l10n,
                           ),
                           const SizedBox(height: AppSpacing.xl),
@@ -113,16 +111,6 @@ class ProfileScreen extends ConsumerWidget {
                               }
                             },
                           ),
-                          const SizedBox(height: AppSpacing.xl),
-
-                          // 5) Bottom CTA Card — clients & freelancers
-                          if (canManagePlans)
-                            _UpgradeCard(
-                              onViewPlans: () => context.go('/subscription'),
-                              l10n: l10n,
-                              isFreelancer: user?.roleId == 3,
-                            ),
-
                           const SizedBox(height: AppSpacing.lg),
                         ],
                       ),
@@ -642,62 +630,6 @@ class _LogoutCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-// 5) Upgrade/Plans CTA Card (Full Width)
-class _UpgradeCard extends StatelessWidget {
-  final VoidCallback onViewPlans;
-  final AppLocalizations l10n;
-  final bool isFreelancer;
-
-  const _UpgradeCard({
-    required this.onViewPlans,
-    required this.l10n,
-    this.isFreelancer = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity, // ✅ Explicit full width
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowColorLight,
-            blurRadius: 12,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start, // ✅ Align content to start
-        children: [
-          // Text
-          Text(
-            isFreelancer ? l10n.freelancerPlanCardTitle : l10n.wantMoreFeatures,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600, // ✅ Slightly bolder
-            ),
-          ),
-          const SizedBox(height: 16),
-          PrimaryGradientButton(
-            onPressed: onViewPlans,
-            label: isFreelancer ? l10n.freelancerPlanCardButton : l10n.viewPlans,
-            height: 56,
-            borderRadius: 30,
-            width: double.infinity,
-          ),
-        ],
       ),
     );
   }

@@ -35,15 +35,20 @@ class PrimaryGradientButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool enabled = isEnabled && !isLoading && onPressed != null;
     final double radius = borderRadius ?? AppRadius.lg;
+    final double textScale = MediaQuery.textScalerOf(context)
+        .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.6)
+        .scale(1.0);
 
     final bool fullWidth = width != null;
     // Full-width: never force a fixed outer height — SizedBox(height: …)+Ink clips text on iPad / large text scale.
+    // Pad grows slightly with accessibility / dynamic type so label + line height always fits.
     final verticalPad = fullWidth
-        ? 14.0
-        : ((height - 24) / 2).clamp(6.0, 14.0);
+        ? (14.0 * textScale)
+        : (((height - 24) / 2).clamp(6.0, 14.0) * textScale);
 
     final buttonWidget = Material(
       color: Colors.transparent,
+      // Default Material clips to the shape; rounded rect can cut off label baselines on iPad / large text.
       clipBehavior: Clip.none,
       child: Ink(
         decoration: BoxDecoration(
