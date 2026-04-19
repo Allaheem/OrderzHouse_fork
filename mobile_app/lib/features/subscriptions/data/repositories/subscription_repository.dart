@@ -158,6 +158,34 @@ class SubscriptionRepository {
     }
   }
 
+  /// Freelancer: `POST /plans/subscribe` with a **free** plan id — activates subscription for the plan period.
+  Future<ActivateFreePlanResult> subscribeFreelancerFreePlan({required int planId}) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/plans/subscribe',
+        data: {'plan_id': planId},
+      );
+      final data = response.data ?? {};
+      final ok = data['success'] == true;
+      return ActivateFreePlanResult(
+        success: ok,
+        message: data['message']?.toString() ??
+            (ok ? 'Subscription activated.' : 'Activation failed'),
+      );
+    } on DioException catch (e) {
+      final msg = _dioResponseMessage(e);
+      return ActivateFreePlanResult(
+        success: false,
+        message: msg ?? e.message ?? 'Network error',
+      );
+    } catch (_) {
+      return ActivateFreePlanResult(
+        success: false,
+        message: 'Could not activate the free plan. Please try again.',
+      );
+    }
+  }
+
   /// Captures payment after the user approves the order in eClick (browser / app).
   Future<EClickCaptureResult> captureEClickPlanOrder({required String orderId}) async {
     try {
@@ -276,6 +304,16 @@ class EClickCheckoutSessionResult {
   final String message;
   final String? orderId;
   final String? approvalUrl;
+}
+
+class ActivateFreePlanResult {
+  const ActivateFreePlanResult({
+    required this.success,
+    required this.message,
+  });
+
+  final bool success;
+  final String message;
 }
 
 class EClickCaptureResult {

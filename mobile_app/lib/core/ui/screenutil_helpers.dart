@@ -68,8 +68,11 @@ class AppFont {
   AppFont._();
 
   static double get f10 => 10.sp;
+  static double get f11 => 11.sp;
   static double get f12 => 12.sp;
+  static double get f13 => 13.sp;
   static double get f14 => 14.sp;
+  static double get f15 => 15.sp;
   static double get f16 => 16.sp;
   static double get f18 => 18.sp;
   static double get f20 => 20.sp;
@@ -150,10 +153,10 @@ abstract final class AppContentLayout {
         AppSpacing.lg * 2 + AppSpacing.md * (crossAxisCount - 1);
     final cellW = (w - horizontalPadding) / crossAxisCount;
     const imageH = 120.0;
-    // ~22 padding + ~34 title + 6 + ~66 description + 10 + ~24 chip; Arabic / metrics need slack.
-    const bodyBase = 162.0;
-    // Subpixel / strut / locale line metrics can exceed estimates by a few px (e.g. RTL titles).
-    const layoutSlackPx = 10.0;
+    // ~22 padding + ~38 title + 6 + ~52 description (2 lines @ f13) + 10 + ~28 chip; Arabic / metrics need slack.
+    const bodyBase = 176.0;
+    // Subpixel / strut / locale line metrics can exceed estimates (e.g. RTL, large text).
+    const layoutSlackPx = 28.0;
     final textScale =
         MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.45);
     final targetH = imageH + bodyBase * textScale + layoutSlackPx;

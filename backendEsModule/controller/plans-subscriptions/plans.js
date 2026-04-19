@@ -205,9 +205,16 @@ export const getPlanSubscriptionCounts = async (req, res) => {
  */
 export const subscribeToPlan = async (req, res) => {
   const freelancerId = req.token?.userId;
-  const { plan_id } = req.body;
+  const plan_id = req.body?.plan_id ?? req.body?.planId;
 
   try {
+    if (plan_id === undefined || plan_id === null || plan_id === "") {
+      return res.status(400).json({
+        success: false,
+        message: "plan_id is required",
+      });
+    }
+
     const { rows: planCheck } = await pool.query(
       "SELECT price::numeric AS price FROM plans WHERE id = $1",
       [plan_id]

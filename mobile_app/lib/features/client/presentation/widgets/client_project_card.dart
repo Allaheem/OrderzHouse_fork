@@ -5,6 +5,9 @@ import '../../../../core/models/project.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/ui/screenutil_helpers.dart';
+import '../../../../core/widgets/project_card_description_excerpt.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Custom project card for Client MyProjects screen
 /// Clean list view - actions moved to Project Details
@@ -23,6 +26,7 @@ class ClientProjectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     const double imageHeight = 120.0;
     const double cardRadius = 16.0;
 
@@ -40,11 +44,10 @@ class ClientProjectCard extends StatelessWidget {
             ),
           ],
         ),
+        clipBehavior: Clip.hardEdge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // Image
             SizedBox(
               height: imageHeight,
               width: double.infinity,
@@ -104,78 +107,78 @@ class ClientProjectCard extends StatelessWidget {
                       ),
               ),
             ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          project.title,
-                          style: AppTextStyles.titleMedium.copyWith(
-                            color: const Color(0xFF111827),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                            height: 1.2,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            project.title,
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: const Color(0xFF111827),
+                              fontWeight: FontWeight.bold,
+                              fontSize: AppFont.f15,
+                              height: 1.25,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: 2,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          project.budgetDisplay,
+                          style: AppTextStyles.labelMedium.copyWith(
+                            color: const Color(0xFF111827),
+                            fontWeight: FontWeight.w600,
+                            fontSize: AppFont.f13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: ProjectCardDescriptionExcerpt(
+                          description: project.description,
+                          emptyHint: l10n.projectCardOpenForFullDescription,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                        ),
+                        child: Text(
+                          project.status.toUpperCase(),
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: const Color(0xFF111827),
+                            fontWeight: FontWeight.w600,
+                            fontSize: AppFont.f11,
+                          ),
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        project.budgetDisplay,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: const Color(0xFF111827),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    project.description,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: const Color(0xFF6B7280),
-                      fontSize: 12,
-                      height: 1.35,
                     ),
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE5E7EB).withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        project.status.toUpperCase(),
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: const Color(0xFF6B7280),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 10,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

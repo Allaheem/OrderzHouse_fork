@@ -1814,6 +1814,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get viewDetails => 'عرض التفاصيل';
 
   @override
+  String get projectCardOpenForFullDescription =>
+      'افتح المشروع لقراءة الوصف كاملاً.';
+
+  @override
+  String get freelancerFreePlanActivated =>
+      'تم تفعيل خطتك المجانية. يمكنك استقبال الطلبات.';
+
+  @override
+  String get freelancerFreePlanActivationFailed =>
+      'تعذّر تفعيل الخطة المجانية. حاول مرة أخرى.';
+
+  @override
+  String get freelancerTapFreePlanToActivate =>
+      'اضغط على الخطة أعلاه لبدء الفترة المجانية.';
+
+  @override
   String get noRecentTransactions => 'لا توجد معاملات حديثة';
 
   @override

@@ -3590,6 +3590,30 @@ abstract class AppLocalizations {
   /// **'View Details'**
   String get viewDetails;
 
+  /// No description provided for @projectCardOpenForFullDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the project to read the full description.'**
+  String get projectCardOpenForFullDescription;
+
+  /// No description provided for @freelancerFreePlanActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your free plan is active. You can receive orders.'**
+  String get freelancerFreePlanActivated;
+
+  /// No description provided for @freelancerFreePlanActivationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not activate the free plan. Try again.'**
+  String get freelancerFreePlanActivationFailed;
+
+  /// No description provided for @freelancerTapFreePlanToActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the plan above to start your free period.'**
+  String get freelancerTapFreePlanToActivate;
+
   /// No description provided for @noRecentTransactions.
   ///
   /// In en, this message translates to:

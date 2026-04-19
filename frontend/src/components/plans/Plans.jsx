@@ -57,6 +57,8 @@ function PlanCard({
   hasActiveSubscription,
   freelancerMode,
   onVerifyAccount,
+  onActivateFreePlan = async () => {},
+  freelancerActivating = false,
 }) {
   const highlight = plan.plan_type === "popular";
 
@@ -124,14 +126,33 @@ function PlanCard({
       <>
         <button
           type="button"
+          disabled={hasActiveSubscription || freelancerActivating}
+          onClick={() => onActivateFreePlan(plan)}
+          className={`w-full rounded-full px-4 py-2.5 text-sm font-semibold shadow-[0_14px_30px_rgba(15,23,42,0.18)] transition ${
+            hasActiveSubscription || freelancerActivating
+              ? "text-slate-500 bg-slate-100 cursor-not-allowed"
+              : "text-white bg-slate-900 hover:opacity-95 active:scale-[0.99]"
+          }`}
+        >
+          {freelancerActivating
+            ? "Activating…"
+            : hasActiveSubscription
+            ? "Free plan active"
+            : "Activate free month"}
+        </button>
+        <p className="mt-2 text-xs text-slate-500 text-center">
+          Starts your free period so you can receive orders. Paid tiers are handled by admin.
+        </p>
+        <button
+          type="button"
           onClick={onVerifyAccount}
-          className="w-full rounded-full px-4 py-2.5 text-sm font-semibold text-white bg-slate-900 shadow-[0_14px_30px_rgba(15,23,42,0.18)] hover:opacity-95 active:scale-[0.99]"
+          disabled={freelancerActivating}
+          className="mt-3 w-full rounded-full px-4 py-2.5 text-sm font-semibold border border-slate-300 text-slate-800 bg-white hover:bg-slate-50 disabled:opacity-50"
         >
           Verify account
         </button>
         <p className="mt-2 text-xs text-slate-500 text-center">
-          Book a short interview with our team to verify your profile after using the free plan. Paid
-          tiers are not sold in the app or on the web — admin handles upgrades.
+          Book a short interview to verify your profile after using the free plan.
         </p>
       </>
     ) : canSubscribe ? (
@@ -177,6 +198,7 @@ export default function Plans() {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [subscriptionExpiry, setSubscriptionExpiry] = useState(null);
+  const [freelancerActivating, setFreelancerActivating] = useState(false);
 
   const isFreelancer = user?.role_id === 3;
 
@@ -267,6 +289,46 @@ export default function Plans() {
     }
   };
 
+  const activateFreelancerFreePlan = async (plan) => {
+    if (!user) return navigate("/login");
+    if (hasActiveSubscription) {
+      toast.error("You already have an active subscription.");
+      return;
+    }
+    if (Number(plan.price) > 0) {
+      toast.error("Only the free plan can be activated here.");
+      return;
+    }
+    setFreelancerActivating(true);
+    try {
+      await API.post("/plans/subscribe", { plan_id: plan.id });
+      toast.success("Free plan activated. You can receive orders.");
+      const res = await API.get("/subscriptions/status");
+      const data = res.data;
+      if (data?.success && data?.subscription) {
+        const sub = data.subscription;
+        const isActive = sub.status === "active" || sub.status === "pending_start";
+        setHasActiveSubscription(isActive);
+        if (isActive && sub.end_date) {
+          setSubscriptionExpiry(new Date(sub.end_date));
+        } else if (isActive && sub.start_date) {
+          setSubscriptionExpiry(new Date(sub.start_date));
+        }
+      } else {
+        setHasActiveSubscription(false);
+        setSubscriptionExpiry(null);
+      }
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ??
+        err.response?.data?.error ??
+        "Could not activate the free plan.";
+      toast.error(msg);
+    } finally {
+      setFreelancerActivating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-slate-600">
@@ -302,11 +364,18 @@ export default function Plans() {
           </p>
         </div>
 
-        {/* Active Subscription Message (not shown for freelancer-only-free flow) */}
+        {/* Active subscription notice */}
         {!isFreelancer && hasActiveSubscription && subscriptionExpiry && (
           <div className="mt-6 rounded-xl bg-orange-50 border border-orange-200 px-4 py-3">
             <p className="text-sm font-semibold text-orange-900">
               You already have an active subscription. You can change plans after it expires on {subscriptionExpiry.toLocaleDateString()}.
+            </p>
+          </div>
+        )}
+        {isFreelancer && hasActiveSubscription && subscriptionExpiry && (
+          <div className="mt-6 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">
+            <p className="text-sm font-semibold text-emerald-900">
+              Your free plan is active. You can receive orders. Current period includes {subscriptionExpiry.toLocaleDateString()}.
             </p>
           </div>
         )}
@@ -327,6 +396,8 @@ export default function Plans() {
               hasActiveSubscription={hasActiveSubscription}
               freelancerMode={isFreelancer}
               onVerifyAccount={openFreelancerVerification}
+              onActivateFreePlan={activateFreelancerFreePlan}
+              freelancerActivating={freelancerActivating}
             />
           ))}
         </div>

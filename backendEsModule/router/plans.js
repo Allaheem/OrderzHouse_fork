@@ -8,7 +8,8 @@ import {
   getPlanSubscriptionCounts,
   adminUpdateSubscription,
   getAllSubscriptions,
-  adminCancelSubscription
+  adminCancelSubscription,
+  subscribeToPlan,
 } from "../controller/plans-subscriptions/plans.js";
 
 import { authentication } from "../middleware/authentication.js";
@@ -22,6 +23,13 @@ const plansRouter = express.Router();
 // Public route for viewing plans — freelancers (authenticated) only see free plans (price <= 0)
 plansRouter.get("/", optionalAuthentication, getPlans);
 
+/** Freelancer: activate free plan (price 0) — creates active subscription for the plan duration */
+plansRouter.post(
+  "/subscribe",
+  authentication,
+  freelancerOnly,
+  subscribeToPlan
+);
 
 plansRouter.get(
   "/subscriptions/counts",

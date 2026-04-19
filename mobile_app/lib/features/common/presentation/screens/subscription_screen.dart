@@ -48,6 +48,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   bool _iosPurchaseListenerAttached = false;
   Plan? _pendingApplePlan;
 
+  /// Freelancer free-plan activation in flight (`POST /plans/subscribe`).
+  int? _activatingFreelancerPlanId;
+
   /// Xcode sets these when the app runs on the **iOS Simulator** (not on a physical device).
   bool _isRunningOnIosSimulator() {
     if (kIsWeb || !Platform.isIOS) return false;
@@ -1089,6 +1092,66 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     }
   }
 
+  Future<void> _activateFreelancerFreePlan(Plan plan) async {
+    if (plan.price > 0) return;
+    final l10n = AppLocalizations.of(context)!;
+    final token = await SecureStore.readAccessToken();
+    if (token == null || token.trim().isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Session expired. Please log in again to continue.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _activatingFreelancerPlanId = plan.id);
+    try {
+      await TokenRefreshCoordinator.refreshIfExpiringSoon(DioClient.instance);
+      final repo = ref.read(subscriptionRepositoryProvider);
+      final result = await repo.subscribeFreelancerFreePlan(planId: plan.id);
+      if (!mounted) return;
+      if (result.success) {
+        await ref.read(authStateProvider.notifier).refreshUser();
+        ref.invalidate(plansProvider);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.freelancerFreePlanActivated),
+            backgroundColor: AppColors.accentOrange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              result.message.isNotEmpty
+                  ? result.message
+                  : l10n.freelancerFreePlanActivationFailed,
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.freelancerFreePlanActivationFailed),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _activatingFreelancerPlanId = null);
+      }
+    }
+  }
+
   Widget _buildPlanRow(
     Plan plan, {
     required bool eClickEnabledOnServer,
@@ -1212,14 +1275,52 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     );
 
     if (freelancerFreeOnly) {
+      final activating = _activatingFreelancerPlanId == plan.id;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          card,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: activating ? null : () => _activateFreelancerFreePlan(plan),
+              borderRadius: BorderRadius.circular(18),
+              child: Stack(
+                children: [
+                  card,
+                  if (activating)
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(18),
+                        child: ColoredBox(
+                          color: Colors.white.withValues(alpha: 0.65),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(strokeWidth: 2.5),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            l10n.freelancerTapFreePlanToActivate,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: const Color(0xFF8B8F97),
+              height: 1.35,
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
           PrimaryButton(
             label: l10n.freelancerVerifyAccount,
             onPressed: _openFreelancerVerificationBooking,
+            isEnabled: !activating,
           ),
         ],
       );

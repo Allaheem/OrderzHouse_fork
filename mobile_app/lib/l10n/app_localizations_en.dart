@@ -1822,6 +1822,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewDetails => 'View Details';
 
   @override
+  String get projectCardOpenForFullDescription =>
+      'Open the project to read the full description.';
+
+  @override
+  String get freelancerFreePlanActivated =>
+      'Your free plan is active. You can receive orders.';
+
+  @override
+  String get freelancerFreePlanActivationFailed =>
+      'Could not activate the free plan. Try again.';
+
+  @override
+  String get freelancerTapFreePlanToActivate =>
+      'Tap the plan above to start your free period.';
+
+  @override
   String get noRecentTransactions => 'No recent transactions';
 
   @override
