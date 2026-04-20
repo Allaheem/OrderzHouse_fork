@@ -45,7 +45,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "0.99",
+          "displayPrice" : "0.03",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "7FCD5A6E",
@@ -78,7 +78,7 @@
           "displayPrice" : "0.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "541D3CF0",
+          "internalID" : "983D156C",
           "introductoryOffers" : [
 
           ],
@@ -90,7 +90,7 @@
             }
           ],
           "productID" : "com.orderzhouse.plan.oneyear",
-          "recurringSubscriptionPeriod" : "P1M",
+          "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Yearly",
           "subscriptionGroupID" : "DD7E790A",
           "type" : "RecurringSubscription",

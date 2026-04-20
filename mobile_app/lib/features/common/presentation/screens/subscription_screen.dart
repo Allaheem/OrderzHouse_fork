@@ -158,6 +158,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final l10n = AppLocalizations.of(context)!;
     final plansAsync = ref.watch(plansProvider);
     final authState = ref.watch(authStateProvider);
+    final subStatusAsync = ref.watch(subscriptionStatusProvider);
     final eClickCheckoutAsync = ref.watch(eClickCheckoutAvailableProvider);
     final eClickEnabledOnServer = eClickCheckoutAsync.valueOrNull == true;
     final user = authState.user;
@@ -241,6 +242,68 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
           // C) Section Header Row
           _buildSectionHeader(isFreelancer ? l10n.freePlan : 'Plans'),
+
+          // Subscription status banner (after purchase/restore)
+          subStatusAsync.when(
+            data: (s) {
+              if (!s.success) return const SizedBox.shrink();
+              final status = s.overallStatus.toLowerCase();
+              final isActiveLike = status == 'active' || status == 'pending_start';
+              if (!isActiveLike) return const SizedBox.shrink();
+              final line1 = status == 'pending_start'
+                  ? 'Subscription pending'
+                  : 'Subscription active';
+              final line2 = s.planName != null && s.planName!.trim().isNotEmpty
+                  ? 'Plan: ${s.planName}'
+                  : null;
+              final line3 =
+                  s.endDateRaw != null && s.endDateRaw!.trim().isNotEmpty
+                      ? 'Ends: ${s.endDateRaw}'
+                      : null;
+              final extra = [line2, line3].whereType<String>().join(' • ');
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        line1,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF065F46),
+                        ),
+                      ),
+                      if (extra.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          extra,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: const Color(0xFF047857),
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          ),
 
           // D) Main Content (Big Container with Plans)
           Expanded(
@@ -1005,97 +1068,112 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
 
   Future<void> _onIosPurchaseUpdated(List<PurchaseDetails> purchases) async {
     final iap = InAppPurchase.instance;
-    for (final d in purchases) {
-      final pending = _pendingApplePlan;
-      if (pending != null && d.productID != pending.appleProductId) {
-        continue;
-      }
-
-      if (d.status == PurchaseStatus.pending) {
-        continue;
-      }
-
-      if (d.status == PurchaseStatus.error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(d.error?.message ?? 'Purchase failed'),
-              backgroundColor: Colors.red,
-            ),
-          );
+    try {
+      for (final d in purchases) {
+        final pending = _pendingApplePlan;
+        if (pending != null && d.productID != pending.appleProductId) {
+          continue;
         }
-        if (pending != null) {
-          setState(() => _pendingApplePlan = null);
-        }
-        await iap.completePurchase(d);
-        continue;
-      }
 
-      if (d.status == PurchaseStatus.canceled) {
-        if (pending != null) {
-          setState(() => _pendingApplePlan = null);
+        if (d.status == PurchaseStatus.pending) {
+          continue;
         }
-        await iap.completePurchase(d);
-        continue;
-      }
 
-      if (d.status == PurchaseStatus.purchased ||
-          d.status == PurchaseStatus.restored) {
-        final receipt = d.verificationData.serverVerificationData;
-        if (receipt.isEmpty) {
+        if (d.status == PurchaseStatus.error) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Missing receipt data from the store. Please try again.',
-                ),
-                backgroundColor: Colors.orange,
+              SnackBar(
+                content: Text(d.error?.message ?? 'Purchase failed'),
+                backgroundColor: Colors.red,
               ),
             );
           }
-          if (pending != null) {
+          if (pending != null && mounted) {
             setState(() => _pendingApplePlan = null);
           }
           await iap.completePurchase(d);
           continue;
         }
 
-        final repo = ref.read(subscriptionRepositoryProvider);
-        final result = await repo.verifyAppleReceipt(
-          receiptDataBase64: receipt,
-          planId: pending?.id,
-        );
-
-        if (result.success) {
-          await ref.read(authStateProvider.notifier).refreshUser();
-          if (pending != null) {
+        if (d.status == PurchaseStatus.canceled) {
+          if (pending != null && mounted) {
             setState(() => _pendingApplePlan = null);
           }
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  result.idempotent
-                      ? 'Your subscription is already active.'
-                      : 'Payment successful! Subscription activated.',
-                ),
-                backgroundColor: AppColors.accentOrange,
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(result.message),
-                backgroundColor: Colors.red,
-                duration: const Duration(seconds: 5),
-              ),
-            );
-          }
+          await iap.completePurchase(d);
+          continue;
         }
-        await iap.completePurchase(d);
+
+        if (d.status == PurchaseStatus.purchased ||
+            d.status == PurchaseStatus.restored) {
+          final receipt = d.verificationData.serverVerificationData;
+          if (receipt.isEmpty) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Missing receipt data from the store. Please try again.',
+                  ),
+                  backgroundColor: Colors.orange,
+                ),
+              );
+            }
+            if (pending != null && mounted) {
+              setState(() => _pendingApplePlan = null);
+            }
+            await iap.completePurchase(d);
+            continue;
+          }
+
+          final repo = ref.read(subscriptionRepositoryProvider);
+          final result = await repo.verifyAppleReceipt(
+            receiptDataBase64: receipt,
+            planId: pending?.id,
+          );
+
+          if (result.success) {
+            await ref.read(authStateProvider.notifier).refreshUser();
+          ref.invalidate(subscriptionStatusProvider);
+            if (pending != null && mounted) {
+              setState(() => _pendingApplePlan = null);
+            }
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    result.idempotent
+                        ? 'Your subscription is already active.'
+                        : 'Payment successful! Subscription activated.',
+                  ),
+                  backgroundColor: AppColors.accentOrange,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(result.message),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 5),
+                ),
+              );
+            }
+          }
+          await iap.completePurchase(d);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Purchase handling error: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+      if (mounted) {
+        setState(() => _pendingApplePlan = null);
       }
     }
   }
