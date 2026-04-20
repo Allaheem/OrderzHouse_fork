@@ -108,8 +108,26 @@ void main() {
   });
 
   test(
-    'exploreProjectsStateProvider resolves to empty when logged out',
+    'exploreProjectsStateProvider fetches public explore projects when logged out (guest)',
     () async {
+      when(
+        () => getExploreProjects.call(
+          query: any(named: 'query'),
+          categoryId: any(named: 'categoryId'),
+          subCategoryId: any(named: 'subCategoryId'),
+          subSubCategoryId: any(named: 'subSubCategoryId'),
+          page: any(named: 'page'),
+          limit: any(named: 'limit'),
+          userRoleId: any(named: 'userRoleId'),
+          sortBy: any(named: 'sortBy'),
+        ),
+      ).thenAnswer(
+        (_) async => const ApiResponse<List<Project>>(
+          success: true,
+          data: <Project>[],
+        ),
+      );
+
       final container = ProviderContainer(
         overrides: <Override>[
           getExploreProjectsProvider.overrideWithValue(getExploreProjects),
@@ -128,7 +146,7 @@ void main() {
       await notifier.load();
       final state = container.read(exploreProjectsStateProvider);
       expect(state.valueOrNull, isEmpty);
-      verifyNever(
+      verify(
         () => getExploreProjects.call(
           query: any(named: 'query'),
           categoryId: any(named: 'categoryId'),
@@ -139,7 +157,7 @@ void main() {
           userRoleId: any(named: 'userRoleId'),
           sortBy: any(named: 'sortBy'),
         ),
-      );
+      ).called(2);
     },
   );
 
