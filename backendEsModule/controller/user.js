@@ -345,7 +345,6 @@ const _registerLegacyDisabled = async (req, res) => {
       !last_name ||
       !email ||
       !password ||
-      !phone_number ||
       !country ||
       !username
     ) {
@@ -354,6 +353,7 @@ const _registerLegacyDisabled = async (req, res) => {
         message: "All fields are required",
       });
     }
+    const phoneTrimmed = typeof phone_number === "string" ? phone_number.trim() : "";
 
     const roleId = parseInt(role_id, 10);
     if (Number.isNaN(roleId)) {
@@ -461,7 +461,7 @@ const _registerLegacyDisabled = async (req, res) => {
         last_name,
         emailLower,
         hashedPassword,
-        phone_number,
+        phoneTrimmed || null,
         country,
         username,
       ]
@@ -1003,9 +1003,10 @@ const verifyAndRegister = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid OTP" });
     }
 
-    if (!role_id || !first_name || !last_name || !password || !phone_number || !country || !username) {
+    if (!role_id || !first_name || !last_name || !password || !country || !username) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
+    const phoneTrimmed = typeof phone_number === "string" ? phone_number.trim() : "";
     const roleId = parseInt(role_id, 10);
     if (Number.isNaN(roleId)) {
       return res.status(400).json({ success: false, message: "Invalid role_id" });
@@ -1063,7 +1064,7 @@ const verifyAndRegister = async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,TRUE,$9,$10,$11,$12,$13,$14)
        RETURNING id, email, first_name, last_name, username, role_id, profile_pic_url, is_deleted, is_two_factor_enabled, email_verified`,
       [
-        roleId, first_name, last_name, emailLower, hashedPassword, phone_number, country, username,
+        roleId, first_name, last_name, emailLower, hashedPassword, phoneTrimmed || null, country, username,
         signupSourceVal, signupMediumVal, signupCampaignVal, signupRefVal, signupLandingVal,
         hasAttribution ? new Date() : null,
       ]
@@ -1397,14 +1398,19 @@ const completeProfile = async (req, res) => {
   if (!country || typeof country !== "string" || !country.trim()) {
     return res.status(400).json({ success: false, message: "Country is required." });
   }
-  if (!phone_number || typeof phone_number !== "string" || !phone_number.trim()) {
-    return res.status(400).json({ success: false, message: "Phone number is required." });
-  }
+  const phoneTrimmed =
+    typeof phone_number === "string" ? phone_number.trim() : "";
 
   try {
-    const updates = ["role_id = $1", "country = $2", "phone_number = $3"];
-    const values = [roleId, country.trim(), phone_number.trim()];
-    let paramIndex = 4;
+    const updates = ["role_id = $1", "country = $2"];
+    const values = [roleId, country.trim()];
+    let paramIndex = 3;
+
+    if (phoneTrimmed) {
+      updates.push(`phone_number = $${paramIndex}`);
+      values.push(phoneTrimmed);
+      paramIndex += 1;
+    }
 
     if (password && typeof password === "string" && password.length >= 8) {
       const hashedPassword = await bcrypt.hash(password, 10);

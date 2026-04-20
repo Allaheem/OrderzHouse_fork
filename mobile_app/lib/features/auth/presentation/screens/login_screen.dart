@@ -201,6 +201,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           height: 52,
                           borderRadius: 30, // Pill shape
                         ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              context.go('/explore');
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              'Continue as guest',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: const Color(0xFFFB923C),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: AppSpacing.lg),
                         Wrap(
                           alignment: WrapAlignment.center,

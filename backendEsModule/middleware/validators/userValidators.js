@@ -19,7 +19,11 @@ export const registerValidator = [
   body("first_name").trim().notEmpty().withMessage("First name is required"),
   body("last_name").trim().notEmpty().withMessage("Last name is required"),
   body("username").trim().notEmpty().withMessage("Username is required"),
-  body("phone_number").notEmpty().withMessage("Phone number is required"),
+  body("phone_number")
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isString()
+    .withMessage("Phone number must be a string"),
   body("country").notEmpty().withMessage("Country is required"),
 ];
 

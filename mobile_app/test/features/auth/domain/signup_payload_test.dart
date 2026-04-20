@@ -29,7 +29,6 @@ void main() {
         lastName: 'Doe',
         email: 'jane@example.com',
         password: 'Password123',
-        phoneNumber: '+1234',
         country: 'US',
         username: 'jane',
         categoryIds: <int>[],
@@ -39,6 +38,7 @@ void main() {
       final json = payload.toJson();
 
       expect(json.containsKey('category_ids'), isFalse);
+      expect(json.containsKey('phone_number'), isFalse);
       expect(json.containsKey('referral_code'), isFalse);
     });
   });

@@ -41,6 +41,10 @@ class SubscriptionScreen extends ConsumerStatefulWidget {
 class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   int _selectedTab = 0; // 0 = Plans, 1 = FAQ (UI only)
 
+  // App Store Connect product ids (fallback if backend plan lacks apple_product_id)
+  static const String _appleMonthlyProductId = 'com.orderzhouse.plan.onemonth';
+  static const String _appleYearlyProductId = 'com.orderzhouse.plan.oneyear';
+
   /// One-shot: refresh access token before subscription/eClick calls if JWT is near expiry.
   bool _didProactiveTokenRefresh = false;
 
@@ -158,6 +162,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     final eClickEnabledOnServer = eClickCheckoutAsync.valueOrNull == true;
     final user = authState.user;
     final isFreelancer = user?.roleId == 3;
+    final isIos = !kIsWeb && Platform.isIOS;
 
     return AppScaffold(
       body: Column(
@@ -216,7 +221,16 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ),
                   ),
                   const Spacer(),
-                  const SizedBox(width: 40), // Balance the back button
+                  // iOS: show Restore Purchases entry point (required by App Review)
+                  if (isIos && !isFreelancer)
+                    IconButton(
+                      tooltip: 'Restore purchases',
+                      icon: const Icon(Icons.restore_rounded),
+                      color: const Color(0xFF0B0B0F),
+                      onPressed: _restoreApplePurchases,
+                    )
+                  else
+                    const SizedBox(width: 40), // Balance the back button
                 ],
               ),
             ),
@@ -493,6 +507,38 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ],
             ),
           ),
+          // Required subscription info links (App Review: Privacy + Terms/EULA)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+            child: Column(
+              children: [
+                Text(
+                  'By subscribing, you agree to our Terms of Use (EULA) and Privacy Policy.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: const Color(0xFF8B8F97),
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 12,
+                  runSpacing: 6,
+                  children: [
+                    TextButton(
+                      onPressed: () => context.push('/privacy-policy'),
+                      child: const Text('Privacy Policy'),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/terms'),
+                      child: const Text('Terms of Use (EULA)'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -525,6 +571,30 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
           backgroundColor: Colors.red,
         ),
       );
+      return;
+    }
+
+    // iOS policy: subscriptions must use Apple IAP only (no external methods)
+    if (!kIsWeb && Platform.isIOS) {
+      final resolvedPid = _resolveAppleProductId(plan);
+      if (resolvedPid == null || resolvedPid.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This subscription is not configured for App Store purchase. Please contact support.',
+            ),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
+          ),
+        );
+        return;
+      }
+      // Ensure plan has a product id for StoreKit flow
+      final effectivePlan = plan.appleProductId == resolvedPid
+          ? plan
+          : plan.copyWith(appleProductId: resolvedPid);
+      await _startApplePurchase(effectivePlan);
       return;
     }
 
@@ -607,6 +677,15 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
       onRestoreApplePurchases: Platform.isIOS ? _restoreApplePurchases : null,
       onSubscribeFromCompany: () => _openCompanySubscribeUrl(),
     );
+  }
+
+  String? _resolveAppleProductId(Plan plan) {
+    final pid = plan.appleProductId?.trim();
+    if (pid != null && pid.isNotEmpty) return pid;
+    final t = plan.planType.toLowerCase().trim();
+    if (t == 'monthly') return _appleMonthlyProductId;
+    if (t == 'yearly') return _appleYearlyProductId;
+    return null;
   }
 
   Future<void> _showAlreadySubscribedDialog(SubscriptionStatusSnapshot s) async {
@@ -793,13 +872,13 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
   }
 
   Future<void> _startApplePurchase(Plan plan) async {
-    final pid = plan.appleProductId?.trim();
+    final pid = _resolveAppleProductId(plan);
     if (pid == null || pid.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'This plan is missing an App Store product ID. Use Subscribe from Company or pick another plan.',
+            'This subscription is not configured for App Store purchase. Please contact support.',
           ),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 4),
@@ -954,7 +1033,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
-                  'Missing receipt data from the store. Try again or use Subscribe from Company.',
+                  'Missing receipt data from the store. Please try again.',
                 ),
                 backgroundColor: Colors.orange,
               ),
@@ -1164,6 +1243,8 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
         : plan.planType;
 
     final l10n = AppLocalizations.of(context)!;
+    final appleConfigured =
+        Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
 
     final card = Opacity(
       opacity: 1.0,
@@ -1267,6 +1348,26 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ),
                   ),
                 ),
+                if (!freelancerFreeOnly && appleConfigured) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B0B0F).withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'In-App Purchase',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: const Color(0xFF0B0B0F),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

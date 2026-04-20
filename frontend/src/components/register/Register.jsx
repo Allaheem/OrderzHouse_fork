@@ -244,7 +244,6 @@ const Register = () => {
     if (!(first_name || "").trim()) err.first_name = "First name is required.";
     if (!(last_name || "").trim()) err.last_name = "Last name is required.";
     if (!country) err.country = "Country is required.";
-    if (!(phone_number || "").trim()) err.phone_number = "Phone number is required.";
     if (role_id === "3" && selectedCategories.length === 0) err.categories = "Please select at least one category.";
     if (!acceptTerms) err.acceptTerms = "You must accept the Terms and Privacy Policy.";
     setStepErrors(err);
@@ -324,7 +323,6 @@ const Register = () => {
       { value: first_name?.trim(), name: "First name" },
       { value: last_name?.trim(), name: "Last name" },
       { value: password, name: "Password" },
-      { value: phone_number?.trim(), name: "Phone number" },
       { value: country?.trim(), name: "Country" },
       { value: username?.trim(), name: "Username" },
     ];
@@ -344,11 +342,12 @@ const Register = () => {
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         password,
-        phone_number: phone_number.trim(),
         country: country.trim(),
         username: username.trim(),
         profile_pic_url: profile_pic_url || undefined,
       };
+      const phoneTrimmed = (phone_number || "").trim();
+      if (phoneTrimmed) userData.phone_number = phoneTrimmed;
       if (role_id === "3") userData.category_ids = selectedCategories;
 
       const attribution = getStoredAttribution();
@@ -613,7 +612,6 @@ const Register = () => {
                     <div>
                       <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-1">Phone number</label>
                       <input id="phone" type="tel" value={phone_number} onChange={(e) => setPhone_number(e.target.value)} placeholder="+1234567890" className={`${inputPill} ${stepErrors.phone_number ? "border-red-400 focus:ring-red-300" : ""}`} aria-invalid={!!stepErrors.phone_number} />
-                      {stepErrors.phone_number && <p className="text-xs text-red-600 mt-1">{stepErrors.phone_number}</p>}
                     </div>
 
                     {/* Freelancer categories (chips) */}

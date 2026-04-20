@@ -78,6 +78,17 @@ bool _lastRouteIncompatibleWithUser(String last, AuthState auth) {
   return last.startsWith('/client') || last.startsWith('/freelancer');
 }
 
+bool _isPublicRoute(String path) {
+  final p = path.startsWith('/') ? path : '/$path';
+  return p == '/explore' ||
+      p.startsWith('/project/') ||
+      p == '/terms' ||
+      p == '/terms-conditions' ||
+      p == '/privacy-policy' ||
+      p == '/help-faq' ||
+      p == '/health-check';
+}
+
 String? _redirect(BuildContext context, GoRouterState state) {
   final auth = ProviderScope.containerOf(context).read(authStateProvider);
   final path = state.uri.path;
@@ -86,6 +97,7 @@ String? _redirect(BuildContext context, GoRouterState state) {
   if (!auth.isAuthenticated) {
     if (path == '/splash') return '/login';
     if (RouteTracker.isAuthRoute(path)) return null;
+    if (_isPublicRoute(path)) return null;
     return '/login';
   }
   if (auth.user?.mustAcceptTerms == true) {
@@ -129,6 +141,10 @@ final List<RouteBase> _appRoutes = [
   GoRoute(
     path: '/register',
     builder: (context, state) => const RegisterScreen(),
+  ),
+  GoRoute(
+    path: '/explore',
+    builder: (context, state) => const ExploreProjectsScreen(readOnly: true),
   ),
   GoRoute(
     path: '/verify-email',

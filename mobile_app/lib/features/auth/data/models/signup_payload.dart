@@ -6,7 +6,7 @@ class SignupPayload {
   final String lastName;
   final String email;
   final String password;
-  final String phoneNumber;
+  final String? phoneNumber;
   final String country;
   final String username;
   final List<int>? categoryIds;
@@ -18,7 +18,7 @@ class SignupPayload {
     required this.lastName,
     required this.email,
     required this.password,
-    required this.phoneNumber,
+    this.phoneNumber,
     required this.country,
     required this.username,
     this.categoryIds,
@@ -32,10 +32,13 @@ class SignupPayload {
       'last_name': lastName,
       'email': email.trim().toLowerCase(),
       'password': password,
-      'phone_number': phoneNumber,
       'country': country,
       'username': username,
     };
+    final pn = phoneNumber?.trim();
+    if (pn != null && pn.isNotEmpty) {
+      data['phone_number'] = pn;
+    }
     if (categoryIds != null && categoryIds!.isNotEmpty) {
       data['category_ids'] = categoryIds;
     }

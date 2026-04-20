@@ -163,19 +163,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         }
         return true;
       case 'contact':
-        final phoneValid =
-            Validators.required(
-              _phoneController.text,
-              fieldName: 'Phone number',
-            ) ==
-            null;
         final countryValid =
             Validators.required(
               _countryController.text,
               fieldName: 'Country',
             ) ==
             null;
-        if (!phoneValid || !countryValid) {
+        if (!countryValid) {
           _formKey.currentState?.validate();
           return false;
         }
@@ -238,13 +232,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authNotifier = ref.read(authStateProvider.notifier);
     final referralCode = _referralCodeController.text.trim().toUpperCase();
     final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
     final payload = SignupPayload(
       roleId: _selectedRole!,
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: email,
       password: _passwordController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
+      phoneNumber: phone.isEmpty ? null : phone,
       country: _countryController.text.trim(),
       username: _usernameController.text.trim(),
       categoryIds: _selectedRole == 3 ? _selectedCategories : null,
@@ -806,10 +801,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: [
         _StyledTextField(
           controller: _phoneController,
-          hint: 'Phone Number',
+          hint: 'Phone Number (Optional)',
           prefixIcon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
-          validator: (v) => Validators.required(v, fieldName: 'Phone number'),
+          validator: null,
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(

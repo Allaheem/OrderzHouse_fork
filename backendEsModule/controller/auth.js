@@ -72,7 +72,7 @@ export const loginWithGoogle = async (req, res) => {
 
       const insertResult = await pool.query(
         `INSERT INTO users (role_id, first_name, last_name, email, password, phone_number, country, username, email_verified, profile_pic_url)
-         VALUES (2, $1, $2, $3, $4, '', '', $5, TRUE, $6)
+         VALUES (2, $1, $2, $3, $4, NULL, NULL, $5, TRUE, $6)
          RETURNING id, email, first_name, last_name, username, role_id, profile_pic_url, phone_number, country, is_deleted, is_two_factor_enabled, email_verified`,
         [givenName, familyName, email, hashedPassword, username, picture]
       );
