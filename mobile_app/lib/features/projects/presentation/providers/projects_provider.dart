@@ -184,18 +184,11 @@ class ExploreProjectsNotifier
     final authState = ref.read(authStateProvider);
     final userRoleId = authState.user?.roleId;
 
-    // Logged-out users should not trigger remote explore calls.
-    if (userId == null) {
-      state = const AsyncValue.data(<Project>[]);
-      ref.read(exploreRefreshErrorProvider.notifier).state = null;
-      return;
-    }
-
     final selectedCategoryId = ref.read(selectedExploreCategoryIdProvider);
     final String sortBy = ref.read(exploreSortByProvider);
     final searchQuery = ref.read(searchQueryProvider);
     final query = searchQuery.trim().isNotEmpty ? searchQuery.trim() : null;
-    final cacheOwner = userId.toString();
+    final cacheOwner = (userId ?? 0) > 0 ? userId.toString() : 'guest';
     final cacheKey =
         'explore_${cacheOwner}_${selectedCategoryId ?? 'all'}_${sortBy}_${query ?? 'noquery'}';
 

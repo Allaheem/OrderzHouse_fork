@@ -24,7 +24,11 @@ export const registerValidator = [
     .trim()
     .isString()
     .withMessage("Phone number must be a string"),
-  body("country").notEmpty().withMessage("Country is required"),
+  body("country")
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isString()
+    .withMessage("Country must be a string"),
 ];
 
 /** POST /users/login */

@@ -163,16 +163,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         }
         return true;
       case 'contact':
-        final countryValid =
-            Validators.required(
-              _countryController.text,
-              fieldName: 'Country',
-            ) ==
-            null;
-        if (!countryValid) {
-          _formKey.currentState?.validate();
-          return false;
-        }
         return true;
       default:
         return false;
@@ -233,6 +223,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final referralCode = _referralCodeController.text.trim().toUpperCase();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
+    final country = _countryController.text.trim();
     final payload = SignupPayload(
       roleId: _selectedRole!,
       firstName: _firstNameController.text.trim(),
@@ -240,7 +231,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       email: email,
       password: _passwordController.text.trim(),
       phoneNumber: phone.isEmpty ? null : phone,
-      country: _countryController.text.trim(),
+      country: country.isEmpty ? null : country,
       username: _usernameController.text.trim(),
       categoryIds: _selectedRole == 3 ? _selectedCategories : null,
       referralCode: referralCode.isNotEmpty ? referralCode : null,
@@ -817,9 +808,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const SizedBox(height: AppSpacing.md),
         _StyledTextField(
           controller: _countryController,
-          hint: 'Country',
+          hint: 'Country (Optional)',
           prefixIcon: Icons.location_on_outlined,
-          validator: (v) => Validators.required(v, fieldName: 'Country'),
+          validator: null,
         ),
         const SizedBox(height: AppSpacing.md),
         // Optional referral code field

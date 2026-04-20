@@ -1003,10 +1003,11 @@ const verifyAndRegister = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid OTP" });
     }
 
-    if (!role_id || !first_name || !last_name || !password || !country || !username) {
+    if (!role_id || !first_name || !last_name || !password || !username) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
     const phoneTrimmed = typeof phone_number === "string" ? phone_number.trim() : "";
+    const countryTrimmed = typeof country === "string" ? country.trim() : "";
     const roleId = parseInt(role_id, 10);
     if (Number.isNaN(roleId)) {
       return res.status(400).json({ success: false, message: "Invalid role_id" });
@@ -1064,7 +1065,14 @@ const verifyAndRegister = async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,TRUE,$9,$10,$11,$12,$13,$14)
        RETURNING id, email, first_name, last_name, username, role_id, profile_pic_url, is_deleted, is_two_factor_enabled, email_verified`,
       [
-        roleId, first_name, last_name, emailLower, hashedPassword, phoneTrimmed || null, country, username,
+        roleId,
+        first_name,
+        last_name,
+        emailLower,
+        hashedPassword,
+        phoneTrimmed || null,
+        countryTrimmed || null,
+        username,
         signupSourceVal, signupMediumVal, signupCampaignVal, signupRefVal, signupLandingVal,
         hasAttribution ? new Date() : null,
       ]

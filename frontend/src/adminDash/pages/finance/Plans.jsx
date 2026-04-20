@@ -52,16 +52,35 @@ export default function Plans() {
       dispatch(setLoading(true));
       dispatch(clearError());
 
-      const [plansRes, countsRes] = await Promise.all([
-        PlansAPI.getPlans(),
-        PlansAPI.getPlanSubscriptionCounts(),
-      ]);
+      // Load plans even if counts fail (counts is admin-only and should not block listing).
+      let plansRes;
+      let countsRes;
+      try {
+        plansRes = await PlansAPI.getPlans();
+      } catch (e) {
+        plansRes = null;
+        throw e;
+      }
+      try {
+        countsRes = await PlansAPI.getPlanSubscriptionCounts();
+      } catch (_) {
+        countsRes = { counts: [] };
+      }
 
-      const plansArray = Array.isArray(plansRes?.plans)
+      const rawPlans = Array.isArray(plansRes?.plans)
         ? plansRes.plans
         : Array.isArray(plansRes)
         ? plansRes
         : [];
+      // Only Monthly(1) + Yearly(1). Ignore multi-year tiers like "Two years".
+      const plansArray = rawPlans.filter((p) => {
+        const t = String(p?.plan_type || "").toLowerCase();
+        const d = Number(p?.duration || 0);
+        if (Number(p?.price) <= 0) return true; // keep Free plan
+        if (t === "monthly" && d === 1) return true;
+        if (t === "yearly" && d === 1) return true;
+        return false;
+      });
 
       dispatch(setPlans(plansArray));
 

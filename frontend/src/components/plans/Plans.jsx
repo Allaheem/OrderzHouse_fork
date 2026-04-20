@@ -202,10 +202,30 @@ export default function Plans() {
 
   const isFreelancer = user?.role_id === 3;
 
+  function normalizePlansPayload(payload) {
+    // Supports API shapes: { plans: [...] } (current), { data: [...] }, or direct array (legacy)
+    const list = Array.isArray(payload?.plans)
+      ? payload.plans
+      : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload)
+      ? payload
+      : [];
+    // Only show Monthly(1) + Yearly(1). Ignore multi-year tiers like "Two years".
+    return list.filter((p) => {
+      const t = String(p?.plan_type || "").toLowerCase();
+      const d = Number(p?.duration || 0);
+      if (Number(p?.price) <= 0) return true; // keep Free plan
+      if (t === "monthly" && d === 1) return true;
+      if (t === "yearly" && d === 1) return true;
+      return false;
+    });
+  }
+
   useEffect(() => {
     API.get("/plans")
       .then((res) => {
-        setPlans(Array.isArray(res.data.plans) ? res.data.plans : []);
+        setPlans(normalizePlansPayload(res?.data));
         setLoading(false);
       })
       .catch(() => setLoading(false));

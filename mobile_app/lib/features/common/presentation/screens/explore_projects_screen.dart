@@ -285,8 +285,10 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();
+                    return;
                   }
-                  // If it's a main tab, do nothing (just show the icon)
+                  // Guest/main explore: use this button as a quick filter entry point.
+                  _showFilterBottomSheet(context, ref);
                 },
               ),
             ),
@@ -303,6 +305,10 @@ class _ExploreProjectsScreenState extends ConsumerState<ExploreProjectsScreen> {
             // Right: Avatar
             GestureDetector(
               onTap: () {
+                if (user == null) {
+                  context.go('/login');
+                  return;
+                }
                 final location = GoRouterState.of(context).uri.path;
                 if (location.contains('/admin')) {
                   context.go('/admin/profile');
