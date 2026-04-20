@@ -253,9 +253,21 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
               data: (plans) {
-                // iOS: show all plans (monthly/yearly) to freelancers too; purchase still uses Apple IAP only.
+                bool isAllowedDisplayPlan(Plan p) {
+                  if (p.price <= 0) return true; // keep free plan(s)
+                  final t = p.planType.toLowerCase().trim();
+                  if (t == 'monthly' && p.duration == 1) return true;
+                  if (t == 'yearly' && p.duration == 1) return true;
+                  return false; // hide multi-year tiers (e.g. 2 years)
+                }
+
+                // iOS: show monthly/yearly (1) plans to freelancers too; purchase still uses Apple IAP only.
+                // Non‑iOS freelancers: keep free-only behavior.
+                final baseList = (isFreelancer && !isIos)
+                    ? plans.where((p) => p.price <= 0).toList()
+                    : plans;
                 final displayPlans =
-                    (isFreelancer && !isIos) ? plans.where((p) => p.price <= 0).toList() : plans;
+                    baseList.where(isAllowedDisplayPlan).toList();
 
                 if (displayPlans.isEmpty) {
                   return EmptyState(
