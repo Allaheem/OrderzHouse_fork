@@ -40,6 +40,11 @@ analyzer:
     curly_braces_in_flow_control_structures: ignore
     unintended_html_in_doc_comment: ignore
     package_names: ignore
+    # CI: do not fail builds on style-only const suggestions
+    prefer_const_constructors: warning
+    prefer_const_constructors_in_immutables: warning
+    prefer_const_declarations: warning
+    prefer_const_literals_to_create_immutables: warning
   strong-mode:
     implicit-casts: false
     implicit-dynamic: false
