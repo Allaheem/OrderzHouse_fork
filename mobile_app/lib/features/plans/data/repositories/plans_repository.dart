@@ -1,6 +1,8 @@
 // ??? ????????
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/models/api_response.dart';
 import '../../../../core/models/plan.dart';
@@ -15,7 +17,11 @@ class PlansRepository {
   /// Matches web behavior: res.data.plans (NOT res.data.data)
   Future<ApiResponse<List<Plan>>> fetchPlans() async {
     try {
-      final response = await _dio.get('/plans');
+      final isIos = !kIsWeb && Platform.isIOS;
+      final response = await _dio.get(
+        '/plans',
+        queryParameters: isIos ? const {'includePaid': true} : null,
+      );
 
       final data = response.data as Map<String, dynamic>;
 

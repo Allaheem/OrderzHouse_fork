@@ -253,9 +253,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 ),
               ),
               data: (plans) {
-                final displayPlans = isFreelancer
-                    ? plans.where((p) => p.price <= 0).toList()
-                    : plans;
+                // iOS: show all plans (monthly/yearly) to freelancers too; purchase still uses Apple IAP only.
+                final displayPlans =
+                    (isFreelancer && !isIos) ? plans.where((p) => p.price <= 0).toList() : plans;
 
                 if (displayPlans.isEmpty) {
                   return EmptyState(

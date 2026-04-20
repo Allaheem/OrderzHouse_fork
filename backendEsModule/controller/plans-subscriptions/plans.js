@@ -14,8 +14,10 @@ const handleError = (res, err, message = "Server error") => {
  */
 export const getPlans = async (req, res) => {
   const withCounts = req.query.withCounts === "true";
+  // Mobile iOS: allow freelancers to see paid plans, but purchasing is still enforced via iOS IAP in-app.
+  const includePaid = String(req.query.includePaid || "").toLowerCase() === "true";
   const roleId = Number(req.token?.role ?? req.token?.roleId ?? req.token?.role_id ?? 0);
-  const freelancerOnlyFree = roleId === 3;
+  const freelancerOnlyFree = roleId === 3 && !includePaid;
 
   let where = "";
   if (freelancerOnlyFree) {
