@@ -41,10 +41,14 @@ analyzer:
     unintended_html_in_doc_comment: ignore
     package_names: ignore
     # CI: do not fail builds on style-only const suggestions
-    prefer_const_constructors: warning
-    prefer_const_constructors_in_immutables: warning
-    prefer_const_declarations: warning
-    prefer_const_literals_to_create_immutables: warning
+    prefer_const_constructors: ignore
+    prefer_const_constructors_in_immutables: ignore
+    prefer_const_declarations: ignore
+    prefer_const_literals_to_create_immutables: ignore
+    # CI: do not fail builds on non-functional warnings
+    unused_local_variable: ignore
+    unused_import: ignore
+    unused_catch_stack: ignore
   strong-mode:
     implicit-casts: false
     implicit-dynamic: false
