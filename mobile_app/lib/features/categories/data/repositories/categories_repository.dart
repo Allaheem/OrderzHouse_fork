@@ -18,10 +18,11 @@ class CategoriesRepository {
 
       return _parseCategoriesResponse(response);
     } on DioException catch (e) {
+      final msg = _extractErrorMessage(e.response?.data) ?? _getErrorMessage(e);
       return ApiResponse(
         success: false,
         data: [],
-        message: _extractErrorMessage(e.response?.data) ?? _getErrorMessage(e),
+        message: (msg.trim().isNotEmpty) ? msg : 'Failed to fetch categories',
         error: e.response?.data is Map<String, dynamic>
             ? e.response?.data as Map<String, dynamic>
             : null,

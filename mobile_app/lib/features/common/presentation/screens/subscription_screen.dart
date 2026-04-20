@@ -290,7 +290,9 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 return _buildPlansContent(
                   displayPlans,
                   eClickEnabledOnServer: eClickEnabledOnServer,
-                  freelancerFreeOnly: isFreelancer,
+                  // iOS: freelancers can view and buy paid plans via Apple IAP only.
+                  // Other platforms: keep free-only behavior for freelancers.
+                  freelancerFreeOnly: isFreelancer && !isIos,
                 );
               },
             ),
