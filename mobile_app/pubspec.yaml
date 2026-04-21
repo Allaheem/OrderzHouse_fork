@@ -2,7 +2,7 @@ name: OrderzHouse
 description: "OrderzHouse Mobile App - Marketplace for Clients and Freelancers"
 publish_to: 'none'
 
-version: 8.0.8+8
+version: 8.0.9+9
 
 environment:
   sdk: ^3.10.7
