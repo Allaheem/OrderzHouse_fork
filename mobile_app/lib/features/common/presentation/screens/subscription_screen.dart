@@ -30,6 +30,8 @@ import '../../../subscriptions/presentation/screens/eclick_checkout_webview_scre
 import '../../../subscriptions/presentation/widgets/payment_method_chooser_sheet.dart';
 import '../../../../core/models/plan.dart';
 import '../../../../l10n/app_localizations.dart';
+import '../widgets/subscription_legal_section.dart';
+import '../widgets/subscription_plan_benefits.dart';
 
 class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
@@ -356,6 +358,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                   // iOS: freelancers can view and buy paid plans via Apple IAP only.
                   // Other platforms: keep free-only behavior for freelancers.
                   freelancerFreeOnly: isFreelancer && !isIos,
+                  isIos: isIos,
                 );
               },
             ),
@@ -532,7 +535,11 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     List<Plan> plans, {
     required bool eClickEnabledOnServer,
     required bool freelancerFreeOnly,
+    required bool isIos,
   }) {
+    final hasPaidPlan = plans.any((p) => p.price > 0);
+    final showStoreLegalFooter = hasPaidPlan && !freelancerFreeOnly;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
@@ -553,6 +560,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Plan Rows
                 ...plans.asMap().entries.map((entry) {
@@ -581,44 +589,66 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     ],
                   );
                 }),
-              ],
-            ),
-          ),
-          // Required subscription info links (App Review: Privacy + Terms/EULA)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-            child: Column(
-              children: [
-                Text(
-                  'By subscribing, you agree to our Terms of Use (EULA) and Privacy Policy.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: const Color(0xFF8B8F97),
-                    height: 1.35,
+                if (showStoreLegalFooter)
+                  SubscriptionLegalSection(
+                    showAppleDisclaimer: isIos,
+                    padding: const EdgeInsets.only(
+                      top: AppSpacing.md,
+                      bottom: AppSpacing.xs,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 12,
-                  runSpacing: 6,
-                  children: [
-                    TextButton(
-                      onPressed: () => context.push('/privacy-policy'),
-                      child: const Text('Privacy Policy'),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/terms'),
-                      child: const Text('Terms of Use (EULA)'),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
+          if (!showStoreLegalFooter)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+              child: Column(
+                children: [
+                  Text(
+                    'By subscribing, you agree to our Terms of Use (EULA) and Privacy Policy.',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: const Color(0xFF8B8F97),
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 12,
+                    runSpacing: 6,
+                    children: [
+                      TextButton(
+                        onPressed: () => context.push('/privacy-policy'),
+                        child: const Text('Privacy Policy'),
+                      ),
+                      TextButton(
+                        onPressed: () => context.push('/terms'),
+                        child: const Text('Terms of Use (EULA)'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
+  }
+
+  String _paidPlanDisplayTitle(Plan plan) {
+    final t = plan.planType.toLowerCase().trim();
+    if (t == 'monthly') return 'Monthly subscription';
+    if (t == 'yearly') return 'Yearly subscription';
+    return plan.name;
+  }
+
+  String _planIntervalBadgeLabel(Plan plan) {
+    final t = plan.planType.toLowerCase().trim();
+    if (t == 'monthly') return 'Monthly';
+    if (t == 'yearly') return 'Yearly';
+    return plan.planType;
   }
 
   Future<void> _handlePlanSelection(
@@ -1328,12 +1358,6 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
     required bool eClickEnabledOnServer,
     required bool freelancerFreeOnly,
   }) {
-    final durationLabel = plan.planType == 'monthly'
-        ? '${plan.duration} Month'
-        : plan.planType == 'yearly'
-        ? '${plan.duration} Year'
-        : plan.planType;
-
     final l10n = AppLocalizations.of(context)!;
     final appleConfigured =
         Platform.isIOS && (plan.appleProductId?.trim().isNotEmpty ?? false);
@@ -1366,12 +1390,28 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    plan.name,
+                    plan.price > 0
+                        ? _paidPlanDisplayTitle(plan)
+                        : plan.name,
                     style: AppTextStyles.titleMedium.copyWith(
                       color: const Color(0xFF0B0B0F), // Near-black primary
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (plan.price > 0 &&
+                      plan.name.trim().isNotEmpty &&
+                      plan.name.trim() != _paidPlanDisplayTitle(plan).trim()) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      plan.name,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFF8B8F97),
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   if (plan.description != null &&
                       plan.description!.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -1433,7 +1473,7 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    durationLabel,
+                    _planIntervalBadgeLabel(plan),
                     style: AppTextStyles.labelSmall.copyWith(
                       color: const Color(0xFFFB923C), // Accent color for text
                       fontWeight: FontWeight.w600,
@@ -1514,6 +1554,30 @@ class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
             label: l10n.freelancerVerifyAccount,
             onPressed: _openFreelancerVerificationBooking,
             isEnabled: !activating,
+          ),
+        ],
+      );
+    }
+
+    if (plan.price > 0) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          card,
+          const SizedBox(height: AppSpacing.sm),
+          SubscriptionPlanBenefits(
+            planTitle: _paidPlanDisplayTitle(plan),
+            bullets: SubscriptionPlanBenefits.defaultPremiumBullets,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          PrimaryButton(
+            label: (!kIsWeb && Platform.isIOS)
+                ? 'Subscribe with App Store'
+                : 'Subscribe',
+            onPressed: () => _handlePlanSelection(
+              plan,
+              eClickEnabledOnServer: eClickEnabledOnServer,
+            ),
           ),
         ],
       );
